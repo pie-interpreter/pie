@@ -1,0 +1,50 @@
+IGNORE: "[ \t\n]|(//[^\n]*\n)|(#[^\n]*\n)|(/\*([^\*]|\*[^/])*\*/)";
+ARRAY: "array";
+ECHO: "(echo)|(print)";
+NAME: "[a-zA-Z_][a-zA-Z0-9_]*";
+ADD_OPER: "[%+-!\|]|\.";
+FLOAT: "-?[0-9]*\.[0-9]*";
+DECIMAL: "-?0|[1-9][0-9]*";
+ASSIGN_OPER: "=|(\+=)|(-=)|(\*=)|(/=)|(<<=)|(>>=)|(\.=)";
+MULT_OPER: "[/*]|(<<)|(>>)"; # XXX is this the right order even?
+COMP_OPER: "(===)|(==)|(>=)|(<=)|>|<|(!==)|(!=)";
+INOP: "(\+\+)|(--)";
+STR: "(\"[^\"]*\")|('[^']*')";
+
+main: statement* [EOF];
+
+statement: expr ";" | ECHO expr ("," expr)* ";" | "return" expr ";" |
+           "return" ";" |
+           "if" "(" expr ")" statement ("elseif" "(" expr ")" statement)*
+           ("else" statement)? | "{" statement* "}" |
+           "while" "(" expr ")" statement |
+           "for" "(" expr ";" expr ";" expr ")" statement |
+           "global" "$" NAME ("," "$" NAME)* ";" |
+           "global" "$" NAME ";" | "static" "$" NAME (ASSIGN_OPER expr)? ";" |
+           "static" "$" NAME (ASSIGN_OPER expr)? ("," "$" NAME (ASSIGN_OPER expr)?)* ";" |
+           "do" "{" statement* "}" "while" "(" expr ")" ";" | "break" ";" |
+           "continue" ";" |
+           "foreach" "(" expr "as" var_assign ")" statement |
+           "foreach" "(" expr "as" var_assign "=>" var_assign ")" statement;
+
+expr: and "?" and ":" and | and;
+
+and: or "&&" and | or "and" and | or;
+or: assignment | comparison "||" or | comparison "or" or | comparison;
+comparison: additive COMP_OPER comparison | additive;
+additive: multitive ADD_OPER additive | multitive;
+multitive: primary MULT_OPER multitive | primary;
+primary: ARRAY "(" ")" | ARRAY "(" array_constr ","? ")" |
+         function_call | atom INOP | "(" expr ")" | NAME |
+         atom ("[" expr "]")+ | atom | INOP atom | ADD_OPER primary | "(" ARRAY ")" primary;
+atom: FLOAT | DECIMAL | STR | "$" atom | "$" "{" expr "}" | NAME;
+array_constr: expr "=>" expr ("," expr "=>" expr)* | expr ("," expr)*;
+
+function_call: atom "(" arglist ")" | atom "(" ")";
+arglist: expr "," arglist | expr;
+
+var_assign: "$" NAME;
+
+assignment: "$" atom ("[" expr "]")+ ASSIGN_OPER expr |
+            "$" atom ("[" expr "]")* "[" "]" ASSIGN_OPER expr |
+            "$" atom ASSIGN_OPER expr;
