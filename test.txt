@@ -1,0 +1,45 @@
+<?php
+/**
+ * Consultant's cabinet page
+ *
+ */
+$config = Registry::getConfig();
+echo $this->renderWidget(
+    'title', array('contentText' => $this->translate('cabinet_title'))
+); ?>
+
+<?php $this->placeholder('content/cabinet')->captureStart(); ?>
+<p><?php echo $this->translate('cabinet_consultant_welcomeInfo'); ?></p>
+<p><?php echo $this->translate('cabinet_consultant_operationSystems'); ?></p>
+<ul>
+    <li>Windows: <a class="notAjax" target="_blank" href=http://www.miranda-im.org/>Miranda</a>,
+        <a class="notAjax" target="_blank" href=http://qip.ru>QIP</a>,
+        <a class="notAjax" target="_blank" href=http://pidgin.im>Pidgin</a>
+    </li>
+    <li>OS X: iChat, iMessage, <a class="notAjax" target="_blank" href=http://adium.im/>Adium</a>
+    </li>
+    <li>Linux: <a class="notAjax" target="_blank" href=http://psi-im.org/>Psi</a>
+    </li>
+    <li>Android: <a class="notAjax" target="_blank" href=http://www.xabber.com/>Xabber</a>,
+        <a class="notAjax" target="_blank"
+           href=https://play.google.com/store/apps/details?id=de.shapeservices.impluslite&hl=en>IM+</a>
+    </li>
+    <li>iOS: <a class="notAjax" target="_blank"
+                href=http://itunes.apple.com/ru/app/palringo-group-messenger/id286274367?mt=8>Palringo</a>,
+        <a class="notAjax" target="_blank"
+           href=http://itunes.apple.com/ru/app/talkonaut/id375113323?mt=8>Talkonaut</a>,
+        <a class="notAjax" target="_blank"
+           href=http://itunes.apple.com/ru/app/im+/id285688934?mt=8>IM+</a>
+    </li>
+</ul>
+<p><?php echo $this->translate('cabinet_consultant_instructions'); ?></p>
+<p><?php echo $this->translate('cabinet_consultant_settings'); ?></p>
+<ul>
+    <li><?php echo $this->translate('cabinet_consultant_infoProtocol'); ?>: XMPP (Jabber)</li>
+    <li><?php echo $this->translate('cabinet_consultant_infoLogin'); ?>: <?php echo $this->user->getCurrentJabberId(); ?></li>
+    <li><?php echo $this->translate('cabinet_consultant_infoPassword'); ?>: <?php echo $this->translate('cabinet_consultant_infoPasswordSame'); ?></li>
+    <li><?php echo $this->translate('cabinet_consultant_infoDomain'); ?>: <?php echo Registry::getJabber()->getHost();?></li>
+</ul>
+<?php $this->placeholder('content/cabinet')->captureEnd(); ?>
+
+<?php echo $this->renderWidget('layout/cabinet'); ?>asdas

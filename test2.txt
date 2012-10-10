@@ -1,0 +1,7 @@
+some text <?php
+    $b = 3;
+    $a = 12 * 1 + (2 + 2) * 12 * $b;
+    echo "a";
+?> other text
+    some text <?php $a
+    = 2; ?> other text
