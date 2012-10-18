@@ -21,25 +21,31 @@ class Node(object):
     def __repr__(self):
         return self.repr()
 
-    def repr(self):
-        raise NotImplementedError('Abstract node class')
-
     def compile(self, context):
         raise NotImplementedError('Abstract node class')
 
 
 class File(Node):
     """
-    Represents a piece of parsed php code
+    Represents a piece of parsed php file
 
-    See 'main' rule in grammar definition file
+    See 'file' rule in grammar definition file
     """
     def __init__(self, blocks):
         self.blocks = blocks
 
     def __repr__(self):
-        return 'Code(' + ','.join([i.repr() for i in self.blocks]) +')'
+        return 'File(' + ','.join([i.repr() for i in self.blocks]) +')'
 
+class CodeBlock(Node):
+    """
+    Represent a piece of parsed php code
+    """
+    def __init__(self, statements):
+        self.statements = statements
+
+    def __repr__(self):
+        return 'File(' + ','.join([i.repr() for i in self.statements]) +')'
 
 class Statement(Node):
     """ Represents 'statement' rule in grammar definition file """
@@ -108,4 +114,7 @@ class BinOp(Node):
         return "%s %s %s" % (self.left.repr(), self.op, self.right.repr())
 
 class InlineHtml(Node):
-    pass
+
+    def repr(self):
+        return "";
+

@@ -1,4 +1,4 @@
-from pie.ast import AstBuilder
+from pie.visitor import Visitor
 from pprint import pprint
 from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
 from pypy.rlib.parsing.lexer import Lexer, Token, SourcePos
@@ -6,14 +6,12 @@ from pypy.rlib.parsing.parsing import PackratParser, ParseError
 import os
 import py
 
-
-def parse(data):
+def buildAst(data):
     """ Parse php code """
-    parseTree = PHPParser().parse(data)
-    astBuilder = AstBuilder() 
-    astBuilder.dispatch(parseTree)
-#    return astBuilder.get_root()
-    return parseTree
+    parseTree = parse(data)
+    astBuilder = Visitor()
+
+    return astBuilder.visit_main(parseTree)
 
 
 class PHPParser(object):
@@ -23,7 +21,7 @@ class PHPParser(object):
         parse, transformer = self.get_parse_tools()
 
         result = parse(data)
-        result = transformer.transform(result)
+#        result = transformer.transform(result)
         return result
 
     def get_parse_tools(self):
@@ -151,3 +149,6 @@ class PHPPreTokenizer(object):
             self.columnno += len(text)
         else:
             self.columnno = text.rfind("\n")
+
+parser = PHPParser()
+parse, transformer = parser.get_parse_tools()

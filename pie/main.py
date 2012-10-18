@@ -1,10 +1,10 @@
-
-from pie.parsing import parse
+from pie.interpreter import Interpreter
+from pie.parsing import buildAst
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
 import sys
 
-def run(argv):
+def entry_point(argv):
     if len(argv) < 2:
         print 'No input file provided'
         return 1
@@ -14,8 +14,9 @@ def run(argv):
     input_file.close()
 
     try:
-        result = parse(data)
-        result.view()
+        result = buildAst(data)
+        interpreter = Interpreter()
+        interpreter.interpret(result)
     except ParseError as e:
         print e.nice_error_message(argv[1], data)
         return 1
@@ -23,4 +24,4 @@ def run(argv):
     return 0
 
 if __name__ == '__main__':
-    run(sys.argv)
+    entry_point(sys.argv)
