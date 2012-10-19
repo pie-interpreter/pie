@@ -13,10 +13,16 @@ OPCODE = {
 OPCODE_INDEXES = {}
 
 def get_opcode_name(index):
-    return OPCODE.get(index)
+    try:
+        return OPCODE[index]
+    except KeyError:
+        return ""
 
 def get_opcode_index(name):
-    return OPCODE_INDEXES.get(name)
+    try:
+        return OPCODE_INDEXES[name]
+    except KeyError:
+        return -1
 
 def _initialize():
     for (key, value) in OPCODE.items():
