@@ -14,3 +14,6 @@ class W_IntObject(W_Root):
 
     def as_number(self, space):
         return self
+
+    def to_string(self):
+        return str(self.intval)

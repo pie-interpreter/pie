@@ -1,8 +1,8 @@
-
 from pie.ast import build
 from pie.compiling import compile_ast
 from pie.frame import Frame
 from pie.interpreter import Interpreter
+from pie.objspace import ObjSpace
 from pie.parsing import parse
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
@@ -19,11 +19,10 @@ def entry_point(argv):
 
     try:
         parseTree = parse(data)
-#        parseTree.view()
         ast = build(parseTree)
         bytecode = compile_ast(ast)
-
-        Interpreter().interpret(None, Frame(), bytecode)
+        objSpace = ObjSpace()
+        Interpreter().interpret(objSpace, Frame(), bytecode)
 
     except ParseError as e:
         print e.nice_error_message(argv[1], data)

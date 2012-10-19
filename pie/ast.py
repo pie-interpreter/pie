@@ -112,10 +112,10 @@ class InlineHtml(AstNode):
 class ConstantInt(AstNode):
 
     def __init__(self, value):
-        self.value = value
+        self.value = int(value)
 
     def repr(self):
-        return "ConstantInt(%s)" % self.value
+        return "ConstantInt(%s)" % str(self.value)
 
 
 builder = AstBuilder()
