@@ -13,9 +13,8 @@ class Interpreter:
 
     def interpret(self, code):
         for block in code.blocks:
-            if isinstance(block, Statement):
-                if isinstance(block.expression, Echo):
-                    self.echo(block.expression)
+            if isinstance(block, Echo):
+                self.echo(block)
 
     def echo(self, echo):
         if isinstance(echo.expression, BinOp):
