@@ -1,5 +1,9 @@
 __author__ = 'sery0ga'
 
+# all opcodes with index <= OPCODE_INDEX_DIVIDER have 0 arguments
+# all opcodes with index > OPCODE_INDEX_DIVIDER have 1 argument
+OPCODE_INDEX_DIVIDER = 127
+
 OPCODE = {
     0: 'ECHO',
     1: 'ADD',
