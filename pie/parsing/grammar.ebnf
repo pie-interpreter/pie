@@ -1,0 +1,121 @@
+# Ebnf PHP grammar
+#
+# TODO: add comments parsing
+
+#
+# TOKENS
+#
+IGNORE: " |\n";
+
+# original PHP tokens
+T_CLOSE_TAG: "\?>";
+T_CONSTANT_ENCAPSED_STRING: "(\"[^\"]*\")|('[^']*)'";
+T_ECHO: "echo";
+T_FUNCTION: "function";
+T_INCLUDE: "include";
+T_INLINE_HTML: "\?><\?php";
+T_LNUMBER: "-?0|[1-9][0-9]*";
+T_OPEN_TAG: "<\?php";
+T_RETURN: "return";
+T_VARIABLE: "\$[a-zA-Z_][a-zA-Z0-9_]*";
+
+
+# non-original PHP tokens, that are in most cases
+# treated as simple strings in PHP parser
+
+# misc
+IDENTIFIER: "[a-zA-Z_][a-zA-Z0-9_]*";
+
+# operations in decreasing order of priorities:
+# ones, that executed first are first in the list
+ASSIGN_OPERATOR: "=";
+MULTITIVE_OPERATOR: "\*|/";
+ADDITIVE_OPERATOR: "\+|-|\.";
+#TERNARY_OPERATOR_FIRST_PART: "\?";
+#TERNARY_OPERATOR_SECOND_PART: "\:";
+
+
+#
+# RULES
+#
+
+# TOP-LEVEL rules:
+# - basically file is list of code and inline-html blocks
+# - code is list of statements
+# - statements can be finished or not finished
+# - finished statements don't require a semicolon in the end of it
+# - not finished statements do
+file: >contents<;
+contents: >content_block< >contents< | [EOF];
+content_block: T_INLINE_HTML
+               | >code<;
+code: [T_OPEN_TAG] >statements<;
+statements: >tol_level_statement< >statements<
+            | >notfinished_statement< [";"]? [T_CLOSE_TAG]
+            | >top_level_finished_statement< [T_CLOSE_TAG]
+            | [";"] [T_CLOSE_TAG];
+
+tol_level_statement: >notfinished_statement< [";"]
+                     | >top_level_finished_statement<
+                     | [";"];
+
+statement: >notfinished_statement< [";"]
+           | [";"];
+
+# NOT FINISHED STATEMENTS
+# not finished statement is something, that require a semicolon in the end of it
+# e.g. all kinds of expressions, language constructs
+notfinished_statement: expression
+                       | >construct<;
+
+
+# language constructs
+construct: construct_echo
+           | construct_include
+           | construct_return;
+construct_echo: T_ECHO expression;
+construct_include: T_INCLUDE expression;
+construct_return: T_RETURN expression;
+
+
+# expressions definition, based on priority of operators
+# expression is anything, that returns a value
+expression: <assign_expression>;
+assign_expression: variable_expression [ASSIGN_OPERATOR] additive_expression
+                   | <additive_expression>;
+ternary_expression: additive_expression ["?"] expression [":"] expression
+                   | <additive_expression>;
+additive_expression: multitive_expression ADDITIVE_OPERATOR additive_expression
+                     | <multitive_expression>;
+multitive_expression: primary_expression MULTITIVE_OPERATOR multitive_expression
+                      | <primary_expression>;
+primary_expression: ["("] <expression> [")"]
+                    | <function_call>
+                    | <variable_expression>
+                    | <constant_expression>;
+
+variable_expression: <T_VARIABLE>;
+constant_expression: <T_LNUMBER> | <T_CONSTANT_ENCAPSED_STRING>;
+
+function_call: >function_call_identifier< >function_parameters<;
+function_call_identifier: IDENTIFIER | variable_expression;
+function_parameters: ["("] function_parameters_list? [")"];
+function_parameters_list: expression [","] >function_parameters_list<
+                          | expression;
+
+
+# TOP LEVEL FINISHED STATEMENTS
+# finished statements are ones, that do not require semicolon in the end of it
+# e.g for, while, function definition, class definitions
+top_level_finished_statement: function_declaration;
+
+function_declaration: [T_FUNCTION] IDENTIFIER >function_arguments< ["{"] function_body ["}"];
+function_arguments: ["("] function_arguments_list? [")"];
+function_arguments_list: >function_argument< [","] >function_arguments_list<
+                         | >function_argument<;
+function_argument: function_argument_with_default_value
+                   | T_VARIABLE;
+function_argument_with_default_value: T_VARIABLE ["="] >function_argument_default_value<;
+function_argument_default_value: constant_expression;
+function_body: >statement< >function_body<
+               | >statement<;
