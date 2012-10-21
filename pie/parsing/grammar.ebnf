@@ -1,11 +1,15 @@
 # Ebnf PHP grammar
 #
-# TODO: add comments parsing
 
 #
 # TOKENS
 #
-IGNORE: " |\n";
+
+# ignored tokens (specified in PieLexer)
+T_COMMENT: "//([^\n])*\n";
+T_DOC_COMMENT: "/\*\*([^\*]|\*[^/])*\*?\*/";
+T_INLINE_COMMENT: "/\*([^\*]|\*[^/])*\*?\*/";
+T_WHITESPACE: "\s";
 
 # original PHP tokens
 T_CLOSE_TAG: "\?>";
@@ -17,20 +21,24 @@ T_INLINE_HTML: "\?><\?php";
 T_LNUMBER: "-?0|[1-9][0-9]*";
 T_OPEN_TAG: "<\?php";
 T_RETURN: "return";
-T_VARIABLE: "\$[a-zA-Z_][a-zA-Z0-9_]*";
+T_VARIABLE: "\$[a-z_][a-z0-9_]*";
 
 
 # non-original PHP tokens, that are in most cases
 # treated as simple strings in PHP parser
 
 # misc
-IDENTIFIER: "[a-zA-Z_][a-zA-Z0-9_]*";
+TRUE: "true";
+FALSE: "false";
+NULL: "null";
+IDENTIFIER: "[a-z_][a-z0-9_]*";
 
 # operations in decreasing order of priorities:
 # ones, that executed first are first in the list
-MULTITIVE_OPERATOR: "\*|/";
+MULTITIVE_OPERATOR: "\*|/|%";
 ADDITIVE_OPERATOR: "\+|-|\.";
 COMPARE_OPERATOR: "(<=)|(>=)|<|>";
+EQUALITY_OPERATOR: "(===)|(!==)|(==)|(!=)|(<>)";
 TERNARY_OPERATOR_FIRST_PART: "\?";
 TERNARY_OPERATOR_SECOND_PART: ":";
 ASSIGN_OPERATOR: "=";
@@ -85,8 +93,13 @@ expression: <assign_expression>;
 assign_expression: variable_expression [ASSIGN_OPERATOR] assign_expression
                    | <ternary_expression>;
 
-ternary_expression: compare_expression [TERNARY_OPERATOR_FIRST_PART] expression [TERNARY_OPERATOR_SECOND_PART] expression
+ternary_expression: equality_expression [TERNARY_OPERATOR_FIRST_PART] expression [TERNARY_OPERATOR_SECOND_PART] expression
+                   | <equality_expression>;
+
+equality_expression: compare_expression EQUALITY_OPERATOR >equality_expression_inner<
                    | <compare_expression>;
+equality_expression_inner: compare_expression EQUALITY_OPERATOR >equality_expression_inner<
+                           | compare_expression;
 
 compare_expression: additive_expression COMPARE_OPERATOR >compare_expression_inner<
                    | <additive_expression>;
@@ -109,7 +122,11 @@ primary_expression: ["("] <expression> [")"]
                     | <constant_expression>;
 
 variable_expression: <T_VARIABLE>;
-constant_expression: <T_LNUMBER> | <T_CONSTANT_ENCAPSED_STRING>;
+constant_expression: <T_LNUMBER>
+                     | <T_CONSTANT_ENCAPSED_STRING>
+                     | <TRUE>
+                     | <FALSE>
+                     | <NULL>;
 
 function_call: >function_call_identifier< >function_parameters<;
 function_call_identifier: IDENTIFIER | variable_expression;

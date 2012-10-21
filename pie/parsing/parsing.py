@@ -25,11 +25,7 @@ def get_parse_tools():
     names, regexs = zip(*regexs)
     check_for_missing_names(names, regexs, rules)
 
-    ignore = ["IGNORE"]
-    if "IGNORE" not in names:
-        ignore = []
-
-    lexer = PieLexer(list(regexs), list(names), ignore=ignore)
+    lexer = PieLexer(list(regexs), list(names))
     parser = PackratParser(rules, rules[0].nonterminal)
     def parse(s):
         tokens = lexer.tokenize(s)

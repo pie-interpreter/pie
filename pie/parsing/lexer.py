@@ -4,18 +4,21 @@ from pypy.rlib.parsing.lexer import Lexer, SourcePos, Token
 class PieLexer(Lexer):
     " Special lexer for php files, adds processing of inline html content "
 
-    def __init__(self, token_regexs, names, ignore=None):
+    IGNORED_TOKES = ["T_WHITESPACE",
+                     "T_COMMENT",
+                     "T_INLINE_COMMENT",
+                     "T_DOC_COMMENT"]
+
+    def __init__(self, token_regexs, names):
         self.token_regexs = token_regexs
         self.names = names
         self.rex = regex.PieLexingOrExpression(token_regexs, names)
         automaton = self.rex.make_automaton()
         self.automaton = automaton.make_deterministic(names)
         self.automaton.optimize() # XXX not sure whether this is a good idea
-        if ignore is None:
-            ignore = []
-        for ign in ignore:
+        for ign in self.IGNORED_TOKES:
             assert ign in names
-        self.ignore = dict.fromkeys(ignore)
+        self.ignore = dict.fromkeys(self.IGNORED_TOKES)
         self.matcher = self.automaton.make_lexing_code()
 
     def tokenize(self, text, eof=False):
@@ -31,18 +34,19 @@ class PieLexer(Lexer):
 
         return tokens
 
-    def tokenize_with_grammar(self, token,):
+    def tokenize_with_grammar(self, token):
         " Return a list of Token's from text. "
-        r = self.get_runner(token.source, eof=False)
-        r.line = token.source_pos.line
-        r.column = token.source_pos.column
+        runner = self.get_runner(token.source, eof=False)
+        runner.line = token.source_pos.line
+        runner.column = token.source_pos.column
         result = []
         while 1:
             try:
-                tok = r.find_next_token()
+                tok = runner.find_next_token()
                 result.append(tok)
             except StopIteration:
                 break
+
         return result
 
     def get_pre_tokenizer(self, text):
