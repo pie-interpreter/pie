@@ -82,9 +82,9 @@ notfinished_statement: expression
 construct: construct_echo
            | construct_include
            | construct_return;
-construct_echo: T_ECHO expression;
-construct_include: T_INCLUDE expression;
-construct_return: T_RETURN expression;
+construct_echo: [T_ECHO] expression;
+construct_include: [T_INCLUDE] expression;
+construct_return: [T_RETURN] expression;
 
 
 # expressions definition, based on priority of operators
@@ -96,15 +96,11 @@ assign_expression: variable_expression [ASSIGN_OPERATOR] assign_expression
 ternary_expression: equality_expression [TERNARY_OPERATOR_FIRST_PART] expression [TERNARY_OPERATOR_SECOND_PART] expression
                    | <equality_expression>;
 
-equality_expression: compare_expression EQUALITY_OPERATOR >equality_expression_inner<
+equality_expression: compare_expression EQUALITY_OPERATOR equality_expression
                    | <compare_expression>;
-equality_expression_inner: compare_expression EQUALITY_OPERATOR >equality_expression_inner<
-                           | compare_expression;
 
-compare_expression: additive_expression COMPARE_OPERATOR >compare_expression_inner<
+compare_expression: additive_expression COMPARE_OPERATOR compare_expression
                    | <additive_expression>;
-compare_expression_inner: additive_expression COMPARE_OPERATOR >compare_expression_inner<
-                          | additive_expression;
 
 additive_expression: multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
                      | <multitive_expression>;

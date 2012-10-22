@@ -1,4 +1,4 @@
-from pie.ast import build
+from pie.ast.building import build
 from pie.compiling import compile_ast
 from pie.frame import Frame
 from pie.interpreter import Interpreter

@@ -1,6 +1,6 @@
 " Module, providing compiling tools "
 
-from pie.ast import Source, Echo, BinaryOperation, ConstantInt, InlineHtml
+from pie.ast.nodes import Source, Echo, BinaryOperation, ConstantInt, InlineHtml
 from pie.bytecode import Bytecode
 from pie.objects.intobject import W_IntObject
 from pie.opcodes import get_opcode_index
