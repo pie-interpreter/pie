@@ -107,7 +107,7 @@ class __extend__(FunctionDeclaration):
         arguments = []
         for argument in self.arguments:
             assert isinstance(argument, Variable)
-            arguments.append(argument.name)
+            arguments.append(argument.name.value)
 
         # registering function in current builder, so it will be added to
         # bytecode
