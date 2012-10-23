@@ -15,16 +15,45 @@ class AstNode:
     def __repr__(self):
         return self.repr()
 
+
 class AstNodeWithResult(AstNode):
     """
     All nodes, subclassed from this one, when compiled and executed leave one
     new value on the stack
     """
 
+
 class Constant(AstNodeWithResult):
     """
     Node for constants, they all share compilation process
     """
+
+
+class Identifier(AstNode):
+
+    def __init__(self, value):
+        self.value = value
+
+    def rerp(self):
+        return self.value
+
+
+class ParametersList(AstNode):
+
+    def __init__(self, parameters = []):
+        self.parameters = parameters
+
+    def repr(self):
+        return "ParametersList()"
+
+
+class ArgumentsList(AstNode):
+
+    def __init__(self, arguments = []):
+        self.arguments = arguments
+
+    def repr(self):
+        return "ArgumentsList()"
 
 
 class StatementsList(AstNode):
@@ -72,7 +101,7 @@ class FunctionCall(AstNodeWithResult):
             representations.append(parameter.repr())
 
         parametersRepr = ", ".join(representations)
-        return "FunctionCall(%s(%s))" % (self.name, parametersRepr)
+        return "FunctionCall(%s(%s))" % (self.name.repr(), parametersRepr)
 
 class TernaryOperator(AstNodeWithResult):
 

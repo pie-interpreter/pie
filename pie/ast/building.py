@@ -1,7 +1,7 @@
 " Module, providing ast building tools "
 
-from pypy.rlib.parsing.tree import RPythonVisitor
 from pie.ast.nodes import *
+from pypy.rlib.parsing.tree import RPythonVisitor
 
 
 def build(parseTree):
@@ -33,11 +33,11 @@ class AstBuilder(RPythonVisitor):
 
         name = self.dispatch(node.children[0])
         if children_count == 2:
-            parameters = self.dispatch(node.children[1])
+            parametersList = self.dispatch(node.children[1])
         else:
-            parameters = []
+            parametersList = ParametersList()
 
-        return FunctionCall(name, parameters)
+        return FunctionCall(name, parametersList.parameters)
 
     def visit_function_parameters_list(self, node):
         assert len(node.children) > 0
@@ -46,7 +46,7 @@ class AstBuilder(RPythonVisitor):
         for child in node.children:
             parameters.append(self.dispatch(child))
 
-        return parameters
+        return ParametersList(parameters)
 
     def visit_ternary_expression(self, node):
         assert len(node.children) == 3
@@ -73,12 +73,14 @@ class AstBuilder(RPythonVisitor):
 
         name = self.dispatch(node.children[0])
         if children_count == 3:
-            arguments = self.dispatch(node.children[1])
+            argumentsList = self.dispatch(node.children[1])
         else:
-            arguments = []
+            argumentsList = ArgumentsList()
         body = self.dispatch(node.children[-1])
 
-        return FunctionDeclaration(name, arguments, StatementsList(body))
+        return FunctionDeclaration(name,
+                                   argumentsList.arguments,
+                                   body)
 
     def visit_function_arguments_list(self, node):
         assert len(node.children) > 0
@@ -87,7 +89,7 @@ class AstBuilder(RPythonVisitor):
         for child in node.children:
             arguments.append(self.dispatch(child))
 
-        return arguments
+        return ArgumentsList(arguments)
 
     def visit_function_body(self, node):
         assert len(node.children) > 0
@@ -97,7 +99,7 @@ class AstBuilder(RPythonVisitor):
             node = self.dispatch(child)
             statements.append(node)
 
-        return statements
+        return StatementsList(statements)
 
     def visit_T_LNUMBER(self, node):
         return ConstantInt(node.token.source)
@@ -106,7 +108,7 @@ class AstBuilder(RPythonVisitor):
         return ConstantString(node.token.source)
 
     def visit_IDENTIFIER(self, node):
-        return node.token.source;
+        return Identifier(node.token.source);
 
     def get_construct_value(self, node):
         assert len(node.children) == 1
@@ -117,8 +119,8 @@ class AstBuilder(RPythonVisitor):
         assert children_count >= 3 and children_count % 2 == 1
 
         operator = BinaryOperator(node.children[1].token.source,
-                                    self.dispatch(node.children[0]),
-                                    self.dispatch(node.children[2]))
+                                  self.dispatch(node.children[0]),
+                                  self.dispatch(node.children[2]))
         i = 3
         while i < children_count:
             tmpOperator = BinaryOperator(node.children[i].token.source,

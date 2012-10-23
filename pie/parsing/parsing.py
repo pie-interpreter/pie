@@ -1,5 +1,4 @@
 from pie.parsing.lexer import PieLexer
-from pprint import pprint
 from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
 from pypy.rlib.parsing.parsing import PackratParser, ParseError
 import os
@@ -29,7 +28,6 @@ def get_parse_tools():
     parser = PackratParser(rules, rules[0].nonterminal)
     def parse(s):
         tokens = lexer.tokenize(s)
-        pprint(tokens)
         s = parser.parse(tokens)
         return s
 
