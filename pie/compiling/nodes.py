@@ -85,10 +85,18 @@ class __extend__(Variable):
         index = builder.register_name(self.name.value)
         builder.emit('LOAD_FAST', index)
 
+
 class __extend__(ConstantInt):
 
     def compile(self, builder):
         index = builder.register_int_const(self.value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantString):
+
+    def compile(self, builder):
+        index = builder.register_string_const(self.value)
         builder.emit('LOAD_CONST', index)
 
 

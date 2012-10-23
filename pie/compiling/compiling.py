@@ -4,6 +4,7 @@ from pie.compiling.bytecode import Bytecode
 from pie.compiling.nodes import *
 from pie.error import CompilerError
 from pie.objects.int import W_IntObject
+from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
 
 
@@ -24,6 +25,7 @@ class BytecodeBuilder(object):
 
         # caching lists
         self.int_consts_cache = {}
+        self.string_consts_cache = {}
         self.names_cache = {}
 
     def emit(self, opcode_name, arg=-1):
@@ -48,6 +50,15 @@ class BytecodeBuilder(object):
             constants_count = len(self.consts)
             self.consts.append(W_IntObject(value))
             self.int_consts_cache[value] = constants_count
+            return constants_count
+
+    def register_string_const(self, value):
+        try:
+            return self.string_consts_cache[value]
+        except KeyError:
+            constants_count = len(self.consts)
+            self.consts.append(W_ConstStringObject(value))
+            self.string_consts_cache[value] = constants_count
             return constants_count
 
     def register_name(self, name):
