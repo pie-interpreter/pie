@@ -37,8 +37,8 @@ class PieLexer(Lexer):
     def tokenize_with_grammar(self, token):
         " Return a list of Token's from text. "
         runner = self.get_runner(token.source, eof=False)
-        runner.line = token.source_pos.lineno
-        runner.column = token.source_pos.columnno
+        runner.lineno = token.source_pos.lineno
+        runner.columnno = token.source_pos.columnno
         result = []
         while 1:
             try:

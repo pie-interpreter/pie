@@ -15,10 +15,15 @@ class AstNode:
     def __repr__(self):
         return self.repr()
 
-class StackDepthIncreaser(AstNode):
+class AstNodeWithResult(AstNode):
     """
     All nodes, subclassed from this one, when compiled and executed leave one
     new value on the stack
+    """
+
+class Constant(AstNodeWithResult):
+    """
+    Node for constants, they all share compilation process
     """
 
 
@@ -39,14 +44,50 @@ class StatementsList(AstNode):
 
 class Echo(AstNode):
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, expression):
+        self.expression = expression
 
     def repr(self):
-        return "Echo(%s)" % self.value.repr()
+        return "Echo(%s)" % self.expression.repr()
 
 
-class BinaryOperation(AstNode):
+class Return(AstNode):
+
+    def __init__(self, expression):
+        self.expression = expression
+
+    def repr(self):
+        return "Return(%s)" % self.expression.repr()
+
+
+class FunctionCall(AstNodeWithResult):
+
+    def __init__(self, name, parameters):
+        self.name = name
+        self.parameters = parameters
+
+    def repr(self):
+        representations = []
+        for parameter in self.parameters:
+            representations.append(parameter.repr())
+
+        parametersRepr = ", ".join(representations)
+        return "FunctionCall(%s(%s))" % (self.name.repr(), parametersRepr)
+
+class TernaryOperator(AstNodeWithResult):
+
+    def __init__(self, condition, expression1, expression2):
+        self.condition = condition
+        self.expression1 = expression1
+        self.expression2 = expression2
+
+    def repr(self):
+        return "TernaryOperator(%s ? %s : %s)" % (self.condition.repr(),
+                                                  self.expression1.repr(),
+                                                  self.expression2.repr())
+
+
+class BinaryOperator(AstNodeWithResult):
 
     def __init__(self, operation, left, right):
         self.operation = operation
@@ -54,16 +95,43 @@ class BinaryOperation(AstNode):
         self.right= right
 
     def repr(self):
-        return "BinaryOperation(%s %s %s)" % (self.left.repr(),
+        return "BinaryOperator(%s %s %s)" % (self.left.repr(),
                                               self.operation,
                                               self.right.repr())
 
 
-class ConstantInt(AstNode):
+class ConstantInt(Constant):
 
     def __init__(self, value):
         self.value = value
 
     def repr(self):
         return "ConstantInt(%s)" % self.value
+
+
+class ConstantString(Constant):
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "ConstantString(%s)" % self.value
+
+
+class FunctionDeclaration(AstNode):
+
+    def __init__(self, name, arguments, body):
+        self.name = name
+        self.arguments = arguments
+        self.body = body
+
+    def repr(self):
+        representations = []
+        for statement in self.arguments:
+            representations.append(statement.repr())
+
+        argumentsRepr = ", ".join(representations)
+        return "FunctionDeclaration(%s(%s){%s})" % (self.name,
+                                                    argumentsRepr,
+                                                    self.body.repr())
 

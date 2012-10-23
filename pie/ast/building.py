@@ -74,7 +74,16 @@ class AstBuilder(RPythonVisitor):
             arguments = []
         body = self.dispatch(node.children[-1])
 
-        return FunctionDeclaration(name, StatementsList(arguments), body)
+        return FunctionDeclaration(name, arguments, StatementsList(body))
+
+    def visit_function_arguments_list(self, node):
+        assert len(node.children) > 0
+
+        arguments = []
+        for child in node.children:
+            arguments.append(self.dispatch(child))
+
+        return arguments
 
     def visit_function_body(self, node):
         assert len(node.children) > 1
@@ -86,14 +95,14 @@ class AstBuilder(RPythonVisitor):
 
         return statements
 
-    def visit_T_IDENTIFIER(self, node):
-        return node.toke.source;
-
     def visit_T_LNUMBER(self, node):
         return ConstantInt(node.token.source)
 
     def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
-        return ConstantString(node.toke.source)
+        return ConstantString(node.token.source)
+
+    def visit_IDENTIFIER(self, node):
+        return node.token.source;
 
     def get_construct_value(self, node):
         assert len(node.children) == 1

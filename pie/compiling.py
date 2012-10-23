@@ -1,6 +1,6 @@
 " Module, providing compiling tools "
 
-from pie.ast.nodes import Source, Echo, BinaryOperation, ConstantInt, InlineHtml
+from pie.ast.nodes import *
 from pie.bytecode import Bytecode
 from pie.objects.intobject import W_IntObject
 from pie.opcodes import get_opcode_index
@@ -44,36 +44,36 @@ class BytecodeBuilder(object):
             self.int_consts_cache[value] = constants_count
             return constants_count
 
-
-class __extend__(Source):
-
-    def compile(self, builder):
-        for statement in self.statements:
-            statement.compile(builder)
-
-
-class __extend__(Echo):
-
-    def compile(self, builder):
-        self.value.compile(builder)
-        builder.emit('ECHO')
-
-
-class __extend__(BinaryOperation):
-
-    def compile(self, builder):
-        self.left.compile(builder)
-        self.right.compile(builder)
-        builder.emit('ADD')
-
-
-class __extend__(ConstantInt):
-
-    def compile(self, builder):
-        index = builder.register_int_const(self.value)
-        builder.emit('LOAD_CONST', index)
-
-class __extend__(InlineHtml):
-
-    def compile(self, builder):
-        pass
+#
+#class __extend__(Source):
+#
+#    def compile(self, builder):
+#        for statement in self.statements:
+#            statement.compile(builder)
+#
+#
+#class __extend__(Echo):
+#
+#    def compile(self, builder):
+#        self.value.compile(builder)
+#        builder.emit('ECHO')
+#
+#
+#class __extend__(BinaryOperation):
+#
+#    def compile(self, builder):
+#        self.left.compile(builder)
+#        self.right.compile(builder)
+#        builder.emit('ADD')
+#
+#
+#class __extend__(ConstantInt):
+#
+#    def compile(self, builder):
+#        index = builder.register_int_const(self.value)
+#        builder.emit('LOAD_CONST', index)
+#
+#class __extend__(InlineHtml):
+#
+#    def compile(self, builder):
+#        pass
