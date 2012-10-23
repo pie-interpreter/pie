@@ -52,16 +52,20 @@ class AstBuilder(RPythonVisitor):
         assert len(node.children) == 3
 
         condition = self.dispatch(node.children[0])
-        expression1 = self.dispatch(node.children[1])
-        expression2 = self.dispatch(node.children[2])
+        left = self.dispatch(node.children[1])
+        right = self.dispatch(node.children[2])
 
-        return TernaryOperator(condition, expression1, expression2)
+        return TernaryOperator(condition, left, right)
 
     def visit_compare_expression(self, node):
         return self.get_binary_operator(node)
 
     def visit_additive_expression(self, node):
-        return self.get_binary_operation(node)
+        return self.get_binary_operator(node)
+
+    def visit_variable_identifier(self, node):
+        assert len(node.children) == 1
+        return Variable(self.dispatch(node.children[0]))
 
     def visit_function_declaration(self, node):
         children_count = len(node.children)
@@ -86,7 +90,7 @@ class AstBuilder(RPythonVisitor):
         return arguments
 
     def visit_function_body(self, node):
-        assert len(node.children) > 1
+        assert len(node.children) > 0
 
         statements = []
         for child in node.children:

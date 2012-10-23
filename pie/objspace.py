@@ -1,5 +1,5 @@
 from operator import add
-from pie.objects.intobject import W_IntObject
+from pie.objects.int import W_IntObject
 
 __author__ = 'sery0ga'
 

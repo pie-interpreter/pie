@@ -1,5 +1,5 @@
 from pie.ast.building import build
-from pie.compiling import compile_ast
+from pie.compiling.compiling import compile_ast
 from pie.frame import Frame
 from pie.interpreter import Interpreter
 from pie.objspace import ObjSpace
@@ -19,9 +19,11 @@ def entry_point(argv):
 
     try:
         parseTree = parsing.parse(data)
-        parseTree.view()
-#        ast = build(parseTree)
-#        bytecode = compile_ast(ast)
+#        parseTree.view()
+        ast = build(parseTree)
+#        print ast
+        bytecode = compile_ast(ast)
+        print bytecode
 #        objSpace = ObjSpace()
 #        Interpreter().interpret(objSpace, Frame(), bytecode)
 

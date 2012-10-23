@@ -6,8 +6,18 @@ OPCODE_INDEX_DIVIDER = 127
 
 OPCODE = {
     0: 'ECHO',
-    1: 'ADD',
-    128: 'LOAD_CONST'
+    1: 'RETURN',
+    2: 'ADD',
+    3: 'SUBSTRACT',
+    4: 'MULTIPLY',
+    5: 'LESS_THAN',
+    6: 'MORE_THAN',
+    128: 'LOAD_CONST',
+    129: 'LOAD_NAME',
+    130: 'LOAD_FAST',
+    131: 'CALL_FUNCTION',
+    132: 'JUMP',
+    133: 'JUMP_IF_FALSE',
 }
 
 OPCODE_INDEXES = {}

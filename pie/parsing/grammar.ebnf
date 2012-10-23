@@ -21,7 +21,6 @@ T_INLINE_HTML: "\?><\?php";
 T_LNUMBER: "-?0|[1-9][0-9]*";
 T_OPEN_TAG: "<\?php";
 T_RETURN: "return";
-T_VARIABLE: "\$[a-z_][a-z0-9_]*";
 
 
 # non-original PHP tokens, that are in most cases
@@ -117,7 +116,8 @@ primary_expression: ["("] <expression> [")"]
                     | <variable_expression>
                     | <constant_expression>;
 
-variable_expression: <T_VARIABLE>;
+variable_expression: <variable_identifier>;
+variable_identifier: ["\$"] IDENTIFIER;
 constant_expression: <T_LNUMBER>
                      | <T_CONSTANT_ENCAPSED_STRING>
                      | <TRUE>
@@ -141,8 +141,8 @@ function_arguments: ["("] function_arguments_list? [")"];
 function_arguments_list: >function_argument< [","] >function_arguments_list<
                          | >function_argument<;
 function_argument: function_argument_with_default_value
-                   | T_VARIABLE;
-function_argument_with_default_value: T_VARIABLE [ASSIGN_OPERATOR] >function_argument_default_value<;
+                   | variable_identifier;
+function_argument_with_default_value: variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
 function_argument_default_value: constant_expression;
 function_body: >statement< >function_body<
                | >statement<;

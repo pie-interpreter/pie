@@ -72,19 +72,19 @@ class FunctionCall(AstNodeWithResult):
             representations.append(parameter.repr())
 
         parametersRepr = ", ".join(representations)
-        return "FunctionCall(%s(%s))" % (self.name.repr(), parametersRepr)
+        return "FunctionCall(%s(%s))" % (self.name, parametersRepr)
 
 class TernaryOperator(AstNodeWithResult):
 
-    def __init__(self, condition, expression1, expression2):
+    def __init__(self, condition, left, right):
         self.condition = condition
-        self.expression1 = expression1
-        self.expression2 = expression2
+        self.left = left
+        self.right = right
 
     def repr(self):
         return "TernaryOperator(%s ? %s : %s)" % (self.condition.repr(),
-                                                  self.expression1.repr(),
-                                                  self.expression2.repr())
+                                                  self.left.repr(),
+                                                  self.right.repr())
 
 
 class BinaryOperator(AstNodeWithResult):
@@ -98,6 +98,15 @@ class BinaryOperator(AstNodeWithResult):
         return "BinaryOperator(%s %s %s)" % (self.left.repr(),
                                               self.operation,
                                               self.right.repr())
+
+
+class Variable(AstNodeWithResult):
+
+    def __init__(self, name):
+        self.name = name
+
+    def repr(self):
+        return "Variable(%s)" % self.name
 
 
 class ConstantInt(Constant):

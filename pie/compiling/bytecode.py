@@ -6,9 +6,5 @@ class Bytecode(object):
     Contains enough data to run code on interpreter
     """
 
-    def __init__(self):
-        self.consts = []
-        self.code = ""
-
     def __repr__(self):
         return "Code: %s\nConstants number: %s" % (self.code, len(self.consts))
