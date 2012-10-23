@@ -32,7 +32,10 @@ class BytecodeBuilder(object):
         assert arg < 1<<16
         self.code.append(chr(get_opcode_index(opcode_name)))
         if arg != -1:
-            self.code.append(chr(arg))
+            # writing first byte of the argument
+            self.code.append(chr(arg & 0xff))
+            # writing second byte of the argument
+            self.code.append(chr(arg >> 8))
 
     def create_bytecode(self):
         bytecode = Bytecode()
@@ -82,7 +85,11 @@ class BytecodeBuilder(object):
         return len(self.code)
 
     def update_to_current_position(self, position):
-        self.code[position] = chr(self.get_current_position())
+        current_position = self.get_current_position()
+        # updating first byte of the argument
+        self.code[position] = chr(current_position & 0xff)
+        # updating second byte of the argument
+        self.code[position + 1] = chr(current_position >> 8)
 
 
 class Function(object):

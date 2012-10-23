@@ -105,7 +105,7 @@ class AstBuilder(RPythonVisitor):
         return ConstantInt(node.token.source)
 
     def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
-        return ConstantString(node.token.source)
+        return ConstantString(node.token.source[1:-1])
 
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source);
