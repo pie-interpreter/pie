@@ -37,8 +37,8 @@ class Interpreter:
                 next_instr = ord(code[position])
                 position += 1
                 if next_instr > OPCODE_INDEX_DIVIDER:
-                    arg = ord(code[position])
-                    position += 1
+                    arg = ord(code[position]) + (ord(code[position + 1]) << 8)
+                    position += 2
                 else:
                     arg = 0 # don't make it negative
                 assert arg >= 0
@@ -125,6 +125,13 @@ class Interpreter:
         except KeyError:
             value = self.space.int(0)
         frame.stack.append(value)
+        return position
+
+    def STORE_FAST(self, frame, bytecode, position, var_index):
+        var_name = bytecode.names[var_index]
+        value = frame.stack.pop()
+        frame.variables[var_name] = value
+
         return position
 
     def CALL_FUNCTION(self, frame, bytecode, position, arguments_number):

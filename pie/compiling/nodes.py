@@ -67,13 +67,13 @@ class __extend__(TernaryOperator):
         builder.emit('JUMP_IF_FALSE', 0)
         # adding jump opcode and saving position of it's parameter
         # to patch it later to second branch's position
-        jump_if_false_position = builder.get_current_position() - 1
+        jump_if_false_position = builder.get_current_position() - 2
 
         self.left.compile(builder)
         builder.emit('JUMP', 0)
         # adding jump opcode and saving position of it's parameter
         # to patch it later to end of statement's position
-        jump_position = builder.get_current_position() - 1
+        jump_position = builder.get_current_position() - 2
         builder.update_to_current_position(jump_if_false_position)
 
         self.right.compile(builder)
@@ -88,10 +88,18 @@ class __extend__(Variable):
         index = builder.register_name(identifier.value)
         builder.emit('LOAD_FAST', index)
 
+
 class __extend__(ConstantInt):
 
     def compile(self, builder):
         index = builder.register_int_const(self.value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantString):
+
+    def compile(self, builder):
+        index = builder.register_string_const(self.value)
         builder.emit('LOAD_CONST', index)
 
 

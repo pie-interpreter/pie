@@ -7,3 +7,6 @@ class W_ConstStringObject(W_Root):
 
     def __repr__(self):
         return self.val
+
+    def to_string(self):
+        return self.val

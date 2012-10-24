@@ -4,6 +4,7 @@ from pie.compiling.bytecode import Bytecode
 from pie.compiling.nodes import *
 from pie.error import CompilerError
 from pie.objects.int import W_IntObject
+from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
 
 
@@ -24,13 +25,17 @@ class BytecodeBuilder(object):
 
         # caching lists
         self.int_consts_cache = {}
+        self.string_consts_cache = {}
         self.names_cache = {}
 
     def emit(self, opcode_name, arg=-1):
         assert arg < 1<<16
         self.code.append(chr(get_opcode_index(opcode_name)))
         if arg != -1:
-            self.code.append(chr(arg))
+            # writing first byte of the argument
+            self.code.append(chr(arg & 0xff))
+            # writing second byte of the argument
+            self.code.append(chr(arg >> 8))
 
     def create_bytecode(self):
         bytecode = Bytecode()
@@ -48,6 +53,15 @@ class BytecodeBuilder(object):
             constants_count = len(self.consts)
             self.consts.append(W_IntObject(value))
             self.int_consts_cache[value] = constants_count
+            return constants_count
+
+    def register_string_const(self, value):
+        try:
+            return self.string_consts_cache[value]
+        except KeyError:
+            constants_count = len(self.consts)
+            self.consts.append(W_ConstStringObject(value))
+            self.string_consts_cache[value] = constants_count
             return constants_count
 
     def register_name(self, name):
@@ -71,7 +85,11 @@ class BytecodeBuilder(object):
         return len(self.code)
 
     def update_to_current_position(self, position):
-        self.code[position] = chr(self.get_current_position())
+        current_position = self.get_current_position()
+        # updating first byte of the argument
+        self.code[position] = chr(current_position & 0xff)
+        # updating second byte of the argument
+        self.code[position + 1] = chr(current_position >> 8)
 
 
 class Function(object):
