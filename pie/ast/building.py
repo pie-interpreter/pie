@@ -79,14 +79,22 @@ class AstBuilder(RPythonVisitor):
 
     def visit_function_declaration(self, node):
         children_count = len(node.children)
-        assert children_count == 2 or children_count == 3
+        assert children_count > 0 or children_count < 4
 
         name = self.dispatch(node.children[0])
-        if children_count == 3:
+        # function declaration can have arguments list or/and function body
+        # missing, we need to check which is which
+        if children_count > 1 \
+                and node.children[1].symbol == "function_arguments_list" :
             argumentsList = self.dispatch(node.children[1])
         else:
             argumentsList = ArgumentsList()
-        body = self.dispatch(node.children[-1])
+
+        if children_count > 2 \
+                or node.children[1].symbol == "statements_list" :
+            body = self.dispatch(node.children[-1])
+        else:
+            body = StatementsList()
 
         return FunctionDeclaration(name,
                                    argumentsList.arguments,
@@ -101,7 +109,7 @@ class AstBuilder(RPythonVisitor):
 
         return ArgumentsList(arguments)
 
-    def visit_function_body(self, node):
+    def visit_statements_block(self, node):
         assert len(node.children) > 0
 
         statements = []
@@ -110,6 +118,18 @@ class AstBuilder(RPythonVisitor):
             statements.append(node)
 
         return StatementsList(statements)
+
+    def visit_while(self, node):
+        children_count = len(node.children)
+        assert children_count == 1 or children_count == 2
+
+        expression = self.dispatch(node.children[0])
+        if children_count > 1:
+            body = self.dispatch(node.children[1])
+        else:
+            body = StatementsList()
+
+        return While(expression, body)
 
     def visit_T_LNUMBER(self, node):
         return ConstantInt(int(node.token.source))

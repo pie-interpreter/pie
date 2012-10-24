@@ -53,6 +53,7 @@ class Interpreter:
                 else:
                     opcode_name = get_opcode_name(next_instr)
                     position = getattr(self, opcode_name)(frame, bytecode, position, arg)
+
                 # this is a return condition
                 if position == self.RETURN_FLAG:
                     break

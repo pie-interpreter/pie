@@ -58,7 +58,7 @@ class ArgumentsList(AstNode):
 class StatementsList(AstNode):
     " Node, containing list of statement, always root node of the ast "
 
-    def __init__(self, statements):
+    def __init__(self, statements = []):
         self.statements = statements
 
     def repr(self):
@@ -146,7 +146,7 @@ class Variable(AstNodeWithResult):
         self.name = name
 
     def repr(self):
-        return "Variable(%s)" % self.name.repr
+        return "Variable(%s)" % self.name.repr()
 
 
 class ConstantInt(Constant):
@@ -183,4 +183,14 @@ class FunctionDeclaration(AstNode):
         return "FunctionDeclaration(%s(%s){%s})" % (self.name,
                                                     argumentsRepr,
                                                     self.body.repr())
+
+
+class While(AstNode):
+
+    def __init__(self, expression, body):
+        self.expression = expression
+        self.body = body
+
+    def repr(self):
+        return "While(%s {%s})" % (self.expression.repr(), self.body.repr())
 

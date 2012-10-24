@@ -15,12 +15,14 @@ T_WHITESPACE: "\s";
 T_CLOSE_TAG: "\?>";
 T_CONSTANT_ENCAPSED_STRING: "(\"[^\"]*\")|('[^']*)'";
 T_ECHO: "echo";
+T_FOR: "for";
 T_FUNCTION: "function";
 T_INCLUDE: "include";
 T_INLINE_HTML: "\?><\?php";
 T_LNUMBER: "-?0|[1-9][0-9]*";
 T_OPEN_TAG: "<\?php";
 T_RETURN: "return";
+T_WHILE: "while";
 
 
 # non-original PHP tokens, that are in most cases
@@ -53,22 +55,36 @@ ASSIGN_OPERATOR: "=";
 # - statements can be finished or not finished
 # - finished statements don't require a semicolon in the end of it
 # - not finished statements do
+#
+# - finished statements divided in two groups: top level ones and other
+#   top level are the ones, that can be found only in main part of the file:
+#   statements like class or function declarations, the rest are control
+#   structures like for, switch, while
+
 file: >contents<;
 contents: >content_block< >contents< | [EOF];
 content_block: T_INLINE_HTML
                | >code<;
-code: [T_OPEN_TAG] >statements<;
-statements: >tol_level_statement< >statements<
-            | >notfinished_statement< [";"]? [T_CLOSE_TAG]
-            | >top_level_finished_statement< [T_CLOSE_TAG]
-            | [";"] [T_CLOSE_TAG];
+code: [T_OPEN_TAG] >top_level_statements_block<;
+
+# top level list of statements include top level finished statements
+top_level_statements_block: >tol_level_statement< >top_level_statements_block<
+                            | >notfinished_statement< [";"]? [T_CLOSE_TAG]
+                            | >top_level_finished_statement< [T_CLOSE_TAG]
+                            | [";"] [T_CLOSE_TAG];
 
 tol_level_statement: >notfinished_statement< [";"]
                      | >top_level_finished_statement<
                      | [";"];
 
+
+# statements block, that can be found anywhere in the file
+statements_block: >statement< >statements_block<
+                  | >statement<;
 statement: >notfinished_statement< [";"]
+           | >finished_statement<
            | [";"];
+
 
 # NOT FINISHED STATEMENTS
 # not finished statement is something, that require a semicolon in the end of it
@@ -134,9 +150,11 @@ function_parameters_list: expression [","] >function_parameters_list<
 # TOP LEVEL FINISHED STATEMENTS
 # finished statements are ones, that do not require semicolon in the end of it
 # e.g for, while, function definition, class definitions
-top_level_finished_statement: function_declaration;
+top_level_finished_statement: function_declaration
+                              | >finished_statement<;
 
-function_declaration: [T_FUNCTION] IDENTIFIER >function_arguments< ["{"] function_body ["}"];
+
+function_declaration: [T_FUNCTION] IDENTIFIER >function_arguments< ["{"] statements_block? ["}"];
 function_arguments: ["("] function_arguments_list? [")"];
 function_arguments_list: >function_argument< [","] >function_arguments_list<
                          | >function_argument<;
@@ -144,5 +162,9 @@ function_argument: function_argument_with_default_value
                    | variable_identifier;
 function_argument_with_default_value: variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
 function_argument_default_value: constant_expression;
-function_body: >statement< >function_body<
-               | >statement<;
+
+# NORMAL FINISHED STATEMENTS
+#
+finished_statement: while;
+
+while: [T_WHILE] ["("] expression [")"] ["{"] statements_block? ["}"];
