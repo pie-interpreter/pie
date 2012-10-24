@@ -1,5 +1,6 @@
 from pie.ast.building import build
 from pie.compiling.compiling import compile_ast
+from pie.error import InterpreterError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.interpreter.interpreter import Interpreter
@@ -27,7 +28,9 @@ def entry_point(argv):
 #        print bytecode
         objSpace = ObjSpace()
         Interpreter(objSpace, Context()).interpret(Frame(), bytecode)
-
+    except InterpreterError as e:
+        print e.error
+        return 1
     except ParseError as e:
         print e.nice_error_message(argv[1], data)
         return 1

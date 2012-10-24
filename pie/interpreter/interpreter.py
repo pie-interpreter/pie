@@ -1,4 +1,4 @@
-from pie.error import InterpreterError
+from pie.error import InterpreterError, PHPError
 from pie.interpreter.frame import Frame
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 #from pypy.rlib import jit
@@ -58,7 +58,6 @@ class Interpreter:
                     break
 
         except InterpreterError:
-            print "Error occured somewhere"
             raise
 
         if len(frame.stack):
@@ -148,7 +147,12 @@ class Interpreter:
         try:
             function = self.context.functions[function_name]
         except KeyError:
-            raise InterpreterError("Function %s is not defined" % function_name)
+            message = "Call to undefined function %s()" % function_name
+            error = PHPError(message)
+            error.level = PHPError.NOTICE
+            exception = InterpreterError(message)
+            exception.error = error
+            raise exception
 
         function_frame = Frame()
         # put function arguments to frame
