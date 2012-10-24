@@ -33,8 +33,8 @@ class Identifier(AstNode):
     def __init__(self, value):
         self.value = value
 
-    def rerp(self):
-        return self.value
+    def repr(self):
+        return "Identifier: %s" % self.value
 
 
 class ParametersList(AstNode):
@@ -102,6 +102,18 @@ class FunctionCall(AstNodeWithResult):
         parametersRepr = ", ".join(representations)
         return "FunctionCall(%s(%s))" % (self.name.repr(), parametersRepr)
 
+
+class Assignment(AstNodeWithResult):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "Assignment(%s = %s)" % (self.variable.repr(),
+                                        self.value.repr())
+
+
 class TernaryOperator(AstNodeWithResult):
 
     def __init__(self, condition, left, right):
@@ -134,7 +146,7 @@ class Variable(AstNodeWithResult):
         self.name = name
 
     def repr(self):
-        return "Variable(%s)" % self.name
+        return "Variable(%s)" % self.name.repr
 
 
 class ConstantInt(Constant):

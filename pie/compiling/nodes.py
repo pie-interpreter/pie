@@ -29,12 +29,12 @@ class __extend__(FunctionCall):
         for i in range(0, len(self.parameters)):
             self.parameters[-1 * i].compile(builder)
 
-        identifier = self.name
-        if isinstance(identifier, Identifier):
-            index = builder.register_name(identifier.value)
+        name = self.name
+        if isinstance(name, Identifier):
+            index = builder.register_name(name.value)
             builder.emit("LOAD_NAME", index)
         else:
-            self.name.compile(builder)
+            name.compile(builder)
 
         builder.emit("CALL_FUNCTION", len(self.parameters))
 
@@ -54,9 +54,23 @@ class __extend__(BinaryOperator):
             '*': 'MULTIPLY',
             '<': 'LESS_THAN',
             '>': 'MORE_THAN',
+            '.': 'CONCAT',
         }
 
         return operations[self.operation]
+
+
+class __extend__(Assignment):
+
+    def compile(self, builder):
+        # compiling value first, so result would be on the stack for us
+        self.value.compile(builder)
+
+        assert isinstance(self.variable, Variable)
+        identifier = self.variable.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
+        builder.emit('STORE_FAST', index)
 
 
 class __extend__(TernaryOperator):
@@ -117,13 +131,12 @@ class __extend__(FunctionDeclaration):
         # preparing arguments
         arguments = []
         for argument in self.arguments:
-            assert isinstance(argument, Variable)
-            name = argument.name
-            assert isinstance(name, Identifier)
-            arguments.append(name.value)
+            identifier = argument.name
+            assert isinstance(identifier, Identifier)
+            arguments.append(identifier.value)
 
         # registering function in current builder, so it will be added to
         # bytecode
-        name = self.name
-        assert isinstance(name, Identifier)
-        builder.register_function(name.value, arguments, bytecode)
+        identifier = self.name
+        assert isinstance(identifier, Identifier)
+        builder.register_function(identifier.value, arguments, bytecode)

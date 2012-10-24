@@ -12,12 +12,14 @@ OPCODE = {
     4: 'MULTIPLY',
     5: 'LESS_THAN',
     6: 'MORE_THAN',
+    7: 'CONCAT',
     128: 'LOAD_CONST',
     129: 'LOAD_NAME',
     130: 'LOAD_FAST',
-    131: 'CALL_FUNCTION',
-    132: 'JUMP',
-    133: 'JUMP_IF_FALSE',
+    131: 'STORE_FAST',
+    132: 'CALL_FUNCTION',
+    133: 'JUMP',
+    134: 'JUMP_IF_FALSE',
 }
 
 OPCODE_INDEXES = {}
