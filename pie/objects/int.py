@@ -16,6 +16,10 @@ class W_IntObject(W_Root):
     def as_int(self):
         return self
 
+    def as_string(self):
+        from pie.objects.conststring import W_ConstStringObject
+        return W_ConstStringObject(str(self.intval))
+
     def less(self, object):
         if self.intval < object.intval:
             return W_IntObject(1)

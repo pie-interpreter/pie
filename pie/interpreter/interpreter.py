@@ -109,6 +109,13 @@ class Interpreter:
         frame.stack.append(result)
         return position
 
+    def CONCAT(self, frame, bytecode, position, value):
+        right = frame.stack.pop()
+        left = frame.stack.pop()
+        result = self.space.concatenate(left, right)
+        frame.stack.append(result)
+        return position
+
     def LOAD_CONST(self, frame, bytecode, position, value):
         frame.stack.append(bytecode.consts[value])
         return position

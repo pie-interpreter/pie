@@ -4,5 +4,5 @@ function fib($n) {
 }
 
 //echo fib(8);
-echo "15321Hello" * 5;
+echo "15321Hello" . 5;
 ?>

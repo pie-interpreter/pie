@@ -7,6 +7,12 @@ class ObjSpace(object):
 
     (w_int, w_str, w_array) = range(3)
 
+    def int(self, value):
+        return W_IntObject(value)
+
+    def str(self, value):
+        return W_ConstStringObject(value)
+
     def plus(self, w_left, w_right):
         """
         In PHP '+' is supported only for numbers and arrays
@@ -34,11 +40,8 @@ class ObjSpace(object):
             return w_left.as_int().multiply(w_right.as_int())
         raise NotImplementedError
 
-    def int(self, value):
-        return W_IntObject(value)
-
-    def str(self, value):
-        return W_ConstStringObject(value)
+    def concatenate(self, w_left, w_right):
+        return w_left.as_string().concatenate(w_right.as_string())
 
     def get_common_type(self, w_left, w_right):
         left_type = w_left.type

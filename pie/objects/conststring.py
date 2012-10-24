@@ -31,3 +31,9 @@ class W_ConstStringObject(W_Root):
         elif minus == -1 and end == 1:
             return W_IntObject(0)
         return W_IntObject(int(self.val[begin:end]) * minus)
+
+    def as_string(self):
+        return self
+
+    def concatenate(self, string):
+        return W_ConstStringObject(''.join([self.val, string.val]))
