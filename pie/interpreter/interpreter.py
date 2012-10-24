@@ -127,6 +127,13 @@ class Interpreter:
         frame.stack.append(value)
         return position
 
+    def STORE_FAST(self, frame, bytecode, position, var_index):
+        var_name = bytecode.names[var_index]
+        value = frame.stack.pop()
+        frame.variables[var_name] = value
+
+        return position
+
     def CALL_FUNCTION(self, frame, bytecode, position, arguments_number):
         # load function name
         function_name = frame.stack.pop().val
