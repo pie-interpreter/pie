@@ -5,15 +5,15 @@ from pypy.rlib.parsing.tree import RPythonVisitor
 
 
 def build(parseTree):
-    " Build as AST from parse tree "
+    """ Build as AST from parse tree """
     return builder.dispatch(parseTree);
 
 
 class AstBuilder(RPythonVisitor):
-    " Class, than transforms parse tree to AST "
+    """ Class, than transforms parse tree to AST """
 
     def visit_file(self, node):
-        " Visit root node of the parse tree "
+        """ Visit root node of the parse tree """
         statements = []
         for child in node.children:
             node = self.dispatch(child)

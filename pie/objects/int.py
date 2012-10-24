@@ -10,14 +10,11 @@ class W_IntObject(W_Root):
     def int_w(self, space):
         return self.intval
 
-    def copy(self, space):
-        return self # immutable object
-
-    def as_number(self, space):
-        return self
-
-    def to_string(self):
+    def str_w(self):
         return str(self.intval)
+
+    def as_int(self):
+        return self
 
     def less(self, object):
         if self.intval < object.intval:
@@ -33,3 +30,12 @@ class W_IntObject(W_Root):
 
     def is_true(self):
         return self.intval > 0
+
+    def plus(self, number):
+        return W_IntObject(self.intval + number.intval)
+
+    def minus(self, number):
+        return W_IntObject(self.intval - number.intval)
+
+    def multiply(self, number):
+        return W_IntObject(self.intval * number.intval)

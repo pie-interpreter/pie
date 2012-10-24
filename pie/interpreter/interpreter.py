@@ -68,7 +68,7 @@ class Interpreter:
 
     def ECHO(self, frame, bytecode, position, value):
         stack_value = frame.stack.pop()
-        os.write(1, stack_value.to_string())
+        os.write(1, stack_value.str_w())
         return position
 
     def RETURN(self, frame, bytecode, position, value):

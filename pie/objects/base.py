@@ -13,7 +13,7 @@ class W_Root(object):
     def int_w(self, space):
         raise InterpreterError("TypeError: casting to int of wrong type")
 
-    def str_w(self, space):
+    def str_w(self):
         raise InterpreterError("TypeError: casting to string of wrong type")
 
     def conststr_w(self, space):

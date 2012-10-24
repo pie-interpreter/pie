@@ -1,15 +1,14 @@
-" Module, with all ast nodes "
-
+""" Module, with all ast nodes """
 
 from pypy.tool.pairtype import extendabletype
 
 
 class AstNode:
-    " Base class for all nodes in ast "
+    """ Base class for all nodes in ast """
     __metaclass__ = extendabletype
 
     def repr(self):
-        " Pure AstNode objects should not exist "
+        """ Pure AstNode objects should not exist """
         raise NotImplementedError
 
     def __repr__(self):
