@@ -37,8 +37,8 @@ class Interpreter:
                 next_instr = ord(code[position])
                 position += 1
                 if next_instr > OPCODE_INDEX_DIVIDER:
-                    arg = ord(code[position])
-                    position += 1
+                    arg = ord(code[position]) + (ord(code[position + 1]) << 8)
+                    position += 2
                 else:
                     arg = 0 # don't make it negative
                 assert arg >= 0
