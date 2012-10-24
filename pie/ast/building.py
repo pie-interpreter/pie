@@ -48,6 +48,13 @@ class AstBuilder(RPythonVisitor):
 
         return ParametersList(parameters)
 
+    def visit_assign_expression(self, node):
+        assert len(node.children) == 2
+
+        variable = self.dispatch(node.children[0])
+        value = self.dispatch(node.children[1])
+        return Assignment(variable, value)
+
     def visit_ternary_expression(self, node):
         assert len(node.children) == 3
 
@@ -61,6 +68,9 @@ class AstBuilder(RPythonVisitor):
         return self.get_binary_operator(node)
 
     def visit_additive_expression(self, node):
+        return self.get_binary_operator(node)
+
+    def visit_multitive_expression(self, node):
         return self.get_binary_operator(node)
 
     def visit_variable_identifier(self, node):
@@ -105,7 +115,10 @@ class AstBuilder(RPythonVisitor):
         return ConstantInt(node.token.source)
 
     def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
-        return ConstantString(node.token.source[1:-1])
+        end = len(node.token.source) - 1
+        assert end >= 0
+
+        return ConstantString(node.token.source[1:end])
 
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source);
@@ -124,8 +137,8 @@ class AstBuilder(RPythonVisitor):
         i = 3
         while i < children_count:
             tmpOperator = BinaryOperator(node.children[i].token.source,
-                                          operator,
-                                          self.dispatch(node.children[i+1]))
+                                         operator,
+                                         self.dispatch(node.children[i+1]))
             operator = tmpOperator
             i += 2
 
