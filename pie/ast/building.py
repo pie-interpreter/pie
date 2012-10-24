@@ -102,7 +102,7 @@ class AstBuilder(RPythonVisitor):
         return StatementsList(statements)
 
     def visit_T_LNUMBER(self, node):
-        return ConstantInt(node.token.source)
+        return ConstantInt(int(node.token.source))
 
     def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
         return ConstantString(node.token.source)

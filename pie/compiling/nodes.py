@@ -29,8 +29,9 @@ class __extend__(FunctionCall):
         for i in range(0, len(self.parameters)):
             self.parameters[-1 * i].compile(builder)
 
-        if isinstance(self.name, Identifier):
-            index = builder.register_name(self.name.value)
+        identifier = self.name
+        if isinstance(identifier, Identifier):
+            index = builder.register_name(identifier.value)
             builder.emit("LOAD_NAME", index)
         else:
             self.name.compile(builder)
@@ -82,7 +83,9 @@ class __extend__(TernaryOperator):
 class __extend__(Variable):
 
     def compile(self, builder):
-        index = builder.register_name(self.name.value)
+        identifier = self.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
         builder.emit('LOAD_FAST', index)
 
 class __extend__(ConstantInt):
@@ -107,9 +110,12 @@ class __extend__(FunctionDeclaration):
         arguments = []
         for argument in self.arguments:
             assert isinstance(argument, Variable)
-            arguments.append(argument.name.value)
+            name = argument.name
+            assert isinstance(name, Identifier)
+            arguments.append(name.value)
 
         # registering function in current builder, so it will be added to
         # bytecode
-        builder.register_function(self.name.value, arguments, bytecode)
-
+        name = self.name
+        assert isinstance(name, Identifier)
+        builder.register_function(name.value, arguments, bytecode)
