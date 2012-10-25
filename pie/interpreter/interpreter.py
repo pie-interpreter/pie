@@ -22,6 +22,9 @@ class InterpreterArg:
         self.bytecode = bytecode
         self.position = 0
 
+    def get_line(self):
+        return self.bytecode.get_line(self.position)
+
 class Interpreter:
 
     RETURN_FLAG = -1
@@ -159,7 +162,10 @@ class Interpreter:
             function = self.context.functions[function_name]
         except KeyError:
             message = "Call to undefined function %s()" % function_name
-            raise PHPError(message, PHPError.FATAL)
+            raise PHPError(message,
+                           PHPError.FATAL,
+                           args.bytecode.get_filename(),
+                           args.get_line())
 
         function_frame = Frame()
         # put function arguments to frame

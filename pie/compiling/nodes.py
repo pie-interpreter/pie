@@ -5,6 +5,7 @@ from pie.ast.nodes import *
 class __extend__(StatementsList):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         for statement in self.statements:
             statement.compile(builder)
 
@@ -12,6 +13,7 @@ class __extend__(StatementsList):
 class __extend__(Echo):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         self.expression.compile(builder)
         builder.emit('ECHO')
 
@@ -19,6 +21,7 @@ class __extend__(Echo):
 class __extend__(Return):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         self.expression.compile(builder)
         builder.emit('RETURN')
 
@@ -26,6 +29,7 @@ class __extend__(Return):
 class __extend__(FunctionCall):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         for i in range(0, len(self.parameters)):
             self.parameters[-1 * i].compile(builder)
 
@@ -42,6 +46,7 @@ class __extend__(FunctionCall):
 class __extend__(BinaryOperator):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         self.left.compile(builder)
         self.right.compile(builder)
         opcode = self.get_binary_opcode()
@@ -63,6 +68,7 @@ class __extend__(BinaryOperator):
 class __extend__(Assignment):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         # compiling value first, so result would be on the stack for us
         self.value.compile(builder)
 
@@ -76,6 +82,7 @@ class __extend__(Assignment):
 class __extend__(TernaryOperator):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         # evaluating condition
         self.condition.compile(builder)
         builder.emit('JUMP_IF_FALSE', 0)
@@ -97,6 +104,7 @@ class __extend__(TernaryOperator):
 class __extend__(Variable):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         identifier = self.name
         assert isinstance(identifier, Identifier)
         index = builder.register_name(identifier.value)
@@ -106,6 +114,7 @@ class __extend__(Variable):
 class __extend__(ConstantInt):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         index = builder.register_int_const(self.value)
         builder.emit('LOAD_CONST', index)
 
@@ -113,6 +122,7 @@ class __extend__(ConstantInt):
 class __extend__(ConstantString):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         index = builder.register_string_const(self.value)
         builder.emit('LOAD_CONST', index)
 
@@ -145,6 +155,7 @@ class __extend__(FunctionDeclaration):
 class __extend__(While):
 
     def compile(self, builder):
+        builder.set_line(self.get_line())
         # first we need to save position, so we can get back here after block
         start_position = builder.get_current_position()
         # now we can compile expression, that will leave it's result on stack

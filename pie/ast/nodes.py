@@ -7,6 +7,8 @@ class AstNode:
     """ Base class for all nodes in ast """
     __metaclass__ = extendabletype
 
+    line_number = 0
+
     def repr(self):
         """ Pure AstNode objects should not exist """
         raise NotImplementedError
@@ -14,6 +16,8 @@ class AstNode:
     def __repr__(self):
         return self.repr()
 
+    def get_line(self):
+        return self.line_number
 
 class AstNodeWithResult(AstNode):
     """
@@ -30,8 +34,9 @@ class Constant(AstNodeWithResult):
 
 class Identifier(AstNode):
 
-    def __init__(self, value):
+    def __init__(self, value, line_number = 0):
         self.value = value
+        self.line_number = line_number
 
     def repr(self):
         return "Identifier: %s" % self.value
@@ -39,8 +44,9 @@ class Identifier(AstNode):
 
 class ParametersList(AstNode):
 
-    def __init__(self, parameters = []):
+    def __init__(self, parameters = [], line_number = 0):
         self.parameters = parameters
+        self.line_number = line_number
 
     def repr(self):
         return "ParametersList()"
@@ -48,8 +54,9 @@ class ParametersList(AstNode):
 
 class ArgumentsList(AstNode):
 
-    def __init__(self, arguments = []):
+    def __init__(self, arguments = [], line_number = 0):
         self.arguments = arguments
+        self.line_number = line_number
 
     def repr(self):
         return "ArgumentsList()"
@@ -58,8 +65,9 @@ class ArgumentsList(AstNode):
 class StatementsList(AstNode):
     " Node, containing list of statement, always root node of the ast "
 
-    def __init__(self, statements = []):
+    def __init__(self, statements = [], line_number = 0):
         self.statements = statements
+        self.line_number = line_number
 
     def repr(self):
         representations = []
@@ -72,8 +80,9 @@ class StatementsList(AstNode):
 
 class Echo(AstNode):
 
-    def __init__(self, expression):
+    def __init__(self, expression, line_number = 0):
         self.expression = expression
+        self.line_number = line_number
 
     def repr(self):
         return "Echo(%s)" % self.expression.repr()
@@ -81,8 +90,9 @@ class Echo(AstNode):
 
 class Return(AstNode):
 
-    def __init__(self, expression):
+    def __init__(self, expression, line_number = 0):
         self.expression = expression
+        self.line_number = line_number
 
     def repr(self):
         return "Return(%s)" % self.expression.repr()
@@ -90,9 +100,10 @@ class Return(AstNode):
 
 class FunctionCall(AstNodeWithResult):
 
-    def __init__(self, name, parameters):
+    def __init__(self, name, parameters, line_number = 0):
         self.name = name
         self.parameters = parameters
+        self.line_number = line_number
 
     def repr(self):
         representations = []
@@ -105,9 +116,10 @@ class FunctionCall(AstNodeWithResult):
 
 class Assignment(AstNodeWithResult):
 
-    def __init__(self, variable, value):
+    def __init__(self, variable, value, line_number = 0):
         self.variable = variable
         self.value = value
+        self.line_number = line_number
 
     def repr(self):
         return "Assignment(%s = %s)" % (self.variable.repr(),
@@ -116,10 +128,11 @@ class Assignment(AstNodeWithResult):
 
 class TernaryOperator(AstNodeWithResult):
 
-    def __init__(self, condition, left, right):
+    def __init__(self, condition, left, right, line_number = 0):
         self.condition = condition
         self.left = left
         self.right = right
+        self.line_number = line_number
 
     def repr(self):
         return "TernaryOperator(%s ? %s : %s)" % (self.condition.repr(),
@@ -129,10 +142,11 @@ class TernaryOperator(AstNodeWithResult):
 
 class BinaryOperator(AstNodeWithResult):
 
-    def __init__(self, operation, left, right):
+    def __init__(self, operation, left, right, line_number = 0):
         self.operation = operation
         self.left = left
-        self.right= right
+        self.right = right
+        self.line_number = line_number
 
     def repr(self):
         return "BinaryOperator(%s %s %s)" % (self.left.repr(),
@@ -142,8 +156,9 @@ class BinaryOperator(AstNodeWithResult):
 
 class Variable(AstNodeWithResult):
 
-    def __init__(self, name):
+    def __init__(self, name, line_number = 0):
         self.name = name
+        self.line_number = line_number
 
     def repr(self):
         return "Variable(%s)" % self.name.repr()
@@ -151,8 +166,9 @@ class Variable(AstNodeWithResult):
 
 class ConstantInt(Constant):
 
-    def __init__(self, value):
+    def __init__(self, value, line_number = 0):
         self.value = value
+        self.line_number = line_number
 
     def repr(self):
         return "ConstantInt(%s)" % self.value
@@ -160,8 +176,9 @@ class ConstantInt(Constant):
 
 class ConstantString(Constant):
 
-    def __init__(self, value):
+    def __init__(self, value, line_number = 0):
         self.value = value
+        self.line_number = line_number
 
     def repr(self):
         return "ConstantString(%s)" % self.value
@@ -169,10 +186,11 @@ class ConstantString(Constant):
 
 class FunctionDeclaration(AstNode):
 
-    def __init__(self, name, arguments, body):
+    def __init__(self, name, arguments, body, line_number = 0):
         self.name = name
         self.arguments = arguments
         self.body = body
+        self.line_number = line_number
 
     def repr(self):
         representations = []
@@ -187,9 +205,10 @@ class FunctionDeclaration(AstNode):
 
 class While(AstNode):
 
-    def __init__(self, expression, body):
+    def __init__(self, expression, body, line_number = 0):
         self.expression = expression
         self.body = body
+        self.line_number = line_number
 
     def repr(self):
         return "While(%s {%s})" % (self.expression.repr(), self.body.repr())
