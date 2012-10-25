@@ -27,8 +27,9 @@ def entry_point(argv):
 #        print ast
         bytecode = compile_ast(ast, argv[1])
 #        print bytecode
-        objSpace = ObjSpace()
-        Interpreter(objSpace, Context()).interpret(Frame(), bytecode)
+        context = Context()
+        context.initialize_function_trace_stack(argv[1])
+        Interpreter(ObjSpace(), context).interpret(Frame(), bytecode)
     except PHPError as e:
         print e
         return 1

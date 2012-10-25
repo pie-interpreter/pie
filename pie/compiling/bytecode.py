@@ -26,11 +26,6 @@ class Bytecode(object):
     def get_line(self, position):
         return self.lines_by_positions[position]
 
-    def get_filename(self):
-        import os
-        return os.path.abspath(self.filename)
-
-
 def disassemble(bytecode):
     "Function to disassemble code to human-readable form"
 

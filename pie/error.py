@@ -14,14 +14,16 @@ class PHPError(Exception):
         return self.__str__()
 
     def __str__(self):
+        import os.path
+
         message = "PHP %s error: %s in %s on line %s\n" \
-            % (self.level, self.message, self.file, self.line)
-        if len(self.trace_stack):
+            % (self.level, self.message, os.path.abspath(self.file), self.line)
+        if self.trace_stack:
             message = ''.join([message, "PHP Stack trace:\n"])
             depth = 1
             for (function_name, line_number, filename) in self.trace_stack:
                 trace_message = "PHP   %s. %s() %s:%s\n" \
-                    % (depth, function_name, filename, line_number)
+                    % (depth, function_name, os.path.abspath(filename), line_number)
                 message = ''.join([message, trace_message])
                 depth += 1
         return message

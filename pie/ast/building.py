@@ -44,7 +44,7 @@ class AstBuilder(RPythonVisitor):
         return FunctionCall(name, parametersList.parameters, line_number)
 
     def visit_function_parameters_list(self, node):
-        assert len(node.children) > 0
+        assert node.children
 
         line_number = node.getsourcepos().lineno
         parameters = []
@@ -111,7 +111,7 @@ class AstBuilder(RPythonVisitor):
                                    line_number)
 
     def visit_function_arguments_list(self, node):
-        assert len(node.children) > 0
+        assert node.children
 
         line_number = node.getsourcepos().lineno
         arguments = []
@@ -121,7 +121,7 @@ class AstBuilder(RPythonVisitor):
         return ArgumentsList(arguments, line_number)
 
     def visit_statements_block(self, node):
-        assert len(node.children) > 0
+        assert node.children
 
         line_number = node.getsourcepos().lineno
         statements = []

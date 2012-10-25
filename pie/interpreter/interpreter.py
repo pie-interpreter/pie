@@ -36,7 +36,6 @@ class Interpreter:
     def interpret(self, frame, bytecode):
         #initialization phase
         self.context.initialize_functions(bytecode)
-        frame.initialize_function_trace_stack(bytecode.get_filename())
 
         position = 0
         code = bytecode.code
@@ -76,7 +75,7 @@ class Interpreter:
         except InterpreterError:
             raise
 
-        if len(frame.stack):
+        if frame.stack:
             return frame.stack.pop()
         else:
             return self.space.int(0)
@@ -145,7 +144,7 @@ class Interpreter:
         try:
             value = args.frame.variables[var_name]
         except KeyError:
-            value = self.space.int(0)
+            value = self._handle_undefined(var_name, args)
         args.frame.stack.append(value)
         return args.position
 
@@ -166,21 +165,36 @@ class Interpreter:
             message = "Call to undefined function %s()" % function_name
             raise PHPError(message,
                            PHPError.FATAL,
-                           args.bytecode.get_filename(),
+                           args.bytecode.filename,
                            args.get_line(),
-                           args.frame.function_trace_stack)
+                           self.context.function_trace_stack)
 
         function_frame = Frame()
-        function_frame.function_trace_stack = args.frame.function_trace_stack
-        function_frame.function_trace_stack.append(
-            (function_name, args.get_line(), function.bytecode.get_filename())
-        )
         # put function arguments to frame
+        arg_position = 1
         for argument in function.arguments:
-            function_frame.variables[argument] = args.frame.stack.pop()
+            if not args.frame.stack:
+                message = "Missing argument %s for %s(), called" \
+                    % (arg_position, function_name)
+                error = PHPError(message,
+                                 PHPError.WARNING,
+                                 args.bytecode.filename,
+                                 args.get_line(),
+                                 self.context.function_trace_stack)
+                print error
+            else:
+                function_frame.variables[argument] = args.frame.stack.pop()
+            arg_position += 1
 
+        # update trace stack and call function
+        self.context.function_trace_stack.append(
+            (function_name, args.get_line(), function.bytecode.filename)
+        )
         return_value = self.interpret(function_frame, function.bytecode)
+        self.context.function_trace_stack.pop()
+
         args.frame.stack.append(return_value)
+
         return args.position
 
     def JUMP(self, args, new_position):
@@ -192,6 +206,15 @@ class Interpreter:
             return args.position
         return new_position
 
+    def _handle_undefined(self, name, args):
+        message = "Undefined variable: %s" % name
+        error = PHPError(message,
+                         PHPError.NOTICE,
+                         args.bytecode.filename,
+                         args.get_line(),
+                         self.context.function_trace_stack)
+        print error
+        return self.space.str("")
 
 def _define_opcodes():
     for index in OPCODE:

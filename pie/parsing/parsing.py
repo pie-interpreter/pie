@@ -6,7 +6,7 @@ import py
 
 
 def parse(data):
-    " Parse php code "
+    """ Parse php code """
     parseTree = parse_php(data)
     parseTree = transformer.transform(parseTree)
 
