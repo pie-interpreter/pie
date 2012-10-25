@@ -10,6 +10,7 @@ from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
 import sys
 
+
 def entry_point(argv):
     if len(argv) < 2:
         print 'No input file provided'

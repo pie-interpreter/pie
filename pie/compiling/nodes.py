@@ -140,3 +140,21 @@ class __extend__(FunctionDeclaration):
         identifier = self.name
         assert isinstance(identifier, Identifier)
         builder.register_function(identifier.value, arguments, bytecode)
+
+
+class __extend__(While):
+
+    def compile(self, builder):
+        # first we need to save position, so we can get back here after block
+        start_position = builder.get_current_position()
+        # now we can compile expression, that will leave it's result on stack
+        self.expression.compile(builder)
+        # now we can check if condition is false and jump out
+        builder.emit('JUMP_IF_FALSE', 0)
+        # saving position to patch it later
+        jump_if_false_position = builder.get_current_position() - 2
+        # compiling body
+        self.body.compile(builder)
+        # jumping back to the start
+        builder.emit('JUMP', start_position)
+        builder.update_to_current_position(jump_if_false_position)
