@@ -22,7 +22,13 @@ class AstBuilder(RPythonVisitor):
         return StatementsList(statements)
 
     def visit_construct_echo(self, node):
-        return Echo(self.get_construct_value(node))
+        assert len(node.children) > 0
+
+        expressions = []
+        for child in node.children:
+            expressions.append(self.dispatch(child))
+
+        return Echo(expressions)
 
     def visit_construct_return(self, node):
         return Return(self.get_construct_value(node))
@@ -52,9 +58,12 @@ class AstBuilder(RPythonVisitor):
         assert len(node.children) == 3
 
         variable = self.dispatch(node.children[0])
-        # TODO
+        operator = self.dispatch(node.children[1])
+        assert isinstance(operator, AssignOperator)
+        operator_value = operator.value
+
         value = self.dispatch(node.children[2])
-        return Assignment(variable, value)
+        return Assignment(variable, operator_value, value)
 
     def visit_ternary_expression(self, node):
         assert len(node.children) == 3
@@ -132,6 +141,9 @@ class AstBuilder(RPythonVisitor):
 
         return While(expression, body)
 
+    def visit_ASSIGN_OPERATOR(self, node):
+        return AssignOperator(node.token.source)
+
     def visit_T_LNUMBER(self, node):
         return ConstantInt(int(node.token.source))
 
@@ -143,6 +155,10 @@ class AstBuilder(RPythonVisitor):
 
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source);
+
+    def visit_T_INLINE_HTML(self, node):
+        return Echo([ConstantString(node.token.source)])
+
 
     def get_construct_value(self, node):
         assert len(node.children) == 1

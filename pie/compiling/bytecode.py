@@ -17,26 +17,25 @@ class Bytecode(object):
 
     def __repr__(self):
         return disassemble(self)
-#        return "Code: %s\nConstants number: %s" % (self.code, len(self.consts))
 
 
 def disassemble(bytecode):
-    "Function to disassemble code to human-readable form"
+    """Function to disassemble code to human-readable form"""
 
     assert isinstance(bytecode, Bytecode)
     result = 'Bytecode object: <' + str(compute_unique_id(bytecode)) + '>\n'
 
     if bytecode.consts:
-        result +=  '  Consts:\n'
+        result +=  '\n  Consts:\n'
         for const in enumerate(bytecode.consts):
             result += '      %s: %s\n' % const
 
     if bytecode.names:
-        result +=  '  Names:\n'
+        result +=  '\n  Names:\n'
         for name in enumerate(bytecode.names):
             result += '      %s: %s\n' % name
 
-    result += '  Code:\n'
+    result += '\n  Code:\n'
     position = 0
     code = bytecode.code
     code_length = len(code)
@@ -58,11 +57,11 @@ def disassemble(bytecode):
         result += '\n'
 
     if bytecode.functions:
-        result +=  'Functions:\n'
+        result += '\nFunctions:\n'
         for name in bytecode.functions:
-            result += '      %s()\n' % name
+            function = bytecode.functions[name]
+            result += '%s(%s)\n' % (name, ", ".join(function.arguments))
+            result += function.bytecode.__repr__()
 
 
     return result
-
-

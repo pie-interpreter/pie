@@ -7,13 +7,19 @@ class __extend__(StatementsList):
     def compile(self, builder):
         for statement in self.statements:
             statement.compile(builder)
+            # for statements, that have results, we need to remove it from the
+            # stack, because it won't be used anyway
+            if isinstance(statement, AstNodeWithResult):
+                builder.emit('POP_STACK');
 
 
 class __extend__(Echo):
 
     def compile(self, builder):
-        self.expression.compile(builder)
-        builder.emit('ECHO')
+        # echoing expressions one by one
+        for expression in self.expressions:
+            expression.compile(builder)
+            builder.emit('ECHO')
 
 
 class __extend__(Return):
@@ -65,12 +71,31 @@ class __extend__(Assignment):
     def compile(self, builder):
         # compiling value first, so result would be on the stack for us
         self.value.compile(builder)
-
+        # registering var name in builder
         assert isinstance(self.variable, Variable)
         identifier = self.variable.name
         assert isinstance(identifier, Identifier)
         index = builder.register_name(identifier.value)
+
+        operation = self.get_modification_operation()
+        if operation:
+            builder.emit('LOAD_FAST', index)
+            builder.emit(operation)
+
         builder.emit('STORE_FAST', index)
+
+    def get_modification_operation(self):
+        operations = {
+            '=': '',
+            '+=': 'ADD',
+            '-=': 'SUBSTRACT',
+            '*=': 'MULTIPLY',
+            '/=': 'DIVIDE',
+            '.=': 'CONCAT',
+            '%=': 'MOD',
+        }
+
+        return operations[self.operator]
 
 
 class __extend__(TernaryOperator):

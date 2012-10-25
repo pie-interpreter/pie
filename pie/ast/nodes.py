@@ -72,11 +72,16 @@ class StatementsList(AstNode):
 
 class Echo(AstNode):
 
-    def __init__(self, expression):
-        self.expression = expression
+    def __init__(self, expressions):
+        self.expressions = expressions
 
     def repr(self):
-        return "Echo(%s)" % self.expression.repr()
+        representations = []
+        for expression in self.expressions:
+            representations.append(expression.repr())
+
+        expressionsRepr = ", ".join(representations)
+        return "Echo(%s)" % expressionsRepr
 
 
 class Return(AstNode):
@@ -105,13 +110,25 @@ class FunctionCall(AstNodeWithResult):
 
 class Assignment(AstNodeWithResult):
 
-    def __init__(self, variable, value):
+    def __init__(self, variable, operator, value):
         self.variable = variable
+        self.operator = operator
         self.value = value
 
     def repr(self):
-        return "Assignment(%s = %s)" % (self.variable.repr(),
-                                        self.value.repr())
+        return "Assignment(%s %s %s)" % (self.variable.repr(),
+                                         self.operator,
+                                         self.value.repr())
+
+
+class AssignOperator(AstNode):
+    """
+    Helper node for making ast-building rpythnoic,
+    not really used in ast and not compiled
+    """
+
+    def __init__(self, value):
+        self.value = value
 
 
 class TernaryOperator(AstNodeWithResult):

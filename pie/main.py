@@ -22,10 +22,16 @@ def entry_point(argv):
     try:
         parseTree = parsing.parse(data)
 #        parseTree.view()
+#        sys.exit()
+
         ast = build(parseTree)
 #        print ast
+#        sys.exit()
+
         bytecode = compile_ast(ast)
 #        print bytecode
+#        sys.exit()
+
         objSpace = ObjSpace()
         Interpreter(objSpace, Context()).interpret(Frame(), bytecode)
 

@@ -13,6 +13,7 @@ OPCODE = {
     5: 'LESS_THAN',
     6: 'MORE_THAN',
     7: 'CONCAT',
+    8: 'POP_STACK',
     128: 'LOAD_CONST',
     129: 'LOAD_NAME',
     130: 'LOAD_FAST',

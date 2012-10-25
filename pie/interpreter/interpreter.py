@@ -117,6 +117,10 @@ class Interpreter:
         frame.stack.append(result)
         return position
 
+    def POP_STACK(self, frame, bytecode, position, value):
+        frame.stack.pop()
+        return position
+
     def LOAD_CONST(self, frame, bytecode, position, value):
         frame.stack.append(bytecode.consts[value])
         return position
@@ -137,7 +141,8 @@ class Interpreter:
 
     def STORE_FAST(self, frame, bytecode, position, var_index):
         var_name = bytecode.names[var_index]
-        value = frame.stack.pop()
+        # we need to leave value on stack
+        value = frame.stack[-1]
         frame.variables[var_name] = value
 
         return position
