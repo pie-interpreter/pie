@@ -13,6 +13,15 @@ __author__ = 'sery0ga'
 #    virtualizables = ['frame'],
 #    should_unroll_one_iteration = lambda *args: True)
 
+class InterpreterArg:
+    """
+    Stores data required for each operand handler in interpreter
+    """
+    def __init__(self, frame, bytecode):
+        self.frame = frame
+        self.bytecode = bytecode
+        self.position = 0
+
 class Interpreter:
 
     RETURN_FLAG = -1
@@ -27,6 +36,7 @@ class Interpreter:
         position = 0
         code = bytecode.code
         bytecode_length = len(bytecode.code)
+        args = InterpreterArg(frame, bytecode)
         try:
             while True:
                 #driver.jit_merge_point(frame=frame,
@@ -42,17 +52,17 @@ class Interpreter:
                 else:
                     arg = 0 # don't make it negative
                 assert arg >= 0
-
+                args.position = position
                 if we_are_translated():
                     for index, name in unrolling_bc:
                         if index == next_instr:
-                            position = getattr(self, name)(frame, bytecode, position, arg)
+                            position = getattr(self, name)(args, arg)
                             break
                     else:
                         assert False
                 else:
                     opcode_name = get_opcode_name(next_instr)
-                    position = getattr(self, opcode_name)(frame, bytecode, position, arg)
+                    position = getattr(self, opcode_name)(args, arg)
 
                 # this is a return condition
                 if position == self.RETURN_FLAG:
@@ -66,111 +76,107 @@ class Interpreter:
         else:
             return self.space.int(0)
 
-    def ECHO(self, frame, bytecode, position, value):
-        stack_value = frame.stack.pop()
+    def ECHO(self, args, value):
+        stack_value = args.frame.stack.pop()
         os.write(1, stack_value.str_w())
-        return position
+        return args.position
 
-    def RETURN(self, frame, bytecode, position, value):
+    def RETURN(self, args, value):
         return self.RETURN_FLAG
 
-    def ADD(self, frame, bytecode, position, value):
-        right = frame.stack.pop()
-        left = frame.stack.pop()
+    def ADD(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
         result = self.space.plus(left, right)
-        frame.stack.append(result)
-        return position
+        args.frame.stack.append(result)
+        return args.position
 
-    def SUBSTRACT(self, frame, bytecode, position, value):
-        right = frame.stack.pop()
-        left = frame.stack.pop()
+    def SUBSTRACT(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
         result = self.space.minus(left, right)
-        frame.stack.append(result)
-        return position
+        args.frame.stack.append(result)
+        return args.position
 
-    def MULTIPLY(self, frame, bytecode, position, value):
-        right = frame.stack.pop()
-        left = frame.stack.pop()
+    def MULTIPLY(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
         result = self.space.multiply(left, right)
-        frame.stack.append(result)
-        return position
+        args.frame.stack.append(result)
+        return args.position
 
-    def LESS_THAN(self, frame, bytecode, position, value):
-        right = frame.stack.pop()
-        left = frame.stack.pop()
+    def LESS_THAN(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
         result = left.less(right)
-        frame.stack.append(result)
-        return position
+        args.frame.stack.append(result)
+        return args.position
 
-    def MORE_THAN(self, frame, bytecode, position, value):
-        right = frame.stack.pop()
-        left = frame.stack.pop()
+    def MORE_THAN(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
         result = left.more(right)
-        frame.stack.append(result)
-        return position
+        args.frame.stack.append(result)
+        return args.position
 
-    def CONCAT(self, frame, bytecode, position, value):
-        right = frame.stack.pop()
-        left = frame.stack.pop()
+    def CONCAT(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
         result = self.space.concatenate(left, right)
-        frame.stack.append(result)
-        return position
+        args.frame.stack.append(result)
+        return args.position
 
-    def LOAD_CONST(self, frame, bytecode, position, value):
-        frame.stack.append(bytecode.consts[value])
-        return position
+    def LOAD_CONST(self, args, value):
+        args.frame.stack.append(args.bytecode.consts[value])
+        return args.position
 
-    def LOAD_NAME(self, frame, bytecode, position, function_index):
-        function_name = bytecode.names[function_index]
-        frame.stack.append(self.space.str(function_name))
-        return position
+    def LOAD_NAME(self, args, function_index):
+        function_name = args.bytecode.names[function_index]
+        args.frame.stack.append(self.space.str(function_name))
+        return args.position
 
-    def LOAD_FAST(self, frame, bytecode, position, var_index):
-        var_name = bytecode.names[var_index]
+    def LOAD_FAST(self, args, var_index):
+        var_name = args.bytecode.names[var_index]
         try:
-            value = frame.variables[var_name]
+            value = args.frame.variables[var_name]
         except KeyError:
             value = self.space.int(0)
-        frame.stack.append(value)
-        return position
+        args.frame.stack.append(value)
+        return args.position
 
-    def STORE_FAST(self, frame, bytecode, position, var_index):
-        var_name = bytecode.names[var_index]
-        value = frame.stack.pop()
-        frame.variables[var_name] = value
+    def STORE_FAST(self, args, var_index):
+        var_name = args.bytecode.names[var_index]
+        value = args.frame.stack.pop()
+        args.frame.variables[var_name] = value
 
-        return position
+        return args.position
 
-    def CALL_FUNCTION(self, frame, bytecode, position, arguments_number):
+    def CALL_FUNCTION(self, args, arguments_number):
         # load function name
-        function_name = frame.stack.pop().val
+        function_name = args.frame.stack.pop().val
         # load function bytecode
         try:
             function = self.context.functions[function_name]
         except KeyError:
             message = "Call to undefined function %s()" % function_name
-            error = PHPError(message)
-            error.level = PHPError.NOTICE
-            exception = InterpreterError(message)
-            exception.error = error
-            raise exception
+            raise PHPError(message, PHPError.FATAL)
 
         function_frame = Frame()
         # put function arguments to frame
         for argument in function.arguments:
-            function_frame.variables[argument] = frame.stack.pop()
+            function_frame.variables[argument] = args.frame.stack.pop()
 
         return_value = self.interpret(function_frame, function.bytecode)
-        frame.stack.append(return_value)
-        return position
+        args.frame.stack.append(return_value)
+        return args.position
 
-    def JUMP(self, frame, bytecode, position, new_position):
+    def JUMP(self, args, new_position):
         return new_position
 
-    def JUMP_IF_FALSE(self, frame, bytecode, position, new_position):
-        value = frame.stack.pop()
+    def JUMP_IF_FALSE(self, args, new_position):
+        value = args.frame.stack.pop()
         if value.is_true():
-            return position
+            return args.position
         return new_position
 
 

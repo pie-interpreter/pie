@@ -1,6 +1,6 @@
 from pie.ast.building import build
 from pie.compiling.compiling import compile_ast
-from pie.error import InterpreterError
+from pie.error import InterpreterError, PHPError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.interpreter.interpreter import Interpreter
@@ -29,8 +29,11 @@ def entry_point(argv):
 #        print bytecode
         objSpace = ObjSpace()
         Interpreter(objSpace, Context()).interpret(Frame(), bytecode)
+    except PHPError as e:
+        print e
+        return 1
     except InterpreterError as e:
-        print e.error
+        print e
         return 1
     except ParseError as e:
         print e.nice_error_message(argv[1], data)
