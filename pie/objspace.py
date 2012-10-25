@@ -1,4 +1,3 @@
-from pie.objects.base import W_Undefined
 from pie.objects.conststring import W_ConstStringObject
 from pie.objects.int import W_IntObject
 
@@ -6,19 +5,13 @@ __author__ = 'sery0ga'
 
 class ObjSpace(object):
 
-    (w_int, w_str, w_array, w_undefined) = range(4)
+    (w_int, w_str, w_array) = range(3)
 
     def int(self, value):
         return W_IntObject(value)
 
     def str(self, value):
         return W_ConstStringObject(value)
-
-    def undefined(self, variable_name):
-        return W_Undefined(variable_name)
-
-    def is_undefined(self, value):
-        return value.type == self.w_undefined
 
     def plus(self, w_left, w_right):
         """
@@ -62,4 +55,3 @@ class ObjSpace(object):
 
 W_IntObject.type = ObjSpace.w_int
 W_ConstStringObject.type = ObjSpace.w_str
-W_Undefined.type = ObjSpace.w_undefined

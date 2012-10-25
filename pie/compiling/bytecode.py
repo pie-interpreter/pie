@@ -27,7 +27,7 @@ class Bytecode(object):
         return self.lines_by_positions[position]
 
 def disassemble(bytecode):
-    "Function to disassemble code to human-readable form"
+    """ Function to disassemble code to human-readable form """
 
     assert isinstance(bytecode, Bytecode)
     result = 'Bytecode object:\n  Functions:\n'
