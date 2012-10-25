@@ -34,7 +34,9 @@ class Interpreter:
         self.context = context
 
     def interpret(self, frame, bytecode):
+        #initialization phase
         self.context.initialize_functions(bytecode)
+        frame.initialize_function_trace_stack(bytecode.get_filename())
 
         position = 0
         code = bytecode.code
@@ -165,9 +167,14 @@ class Interpreter:
             raise PHPError(message,
                            PHPError.FATAL,
                            args.bytecode.get_filename(),
-                           args.get_line())
+                           args.get_line(),
+                           args.frame.function_trace_stack)
 
         function_frame = Frame()
+        function_frame.function_trace_stack = args.frame.function_trace_stack
+        function_frame.function_trace_stack.append(
+            (function_name, args.get_line(), function.bytecode.get_filename())
+        )
         # put function arguments to frame
         for argument in function.arguments:
             function_frame.variables[argument] = args.frame.stack.pop()

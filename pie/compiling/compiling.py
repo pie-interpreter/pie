@@ -8,8 +8,9 @@ from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
 
 
-def compile_ast(ast):
+def compile_ast(ast, filename):
     builder = BytecodeBuilder()
+    builder.filename = filename
     ast.compile(builder)
 
     return builder.create_bytecode()
@@ -32,6 +33,7 @@ class BytecodeBuilder(object):
         self.current_line = 0
         self.lines_by_positions = []
         self.offset = 0
+        self.filename = ""
 
     def emit(self, opcode_name, arg=-1):
         assert arg < 1<<16
@@ -57,6 +59,7 @@ class BytecodeBuilder(object):
         bytecode.names = self.names
         bytecode.functions = self.functions
         bytecode.lines_by_positions = self.lines_by_positions
+        bytecode.filename = self.filename
         return bytecode
 
     def register_int_const(self, value):

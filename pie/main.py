@@ -25,8 +25,7 @@ def entry_point(argv):
 #        parseTree.view()
         ast = build(parseTree)
 #        print ast
-        bytecode = compile_ast(ast)
-        bytecode.filename = argv[1]
+        bytecode = compile_ast(ast, argv[1])
 #        print bytecode
         objSpace = ObjSpace()
         Interpreter(objSpace, Context()).interpret(Frame(), bytecode)

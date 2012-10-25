@@ -1,4 +1,4 @@
-" Module, defining how each node of ast is compiled "
+""" Module, defining how each node of ast is compiled """
 
 from pie.ast.nodes import *
 
@@ -134,6 +134,7 @@ class __extend__(FunctionDeclaration):
 
         # creating context to compile function's body
         function_bytecode_builder = BytecodeBuilder()
+        function_bytecode_builder.filename = builder.filename
         # compiling
         self.body.compile(function_bytecode_builder)
         bytecode = function_bytecode_builder.create_bytecode()

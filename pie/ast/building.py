@@ -1,4 +1,4 @@
-" Module, providing ast building tools "
+""" Module, providing ast building tools """
 
 from pie.ast.nodes import *
 from pypy.rlib.parsing.tree import RPythonVisitor
