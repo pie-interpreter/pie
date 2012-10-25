@@ -5,7 +5,7 @@ class W_IntObject(W_Root):
         self.intval = int(intval)
 
     def __repr__(self):
-        return str(self.intval)
+        return "W_IntObject(%s)" % self.intval
 
     def int_w(self, space):
         return self.intval

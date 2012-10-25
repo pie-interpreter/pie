@@ -49,10 +49,11 @@ class AstBuilder(RPythonVisitor):
         return ParametersList(parameters)
 
     def visit_assign_expression(self, node):
-        assert len(node.children) == 2
+        assert len(node.children) == 3
 
         variable = self.dispatch(node.children[0])
-        value = self.dispatch(node.children[1])
+        # TODO
+        value = self.dispatch(node.children[2])
         return Assignment(variable, value)
 
     def visit_ternary_expression(self, node):

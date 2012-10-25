@@ -7,7 +7,7 @@ class W_ConstStringObject(W_Root):
         self.val = val
 
     def __repr__(self):
-        return self.val
+        return "W_ConstStringObject(%s)" % self.val
 
     def str_w(self):
         return self.val
