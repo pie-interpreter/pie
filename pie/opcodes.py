@@ -14,6 +14,7 @@ OPCODE = {
     6: 'MORE_THAN',
     7: 'CONCAT',
     8: 'POP_STACK',
+    9: 'DUPLICATE_TOP',
     128: 'LOAD_CONST',
     129: 'LOAD_NAME',
     130: 'LOAD_FAST',
@@ -21,6 +22,7 @@ OPCODE = {
     132: 'CALL_FUNCTION',
     133: 'JUMP',
     134: 'JUMP_IF_FALSE',
+    135: 'JUMP_IF_TRUE',
 }
 
 OPCODE_INDEXES = {}

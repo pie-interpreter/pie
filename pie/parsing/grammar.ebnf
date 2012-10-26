@@ -5,7 +5,7 @@
 # TOKENS
 #
 
-# ignored tokens (specified in PieLexer)
+# ignored tokens (specified in PieLexer class)
 T_COMMENT: "//([^\n])*\n";
 T_DOC_COMMENT: "/\*\*([^\*]|\*[^/])*\*?\*/";
 T_INLINE_COMMENT: "/\*([^\*]|\*[^/])*\*?\*/";
@@ -242,6 +242,7 @@ comma_seperated_expressions: expression [","] >comma_seperated_expressions<
                            | expression;
 
 
+
 # TOP LEVEL FINISHED STATEMENTS
 # finished statements are ones, that do not require semicolon in the end of it
 # e.g for, while, function definition, class definitions
@@ -258,6 +259,8 @@ function_argument: function_argument_with_default_value
 function_argument_with_default_value: variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
 function_argument_default_value: constant_expression;
 
+
+
 # NORMAL FINISHED STATEMENTS
 #
 finished_statement: if
@@ -265,22 +268,25 @@ finished_statement: if
                   | dowhile
                   | for;
 
-if: [T_IF] ["("] expression [")"] >ifelse_body< else?;
-else: [T_ELSE] >ifelse_body<
-    | [T_ELSEIF] ["("] expression [")"] >ifelse_body< else?;
+if: [T_IF] ["("] expression [")"] >ifelse_body< >else_inner<?;
+else_inner: [T_ELSE] ["{"] ["}"]
+          | else
+          | elseif;
+else: [T_ELSE] >ifelse_body<;
+elseif: [T_ELSEIF] ["("] expression [")"] >ifelse_body< >else_inner<?;
 ifelse_body: ["{"] statements_block? ["}"]
            | >statement<;
 
-while: [T_WHILE] ["("] expression [")"] ["{"] statements_block? ["}"];
+while: [T_WHILE] ["("] expression [")"] >while_body<;
+while_body: ["{"] statements_block? ["}"]
+          | [";"];
 
 dowhile: [T_DO] ["{"] statements_block? ["}"] [T_WHILE] ["("] expression [")"] [";"];
 
-for: [T_FOR] ["("] comma_seperated_expressions?
-                   [";"]
-                   comma_seperated_expressions?
-                   [";"]
-                   comma_seperated_expressions?
-             [")"] >for_body<;
+for: [T_FOR] ["("] for_init? [";"] for_condition? [";"] for_expression? [")"] >for_body<;
+for_init: >comma_seperated_expressions<;
+for_condition:  >comma_seperated_expressions<;
+for_expression:  >comma_seperated_expressions<;
 for_body: ["{"] statements_block? ["}"]
         | [";"];
 

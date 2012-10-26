@@ -7,12 +7,22 @@ class AstNode:
     """ Base class for all nodes in ast """
     __metaclass__ = extendabletype
 
+    def __repr__(self):
+        return self.repr()
+
     def repr(self):
         """ Pure AstNode objects should not exist """
         raise NotImplementedError
 
-    def __repr__(self):
-        return self.repr()
+    def get_list_repr(self, items_list):
+        representations = []
+        for item in items_list:
+            if isinstance(item, str):
+                representations.append(item)
+            else:
+                representations.append(item.__repr__())
+
+        return ", ".join(representations)
 
 
 class AstNodeWithResult(AstNode):
@@ -22,66 +32,71 @@ class AstNodeWithResult(AstNode):
     """
 
 
+class Item(AstNode):
+    """
+    Helper node for making ast-building rpythnoic, not really used in ast and
+    not compiled. Used as return value of visiting single nodes.
+
+    Value of the item should always be string.
+
+    Nodes, subclassed from this one can be in ast.
+    """
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "Item: %s" % self.value
+
+
+class ItemsList(AstNode):
+    """
+    Helper node for all constructs, that represent lists of something. Used
+    to make ast-building rpythnoic, not really used in ast and not compiled.
+
+    Nodes, subclassed from this one can be in ast.
+    """
+
+    def __init__(self, items_list = []):
+        self.list = items_list
+
+    def repr(self):
+        return "ItemsList(%s)" % self.get_list_repr(self.list)
+
+
+class EmptyStatement(AstNode):
+    """
+    Helper node to represent empty result of visiting parse tree.
+    Used to make ast-building rpythnoic.
+    """
+
+    def repr(self):
+        return "EmptyStatement()"
+
+
 class Constant(AstNodeWithResult):
     """
     Node for constants, they all share compilation process
     """
 
 
-class Identifier(AstNode):
-
-    def __init__(self, value):
-        self.value = value
+class Identifier(Item):
 
     def repr(self):
         return "Identifier: %s" % self.value
 
 
-class ParametersList(AstNode):
-
-    def __init__(self, parameters = []):
-        self.parameters = parameters
-
-    def repr(self):
-        return "ParametersList()"
-
-
-class ArgumentsList(AstNode):
-
-    def __init__(self, arguments = []):
-        self.arguments = arguments
-
-    def repr(self):
-        return "ArgumentsList()"
-
-
-class StatementsList(AstNode):
+class StatementsList(ItemsList):
     " Node, containing list of statement, always root node of the ast "
 
-    def __init__(self, statements = []):
-        self.statements = statements
+    def repr(self):
+        return "StatementsList(%s)" % self.get_list_repr(self.list)
+
+
+class Echo(ItemsList):
 
     def repr(self):
-        representations = []
-        for statement in self.statements:
-            representations.append(statement.repr())
-
-        childrenRepr = ", ".join(representations)
-        return "StatementsList(%s)" % childrenRepr
-
-
-class Echo(AstNode):
-
-    def __init__(self, expressions):
-        self.expressions = expressions
-
-    def repr(self):
-        representations = []
-        for expression in self.expressions:
-            representations.append(expression.repr())
-
-        expressionsRepr = ", ".join(representations)
-        return "Echo(%s)" % expressionsRepr
+        return "Echo(%s)" % self.get_list_repr(self.list)
 
 
 class Return(AstNode):
@@ -100,12 +115,8 @@ class FunctionCall(AstNodeWithResult):
         self.parameters = parameters
 
     def repr(self):
-        representations = []
-        for parameter in self.parameters:
-            representations.append(parameter.repr())
-
-        parametersRepr = ", ".join(representations)
-        return "FunctionCall(%s(%s))" % (self.name.repr(), parametersRepr)
+        return "FunctionCall(%s(%s))" % (self.name.repr(),
+                                         self.get_list_repr(self.parameters))
 
 
 class Assignment(AstNodeWithResult):
@@ -119,16 +130,6 @@ class Assignment(AstNodeWithResult):
         return "Assignment(%s %s %s)" % (self.variable.repr(),
                                          self.operator,
                                          self.value.repr())
-
-
-class AssignOperator(AstNode):
-    """
-    Helper node for making ast-building rpythnoic,
-    not really used in ast and not compiled
-    """
-
-    def __init__(self, value):
-        self.value = value
 
 
 class TernaryOperator(AstNodeWithResult):
@@ -155,6 +156,29 @@ class BinaryOperator(AstNodeWithResult):
         return "BinaryOperator(%s %s %s)" % (self.left.repr(),
                                               self.operation,
                                               self.right.repr())
+
+
+class IncremenetDecrement(AstNodeWithResult):
+
+    def __init__(self, variable, operator_item):
+        self.variable = variable
+        assert isinstance(operator_item, Item)
+        self.operator = operator_item.value
+        self.constant = ConstantInt(1)
+
+
+class PreIncremenetDecrement(IncremenetDecrement):
+
+    def repr(self):
+        return "PreIncremenetDecrement(%s, %s)" % (self.variable.repr(),
+                                                  self.operator)
+
+
+class PostIncremenetDecrement(IncremenetDecrement):
+
+    def repr(self):
+        return "PostIncremenetDecrement(%s, %s)" % (self.variable.repr(),
+                                                  self.operator)
 
 
 class Variable(AstNodeWithResult):
@@ -192,14 +216,23 @@ class FunctionDeclaration(AstNode):
         self.body = body
 
     def repr(self):
-        representations = []
-        for statement in self.arguments:
-            representations.append(statement.repr())
+        return "FunctionDeclaration(%s(%s){%s})" \
+            % (self.name,
+               self.get_list_repr(self.arguments),
+               self.body.repr())
 
-        argumentsRepr = ", ".join(representations)
-        return "FunctionDeclaration(%s(%s){%s})" % (self.name,
-                                                    argumentsRepr,
-                                                    self.body.repr())
+
+class If(AstNode):
+
+    def __init__(self, condition, body, else_branch):
+        self.condition = condition
+        self.body = body
+        self.else_branch = else_branch
+
+    def repr(self):
+        return("If(%s) {%s} else {%s}") % (self.condition,
+                                           self.body,
+                                           self.else_branch)
 
 
 class While(AstNode):
@@ -210,4 +243,31 @@ class While(AstNode):
 
     def repr(self):
         return "While(%s {%s})" % (self.expression.repr(), self.body.repr())
+
+
+class DoWhile(AstNode):
+
+    def __init__(self, expression, body):
+        self.expression = expression
+        self.body = body
+
+    def repr(self):
+        return "DoWhile({%s} %s)" % (self.body.repr(), self.expression.repr())
+
+
+class For(AstNode):
+
+    def __init__(self, init_statements,
+                 condition_statements, expression_statements, body):
+        self.init_statements = init_statements
+        self.condition_statements = condition_statements
+        self.expression_statements = expression_statements
+        self.body = body
+
+    def repr(self):
+        return "For(%s;%s;%s {%s})" \
+            % (self.get_list_repr(self.init_statements),
+               self.get_list_repr(self.condition_statements),
+               self.get_list_repr(self.expression_statements),
+               self.body.repr())
 

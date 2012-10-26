@@ -29,6 +29,8 @@ class BytecodeBuilder(object):
         self.names_cache = {}
 
     def emit(self, opcode_name, arg=-1):
+        current_position = self.get_current_position()
+
         assert arg < 1<<16
         self.code.append(chr(get_opcode_index(opcode_name)))
         if arg != -1:
@@ -36,6 +38,8 @@ class BytecodeBuilder(object):
             self.code.append(chr(arg & 0xff))
             # writing second byte of the argument
             self.code.append(chr(arg >> 8))
+
+        return current_position
 
     def create_bytecode(self):
         bytecode = Bytecode()

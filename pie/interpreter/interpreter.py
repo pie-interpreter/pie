@@ -121,6 +121,10 @@ class Interpreter:
         frame.stack.pop()
         return position
 
+    def DUPLICATE_TOP(self, frame, bytecode, position, value):
+        frame.stack.append(frame.stack[-1])
+        return position
+
     def LOAD_CONST(self, frame, bytecode, position, value):
         frame.stack.append(bytecode.consts[value])
         return position
@@ -173,6 +177,12 @@ class Interpreter:
         if value.is_true():
             return position
         return new_position
+
+    def JUMP_IF_TRUE(self, frame, bytecode, position, new_position):
+        value = frame.stack.pop()
+        if value.is_true():
+            return new_position
+        return position
 
 
 def _define_opcodes():

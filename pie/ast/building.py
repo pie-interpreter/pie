@@ -14,24 +14,13 @@ class AstBuilder(RPythonVisitor):
 
     def visit_file(self, node):
         """ Visit root node of the parse tree """
-        statements = []
-        for child in node.children:
-            node = self.dispatch(child)
-            statements.append(node)
-
-        return StatementsList(statements)
+        return self.visit_statements_block(node)
 
     def visit_construct_echo(self, node):
-        assert len(node.children) > 0
-
-        expressions = []
-        for child in node.children:
-            expressions.append(self.dispatch(child))
-
-        return Echo(expressions)
+        return Echo(self.get_children_as_list(node))
 
     def visit_construct_return(self, node):
-        return Return(self.get_construct_value(node))
+        return Return(self.get_single_child(node))
 
     def visit_function_call(self, node):
         children_count = len(node.children)
@@ -39,31 +28,23 @@ class AstBuilder(RPythonVisitor):
 
         name = self.dispatch(node.children[0])
         if children_count == 2:
-            parametersList = self.dispatch(node.children[1])
+            parameters = self.dispatch(node.children[1])
         else:
-            parametersList = ParametersList()
+            parameters = ItemsList()
 
-        return FunctionCall(name, parametersList.parameters)
-
-    def visit_function_parameters_list(self, node):
-        assert len(node.children) > 0
-
-        parameters = []
-        for child in node.children:
-            parameters.append(self.dispatch(child))
-
-        return ParametersList(parameters)
+        return FunctionCall(name, parameters.list)
 
     def visit_assign_expression(self, node):
         assert len(node.children) == 3
 
         variable = self.dispatch(node.children[0])
-        operator = self.dispatch(node.children[1])
-        assert isinstance(operator, AssignOperator)
-        operator_value = operator.value
+        operator_item = self.dispatch(node.children[1])
+
+        assert isinstance(operator_item, Item)
+        operator = operator_item.value
 
         value = self.dispatch(node.children[2])
-        return Assignment(variable, operator_value, value)
+        return Assignment(variable, operator, value)
 
     def visit_ternary_expression(self, node):
         assert len(node.children) == 3
@@ -83,9 +64,17 @@ class AstBuilder(RPythonVisitor):
     def visit_multitive_expression(self, node):
         return self.get_binary_operator(node)
 
+    def visit_incdec_expression(self, node):
+        assert len(node.children) == 2
+        if node.children[0].symbol == "variable_identifier":
+            return PostIncremenetDecrement(self.dispatch(node.children[0]),
+                                           self.dispatch(node.children[1]))
+        else:
+            return PreIncremenetDecrement(self.dispatch(node.children[1]),
+                                          self.dispatch(node.children[0]))
+
     def visit_variable_identifier(self, node):
-        assert len(node.children) == 1
-        return Variable(self.dispatch(node.children[0]))
+        return Variable(self.get_single_child(node))
 
     def visit_function_declaration(self, node):
         children_count = len(node.children)
@@ -96,38 +85,42 @@ class AstBuilder(RPythonVisitor):
         # missing, we need to check which is which
         if children_count > 1 \
                 and node.children[1].symbol == "function_arguments_list" :
-            argumentsList = self.dispatch(node.children[1])
+            arguments = self.dispatch(node.children[1])
         else:
-            argumentsList = ArgumentsList()
+            arguments = ItemsList()
 
         if children_count > 2 \
                 or node.children[1].symbol == "statements_list" :
             body = self.dispatch(node.children[-1])
         else:
-            body = StatementsList()
+            body = EmptyStatement()
 
-        return FunctionDeclaration(name,
-                                   argumentsList.arguments,
-                                   body)
-
-    def visit_function_arguments_list(self, node):
-        assert len(node.children) > 0
-
-        arguments = []
-        for child in node.children:
-            arguments.append(self.dispatch(child))
-
-        return ArgumentsList(arguments)
+        return FunctionDeclaration(name, arguments.list, body)
 
     def visit_statements_block(self, node):
-        assert len(node.children) > 0
+        return StatementsList(self.get_children_as_list(node))
 
-        statements = []
-        for child in node.children:
-            node = self.dispatch(child)
-            statements.append(node)
+    def visit_if(self, node):
+        children_count = len(node.children)
+        assert children_count > 0 and children_count < 4
 
-        return StatementsList(statements)
+        condition = self.dispatch(node.children[0])
+        body = EmptyStatement()
+        else_branch = EmptyStatement()
+        for index in range(1, children_count):
+            child = node.children[index]
+            if child.symbol == 'else' or child.symbol == 'elseif':
+                else_branch = self.dispatch(child)
+            else:
+                body = self.dispatch(child)
+
+        return If(condition, body, else_branch)
+
+    def visit_else(self, node):
+        return self.get_single_child(node)
+
+    def visit_elseif(self, node):
+        return self.visit_if(node)
 
     def visit_while(self, node):
         children_count = len(node.children)
@@ -137,12 +130,45 @@ class AstBuilder(RPythonVisitor):
         if children_count > 1:
             body = self.dispatch(node.children[1])
         else:
-            body = StatementsList()
+            body = EmptyStatement()
 
         return While(expression, body)
 
-    def visit_ASSIGN_OPERATOR(self, node):
-        return AssignOperator(node.token.source)
+    def visit_dowhile(self, node):
+        children_count = len(node.children)
+        assert children_count == 1 or children_count == 2
+
+        expression = self.dispatch(node.children[-1])
+        if children_count > 1:
+            body = self.dispatch(node.children[0])
+        else:
+            body = EmptyStatement()
+
+        return DoWhile(expression, body)
+
+    def visit_for(self, node):
+        children_count = len(node.children)
+        assert children_count > 0 or children_count < 4
+
+        init_statements = []
+        condition_statements = []
+        expression_statements = []
+        body = EmptyStatement()
+
+        for child in node.children:
+            if child.symbol == 'for_init':
+                init_statements = self.dispatch(child).list
+            elif child.symbol == 'for_condition':
+                condition_statements = self.dispatch(child).list
+            elif child.symbol == 'for_expression':
+                expression_statements = self.dispatch(child).list
+            elif child.symbol == 'statements_block':
+                body = self.dispatch(child)
+
+        return For(init_statements,
+                   condition_statements,
+                   expression_statements,
+                   body)
 
     def visit_T_LNUMBER(self, node):
         return ConstantInt(int(node.token.source))
@@ -153,14 +179,25 @@ class AstBuilder(RPythonVisitor):
 
         return ConstantString(node.token.source[1:end])
 
+    def visit_TRUE(self, node):
+        return ConstantInt(1)
+
+    def visit_FALSE(self, node):
+        return ConstantInt(0)
+
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source);
 
     def visit_T_INLINE_HTML(self, node):
         return Echo([ConstantString(node.token.source)])
 
+    def general_nonterminal_visit(self, node):
+        return ItemsList(self.get_children_as_list(node))
 
-    def get_construct_value(self, node):
+    def general_symbol_visit(self, node):
+        return Item(node.token.source)
+
+    def get_single_child(self, node):
         assert len(node.children) == 1
         return self.dispatch(node.children[0])
 
@@ -180,6 +217,15 @@ class AstBuilder(RPythonVisitor):
             i += 2
 
         return operator
+
+    def get_children_as_list(self, node):
+        assert len(node.children) > 0
+
+        children_list = []
+        for child in node.children:
+            children_list.append(self.dispatch(child))
+
+        return children_list
 
 
 builder = AstBuilder()

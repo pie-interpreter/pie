@@ -2,10 +2,17 @@
 
 from pie.ast.nodes import *
 
+class __extend__(EmptyStatement):
+
+    def compile(self, builder):
+        # it is really empty
+        pass
+
+
 class __extend__(StatementsList):
 
     def compile(self, builder):
-        for statement in self.statements:
+        for statement in self.list:
             statement.compile(builder)
             # for statements, that have results, we need to remove it from the
             # stack, because it won't be used anyway
@@ -17,7 +24,7 @@ class __extend__(Echo):
 
     def compile(self, builder):
         # echoing expressions one by one
-        for expression in self.expressions:
+        for expression in self.list:
             expression.compile(builder)
             builder.emit('ECHO')
 
@@ -103,10 +110,7 @@ class __extend__(TernaryOperator):
     def compile(self, builder):
         # evaluating condition
         self.condition.compile(builder)
-        builder.emit('JUMP_IF_FALSE', 0)
-        # adding jump opcode and saving position of it's parameter
-        # to patch it later to second branch's position
-        jump_if_false_position = builder.get_current_position() - 2
+        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
 
         self.left.compile(builder)
         builder.emit('JUMP', 0)
@@ -117,6 +121,50 @@ class __extend__(TernaryOperator):
 
         self.right.compile(builder)
         builder.update_to_current_position(jump_position)
+
+
+class __extend__(IncremenetDecrement):
+
+    def get_operation(self):
+        operations = {
+            '++': 'ADD',
+            '--': 'SUBSTRACT',
+        }
+
+        return operations[self.operator]
+
+
+class __extend__(PreIncremenetDecrement):
+
+    def compile(self, builder):
+        # registering var name in builder
+        assert isinstance(self.variable, Variable)
+        identifier = self.variable.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
+
+        builder.emit('LOAD_FAST', index)
+        self.constant.compile(builder)
+        builder.emit(self.get_operation())
+
+        builder.emit('STORE_FAST', index)
+
+
+class __extend__(PostIncremenetDecrement):
+
+    def compile(self, builder):
+        # registering var name in builder
+        assert isinstance(self.variable, Variable)
+        identifier = self.variable.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
+
+        builder.emit('LOAD_FAST', index)
+        builder.emit('DUPLICATE_TOP')
+        self.constant.compile(builder)
+        builder.emit(self.get_operation())
+        builder.emit('STORE_FAST', index)
+        builder.emit('POP_STACK')
 
 
 class __extend__(Variable):
@@ -167,6 +215,37 @@ class __extend__(FunctionDeclaration):
         builder.register_function(identifier.value, arguments, bytecode)
 
 
+class __extend__(If):
+
+    def compile(self, builder):
+        self.condition.compile(builder)
+        # in case body or else branch is empty, we don't need some jumps
+        bodyempty = isinstance(self.body, EmptyStatement)
+        elseempty = isinstance(self.else_branch, EmptyStatement)
+
+        if bodyempty and elseempty:
+            builder.emit('POP_STACK')
+            return
+
+        if bodyempty:
+            jump_if_true_position = builder.emit('JUMP_IF_TRUE', 0) + 1
+            self.else_branch.compile(builder)
+            builder.update_to_current_position(jump_if_true_position)
+            return
+
+        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
+        self.body.compile(builder)
+
+        if elseempty:
+            builder.update_to_current_position(jump_if_false_position)
+            return
+
+        jump_position = builder.emit('JUMP', 0) + 1
+        builder.update_to_current_position(jump_if_false_position)
+        self.else_branch.compile(builder)
+        builder.update_to_current_position(jump_position)
+
+
 class __extend__(While):
 
     def compile(self, builder):
@@ -174,12 +253,54 @@ class __extend__(While):
         start_position = builder.get_current_position()
         # now we can compile expression, that will leave it's result on stack
         self.expression.compile(builder)
+        if isinstance(self.body, EmptyStatement):
+            builder.emit('JUMP_IF_TRUE', start_position)
+            return
+
         # now we can check if condition is false and jump out
-        builder.emit('JUMP_IF_FALSE', 0)
-        # saving position to patch it later
-        jump_if_false_position = builder.get_current_position() - 2
+        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
         # compiling body
         self.body.compile(builder)
+        # jumping back to the start
+        builder.emit('JUMP', start_position)
+        builder.update_to_current_position(jump_if_false_position)
+
+
+class __extend__(DoWhile):
+
+    def compile(self, builder):
+        start_position = builder.get_current_position()
+        self.body.compile(builder)
+        self.expression.compile(builder)
+        builder.emit('JUMP_IF_TRUE', start_position)
+
+
+class __extend__(For):
+
+    def compile(self, builder):
+        # init statements are compiled only once, before loop
+        for statement in self.init_statements:
+            statement.compile(builder)
+            builder.emit('POP_STACK');
+
+        # saving starting position to return here after one iteration ends
+        start_position = builder.get_current_position()
+        # all conditinal statements should be executed every time
+        # but only the last one is considered condition
+        for index in range(0, len(self.condition_statements) - 1):
+            self.condition_statements[index].compile(builder)
+            builder.emit('POP_STACK');
+        self.condition_statements[-1].compile(builder)
+        # now we can check if condition is false and jump out
+        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
+        # compiling body
+        self.body.compile(builder)
+
+        # compiling loop expressions
+        for statement in self.expression_statements:
+            statement.compile(builder)
+            builder.emit('POP_STACK');
+
         # jumping back to the start
         builder.emit('JUMP', start_position)
         builder.update_to_current_position(jump_if_false_position)
