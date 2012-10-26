@@ -1,11 +1,8 @@
-from pie.ast.building import build
-from pie.compiling.compiling import compile_ast
 from pie.error import InterpreterError, PHPError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
-from pie.interpreter.interpreter import Interpreter
 from pie.objspace import ObjSpace
-from pie.parsing import parsing
+from pie.parsing.parsing import interpretFile
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
 import sys
@@ -21,15 +18,9 @@ def entry_point(argv):
     input_file.close()
 
     try:
-        parseTree = parsing.parse(data)
-#        parseTree.view()
-        ast = build(parseTree)
-#        print ast
-        bytecode = compile_ast(ast, argv[1])
-#        print bytecode
         context = Context()
         context.initialize_function_trace_stack(argv[1])
-        Interpreter(ObjSpace(), context).interpret(Frame(), bytecode)
+        interpretFile(argv[1], data, context, ObjSpace(), Frame())
     except PHPError as e:
         print e
         return 1

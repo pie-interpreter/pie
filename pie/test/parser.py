@@ -8,6 +8,7 @@ class Test(object):
         self.result = ''
         self.file = ''
         self.doc = ''
+        self.is_true = True
 
     def __str__(self):
         return "Result: %s\n File: %s\n Doc: %s\n" \
@@ -29,8 +30,10 @@ class Parser(object):
             elif line == "--FILE--":
                 mode = self.file
                 continue
-            elif line == "--EXPECTF--":
+            elif line == "--EXPECTF--" or line == "--EXPECT--":
                 mode = self.result
+                if line == "--EXPECTF--":
+                    test.is_true = False
                 continue
             if current_mode == self.doc:
                 test.doc = "\n".join([test.doc, line])

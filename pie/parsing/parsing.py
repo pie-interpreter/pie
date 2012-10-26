@@ -1,9 +1,20 @@
+from pie.ast.building import build
+from pie.compiling.compiling import compile_ast
+from pie.interpreter.interpreter import Interpreter
 from pie.parsing.lexer import PieLexer
 from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
 from pypy.rlib.parsing.parsing import PackratParser, ParseError
 import os
 import py
 
+
+def interpretFile(filename, data, context, objspace, frame):
+    """ Parse and interpret one code file
+    """
+    parseTree = parse(data)
+    ast = build(parseTree)
+    bytecode = compile_ast(ast, filename)
+    Interpreter(objspace, context).interpret(frame, bytecode)
 
 def parse(data):
     """ Parse php code """
