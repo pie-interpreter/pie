@@ -29,11 +29,227 @@ class __extend__(Echo):
             builder.emit('ECHO')
 
 
+class __extend__(Include):
+
+    def compile(self, builder):
+        self.value.compile(builder)
+        builder.emit('INCLUDE')
+
+
+class __extend__(IncludeOnce):
+
+    def compile(self, builder):
+        self.value.compile(builder)
+        builder.emit('INCLUDE_ONCE')
+
+
+class __extend__(Require):
+
+    def compile(self, builder):
+        self.value.compile(builder)
+        builder.emit('REQUIRE')
+
+
+class __extend__(RequireOnce):
+
+    def compile(self, builder):
+        self.value.compile(builder)
+        builder.emit('REQUIRE_ONCE')
+
+
 class __extend__(Return):
 
     def compile(self, builder):
         self.expression.compile(builder)
         builder.emit('RETURN')
+
+
+class __extend__(Break):
+
+    def compile(self, builder):
+        jump_position = builder.emit('JUMP', 0) + 1
+        builder.add_break_position_to_patch(self.level, jump_position)
+
+
+class __extend__(Continue):
+
+    def compile(self, builder):
+        jump_position = builder.emit('JUMP', 0) + 1
+        builder.add_continue_position_to_patch(self.level, jump_position)
+
+
+class __extend__(BinaryOperator):
+
+    def compile(self, builder):
+        self.left.compile(builder)
+        self.right.compile(builder)
+        opcode = self.get_binary_opcode()
+        builder.emit(opcode)
+
+    def get_binary_opcode(self):
+        operations = {
+            '+': 'ADD',
+            '-': 'SUBSTRACT',
+            '.': 'CONCAT',
+            '*': 'MULTIPLY',
+            '/': 'DIVIDE',
+            '%': 'MOD',
+            '<': 'LESS_THAN',
+            '>': 'MORE_THAN',
+            '<=': 'LESS_THAN_OR_EQUAL',
+            '>=': 'MORE_THAN_OR_EQUAL',
+            '==': 'EQUAL',
+            '!=': 'NOT_EQUAL',
+            '<>': 'NOT_EQUAL',
+            '===': 'IDENTICAL',
+            '!==': 'NOT_IDENTICAL',
+        }
+
+        return operations[self.operation]
+
+
+class __extend__(Xor):
+
+    def compile(self, builder):
+        self.left.compile()
+        self.right.compile()
+        builder.emit('XOR')
+
+
+class __extend__(Or):
+
+    def compile(self, builder):
+        self.left.compile(builder)
+        jump_if_false_position = builder.emit('JUMP_IF_TRUE') + 1
+        builder.emit('POP_STACK')
+        self.right.compile(builder)
+        builder.update_to_current_position(jump_if_false_position)
+        builder.emit('CAST_TO_BOOL')
+
+
+class __extend__(And):
+
+    def compile(self, builder):
+        self.left.compile(builder)
+        jump_if_false_position = builder.emit('JUMP_IF_FALSE') + 1
+        builder.emit('POP_STACK')
+        self.right.compile(builder)
+        builder.update_to_current_position(jump_if_false_position)
+        builder.emit('CAST_TO_BOOL')
+
+
+class __extend__(Assignment):
+
+    def compile(self, builder):
+        # compiling value first, so result would be on the stack for us
+        self.value.compile(builder)
+        # registering var name in builder
+        assert isinstance(self.variable, Variable)
+        identifier = self.variable.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
+
+        operation = self.get_modification_operation()
+        if operation: #inplace operation
+            builder.emit('LOAD_NAME', index)
+            builder.emit(operation)
+        else: # simple assign
+            builder.emit('STORE_VAR_FAST', index)
+
+    def get_modification_operation(self):
+        operations = {
+            '=': '',
+            '+=': 'INPLACE_ADD',
+            '-=': 'INPLACE_SUBSTRACT',
+            '.=': 'INPLACE_CONCAT',
+            '*=': 'INPLACE_MULTIPLY',
+            '/=': 'INPLACE_DIVIDE',
+            '%=': 'INPLACE_MOD',
+        }
+
+        return operations[self.operator]
+
+
+class __extend__(TernaryOperator):
+
+    def compile(self, builder):
+        # TODO optimize
+        # evaluating condition
+        self.condition.compile(builder)
+        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
+
+        self.left.compile(builder)
+        builder.emit('JUMP', 0)
+        # adding jump opcode and saving position of it's parameter
+        # to patch it later to end of statement's position
+        jump_position = builder.get_current_position() - 2
+        builder.update_to_current_position(jump_if_false_position)
+
+        self.right.compile(builder)
+        builder.update_to_current_position(jump_position)
+
+
+class __extend__(Not):
+
+    def compile(self, builder):
+        self.value.compile(builder)
+        builder.emit('NOT')
+
+
+class __extend__(IncrementDecrement):
+
+    def compile(self, builder):
+        # registering var name in builder
+        assert isinstance(self.variable, Variable)
+        identifier = self.variable.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
+
+        builder.emit('LOAD_NAME', index)
+        builder.emit(self.get_operation())
+
+    def get_operation(self):
+        operations = {
+            self.PRE: {
+                '++': 'PRE_INCREMENT',
+                '--': 'PRE_DECREMENT',
+            },
+            self.POST: {
+                '++': 'POST_INCREMENT',
+                '--': 'POST_DECREMENT',
+            },
+        }
+
+        return operations[self.type][self.operator]
+
+
+class __extend__(Cast):
+
+    def compile(self, builder):
+        self.value.compile(builder)
+        builder.emit(self.get_operation())
+
+    def get_operation(self):
+        operations = {
+            'T_ARRAY_CAST': 'CAST_TO_ARRAY',
+            'T_BOOL_CAST': 'CAST_TO_BOOL',
+            'T_DOUBLE_CAST': 'CAST_TO_DOUBLE',
+            'T_INT_CAST': 'CAST_TO_INT',
+            'T_OBJECT_CAST': 'CAST_TO_OBJECT',
+            'T_STRING_CAST': 'CAST_TO_STRING',
+            'T_UNSET_CAST': 'CAST_TO_UNSET'
+        }
+
+        return operations[self.symbol]
+
+
+class __extend__(Variable):
+
+    def compile(self, builder):
+        identifier = self.name
+        assert isinstance(identifier, Identifier)
+        index = builder.register_name(identifier.value)
+        builder.emit('LOAD_VAR_FAST', index)
 
 
 class __extend__(FunctionCall):
@@ -50,144 +266,6 @@ class __extend__(FunctionCall):
             name.compile(builder)
 
         builder.emit("CALL_FUNCTION", len(self.parameters))
-
-
-class __extend__(BinaryOperator):
-
-    def compile(self, builder):
-        self.left.compile(builder)
-        self.right.compile(builder)
-        opcode = self.get_binary_opcode()
-        builder.emit(opcode)
-
-    def get_binary_opcode(self):
-        operations = {
-            '+': 'ADD',
-            '-': 'SUBSTRACT',
-            '*': 'MULTIPLY',
-            '<': 'LESS_THAN',
-            '>': 'MORE_THAN',
-            '.': 'CONCAT',
-        }
-
-        return operations[self.operation]
-
-
-class __extend__(Assignment):
-
-    def compile(self, builder):
-        # compiling value first, so result would be on the stack for us
-        self.value.compile(builder)
-        # registering var name in builder
-        assert isinstance(self.variable, Variable)
-        identifier = self.variable.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
-
-        operation = self.get_modification_operation()
-        if operation:
-            builder.emit('LOAD_FAST', index)
-            builder.emit(operation)
-
-        builder.emit('STORE_FAST', index)
-
-    def get_modification_operation(self):
-        operations = {
-            '=': '',
-            '+=': 'ADD',
-            '-=': 'SUBSTRACT',
-            '*=': 'MULTIPLY',
-            '/=': 'DIVIDE',
-            '.=': 'CONCAT',
-            '%=': 'MOD',
-        }
-
-        return operations[self.operator]
-
-
-class __extend__(TernaryOperator):
-
-    def compile(self, builder):
-        # evaluating condition
-        self.condition.compile(builder)
-        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
-
-        self.left.compile(builder)
-        builder.emit('JUMP', 0)
-        # adding jump opcode and saving position of it's parameter
-        # to patch it later to end of statement's position
-        jump_position = builder.get_current_position() - 2
-        builder.update_to_current_position(jump_if_false_position)
-
-        self.right.compile(builder)
-        builder.update_to_current_position(jump_position)
-
-
-class __extend__(IncremenetDecrement):
-
-    def get_operation(self):
-        operations = {
-            '++': 'ADD',
-            '--': 'SUBSTRACT',
-        }
-
-        return operations[self.operator]
-
-
-class __extend__(PreIncremenetDecrement):
-
-    def compile(self, builder):
-        # registering var name in builder
-        assert isinstance(self.variable, Variable)
-        identifier = self.variable.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
-
-        builder.emit('LOAD_FAST', index)
-        self.constant.compile(builder)
-        builder.emit(self.get_operation())
-
-        builder.emit('STORE_FAST', index)
-
-
-class __extend__(PostIncremenetDecrement):
-
-    def compile(self, builder):
-        # registering var name in builder
-        assert isinstance(self.variable, Variable)
-        identifier = self.variable.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
-
-        builder.emit('LOAD_FAST', index)
-        builder.emit('DUPLICATE_TOP')
-        self.constant.compile(builder)
-        builder.emit(self.get_operation())
-        builder.emit('STORE_FAST', index)
-        builder.emit('POP_STACK')
-
-
-class __extend__(Variable):
-
-    def compile(self, builder):
-        identifier = self.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
-        builder.emit('LOAD_FAST', index)
-
-
-class __extend__(ConstantInt):
-
-    def compile(self, builder):
-        index = builder.register_int_const(self.value)
-        builder.emit('LOAD_CONST', index)
-
-
-class __extend__(ConstantString):
-
-    def compile(self, builder):
-        index = builder.register_string_const(self.value)
-        builder.emit('LOAD_CONST', index)
 
 
 class __extend__(FunctionDeclaration):
@@ -249,6 +327,8 @@ class __extend__(If):
 class __extend__(While):
 
     def compile(self, builder):
+        builder.register_loop()
+
         # first we need to save position, so we can get back here after block
         start_position = builder.get_current_position()
         # now we can compile expression, that will leave it's result on stack
@@ -265,19 +345,30 @@ class __extend__(While):
         builder.emit('JUMP', start_position)
         builder.update_to_current_position(jump_if_false_position)
 
+        builder.patch_continue_positions(start_position)
+        builder.patch_break_positions(builder.get_current_position())
+
 
 class __extend__(DoWhile):
 
     def compile(self, builder):
+        builder.register_loop()
+
         start_position = builder.get_current_position()
         self.body.compile(builder)
+        condition_position = builder.get_current_position()
         self.expression.compile(builder)
         builder.emit('JUMP_IF_TRUE', start_position)
+
+        builder.patch_continue_positions(condition_position)
+        builder.patch_break_positions(builder.get_current_position())
 
 
 class __extend__(For):
 
     def compile(self, builder):
+        builder.register_loop()
+
         # init statements are compiled only once, before loop
         for statement in self.init_statements:
             statement.compile(builder)
@@ -285,14 +376,17 @@ class __extend__(For):
 
         # saving starting position to return here after one iteration ends
         start_position = builder.get_current_position()
-        # all conditinal statements should be executed every time
-        # but only the last one is considered condition
-        for index in range(0, len(self.condition_statements) - 1):
-            self.condition_statements[index].compile(builder)
-            builder.emit('POP_STACK');
-        self.condition_statements[-1].compile(builder)
-        # now we can check if condition is false and jump out
-        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
+        jump_if_false_position = 0
+        if self.condition_statements:
+            # all conditinal statements should be executed every time
+            # but only the last one is considered condition
+            for index in range(0, len(self.condition_statements) - 1):
+                self.condition_statements[index].compile(builder)
+                builder.emit('POP_STACK');
+            self.condition_statements[-1].compile(builder)
+            # now we can check if condition is false and jump out
+            jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
+
         # compiling body
         self.body.compile(builder)
 
@@ -303,4 +397,23 @@ class __extend__(For):
 
         # jumping back to the start
         builder.emit('JUMP', start_position)
-        builder.update_to_current_position(jump_if_false_position)
+
+        if self.condition_statements:
+            builder.update_to_current_position(jump_if_false_position)
+
+        builder.patch_continue_positions(start_position)
+        builder.patch_break_positions(builder.get_current_position())
+
+
+class __extend__(ConstantInt):
+
+    def compile(self, builder):
+        index = builder.register_int_const(self.value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantString):
+
+    def compile(self, builder):
+        index = builder.register_string_const(self.value)
+        builder.emit('LOAD_CONST', index)

@@ -14,6 +14,7 @@ def compile_ast(ast):
 
     return builder.create_bytecode()
 
+
 class BytecodeBuilder(object):
     " Helper class to build bycode "
 
@@ -27,6 +28,10 @@ class BytecodeBuilder(object):
         self.int_consts_cache = {}
         self.string_consts_cache = {}
         self.names_cache = {}
+
+        # lists to keep stack of loops
+        self.break_positions = []
+        self.continue_positions = []
 
     def emit(self, opcode_name, arg=-1):
         current_position = self.get_current_position()
@@ -89,11 +94,43 @@ class BytecodeBuilder(object):
         return len(self.code)
 
     def update_to_current_position(self, position):
-        current_position = self.get_current_position()
+        self.update_value(position, self.get_current_position())
+
+    def update_value(self, position, new_value):
         # updating first byte of the argument
-        self.code[position] = chr(current_position & 0xff)
+        self.code[position] = chr(new_value & 0xff)
         # updating second byte of the argument
-        self.code[position + 1] = chr(current_position >> 8)
+        self.code[position + 1] = chr(new_value >> 8)
+
+    def register_loop(self):
+        self.break_positions.append([])
+        self.continue_positions.append([])
+
+    def patch_break_positions(self, position):
+        assert len(self.break_positions) > 0
+
+        last_break_positions = self.break_positions.pop()
+        for break_position in last_break_positions:
+            self.update_value(break_position, position)
+
+    def patch_continue_positions(self, position):
+        assert len(self.continue_positions) > 0
+
+        last_continue_positions = self.continue_positions.pop()
+        for continue_position in last_continue_positions:
+            self.update_value(continue_position, position)
+
+    def add_break_position_to_patch(self, level, position):
+        if len(self.break_positions) < level:
+            raise CompilerError, "Cannot break %s levels" % level
+
+        self.break_positions[-1 * level].append(position)
+
+    def add_continue_position_to_patch(self, level, position):
+        if len(self.continue_positions) < level:
+            raise CompilerError, "Cannot continue %s levels" % level
+
+        self.continue_positions[-1 * level].append(position)
 
 
 class Function(object):

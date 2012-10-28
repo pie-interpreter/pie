@@ -80,12 +80,6 @@ class Constant(AstNodeWithResult):
     """
 
 
-class Identifier(Item):
-
-    def repr(self):
-        return "Identifier: %s" % self.value
-
-
 class StatementsList(ItemsList):
     " Node, containing list of statement, always root node of the ast "
 
@@ -99,6 +93,33 @@ class Echo(ItemsList):
         return "Echo(%s)" % self.get_list_repr(self.list)
 
 
+class Include(AstNodeWithResult):
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "Include(%s)" % self.value.repr()
+
+
+class IncludeOnce(Include):
+
+    def repr(self):
+        return "IncludeOnce(%s)" % self.value.repr()
+
+
+class Require(Include):
+
+    def repr(self):
+        return "Require(%s)" % self.value.repr()
+
+
+class RequireOnce(Include):
+
+    def repr(self):
+        return "RequireOnce(%s)" % self.value.repr()
+
+
 class Return(AstNode):
 
     def __init__(self, expression):
@@ -108,15 +129,58 @@ class Return(AstNode):
         return "Return(%s)" % self.expression.repr()
 
 
-class FunctionCall(AstNodeWithResult):
+class Break(AstNode):
 
-    def __init__(self, name, parameters):
-        self.name = name
-        self.parameters = parameters
+    def __init__(self, level):
+        self.level = level
 
     def repr(self):
-        return "FunctionCall(%s(%s))" % (self.name.repr(),
-                                         self.get_list_repr(self.parameters))
+        return "Break(%s)" % self.level
+
+
+class Continue(AstNode):
+
+    def __init__(self, level):
+        self.level = level
+
+    def repr(self):
+        return "Continue(%s)" % self.level
+
+
+class BinaryOperator(AstNodeWithResult):
+
+    def __init__(self, operation, left, right):
+        self.operation = operation
+        self.left = left
+        self.right= right
+
+    def repr(self):
+        return "BinaryOperator(%s %s %s)" % (self.left.repr(),
+                                              self.operation,
+                                              self.right.repr())
+
+
+class Xor(AstNodeWithResult):
+
+    def __init__(self, left, right):
+        self.left = left
+        self.right= right
+
+    def repr(self):
+        return "Xor(%s xor %s)" % (self.left.repr(), self.right.repr())
+
+
+class Or(Xor):
+
+    def repr(self):
+        return "Or(%s or %s)" % (self.left.repr(), self.right.repr())
+
+
+class And(Xor):
+
+    def repr(self):
+        return "And(%s or %s)" % (self.left.repr(), self.right.repr())
+
 
 
 class Assignment(AstNodeWithResult):
@@ -145,40 +209,41 @@ class TernaryOperator(AstNodeWithResult):
                                                   self.right.repr())
 
 
-class BinaryOperator(AstNodeWithResult):
+class Not(AstNodeWithResult):
 
-    def __init__(self, operation, left, right):
-        self.operation = operation
-        self.left = left
-        self.right= right
+    def __init__(self, value):
+        self.value = value
 
     def repr(self):
-        return "BinaryOperator(%s %s %s)" % (self.left.repr(),
-                                              self.operation,
-                                              self.right.repr())
+        return "Not(%s)" % self.value
 
 
-class IncremenetDecrement(AstNodeWithResult):
+class IncrementDecrement(AstNodeWithResult):
 
-    def __init__(self, variable, operator_item):
+    PRE = 'pre'
+    POST = 'post'
+
+    def __init__(self, operation_type, operator, variable):
+        self.type = operation_type
+        self.operator = operator
         self.variable = variable
-        assert isinstance(operator_item, Item)
-        self.operator = operator_item.value
-        self.constant = ConstantInt(1)
-
-
-class PreIncremenetDecrement(IncremenetDecrement):
 
     def repr(self):
-        return "PreIncremenetDecrement(%s, %s)" % (self.variable.repr(),
-                                                  self.operator)
+        if self.type == self.POST:
+            values = (self.variable.repr(), self.operator)
+        else:
+            values = (self.operator, self.variable.repr())
+        return "IncrementDecrement(%s%s)" % values
 
 
-class PostIncremenetDecrement(IncremenetDecrement):
+class Cast(AstNodeWithResult):
+
+    def __init__(self, symbol, value):
+        self.symbol = symbol
+        self.value = value
 
     def repr(self):
-        return "PostIncremenetDecrement(%s, %s)" % (self.variable.repr(),
-                                                  self.operator)
+        return "Cast((%s) %s)" % (self.symbol, self.value.repr())
 
 
 class Variable(AstNodeWithResult):
@@ -190,22 +255,15 @@ class Variable(AstNodeWithResult):
         return "Variable(%s)" % self.name.repr()
 
 
-class ConstantInt(Constant):
+class FunctionCall(AstNodeWithResult):
 
-    def __init__(self, value):
-        self.value = value
-
-    def repr(self):
-        return "ConstantInt(%s)" % self.value
-
-
-class ConstantString(Constant):
-
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, name, parameters):
+        self.name = name
+        self.parameters = parameters
 
     def repr(self):
-        return "ConstantString(%s)" % self.value
+        return "FunctionCall(%s(%s))" % (self.name.repr(),
+                                         self.get_list_repr(self.parameters))
 
 
 class FunctionDeclaration(AstNode):
@@ -270,4 +328,28 @@ class For(AstNode):
                self.get_list_repr(self.condition_statements),
                self.get_list_repr(self.expression_statements),
                self.body.repr())
+
+
+class ConstantInt(Constant):
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "ConstantInt(%s)" % self.value
+
+
+class ConstantString(Constant):
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "ConstantString(%s)" % self.value
+
+
+class Identifier(Item):
+
+    def repr(self):
+        return "Identifier: %s" % self.value
 

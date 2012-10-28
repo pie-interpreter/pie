@@ -46,13 +46,15 @@ class Interpreter:
                 if we_are_translated():
                     for index, name in unrolling_bc:
                         if index == next_instr:
-                            position = getattr(self, name)(frame, bytecode, position, arg)
+                            position = getattr(self, name)(frame, bytecode,
+                                                           position, arg)
                             break
                     else:
                         assert False
                 else:
                     opcode_name = get_opcode_name(next_instr)
-                    position = getattr(self, opcode_name)(frame, bytecode, position, arg)
+                    position = getattr(self, opcode_name)(frame, bytecode,
+                                                          position, arg)
 
                 # this is a return condition
                 if position == self.RETURN_FLAG:
@@ -134,7 +136,7 @@ class Interpreter:
         frame.stack.append(self.space.str(function_name))
         return position
 
-    def LOAD_FAST(self, frame, bytecode, position, var_index):
+    def LOAD_VAR_FAST(self, frame, bytecode, position, var_index):
         var_name = bytecode.names[var_index]
         try:
             value = frame.variables[var_name]
@@ -143,7 +145,7 @@ class Interpreter:
         frame.stack.append(value)
         return position
 
-    def STORE_FAST(self, frame, bytecode, position, var_index):
+    def STORE_VAR_FAST(self, frame, bytecode, position, var_index):
         var_name = bytecode.names[var_index]
         # we need to leave value on stack
         value = frame.stack[-1]

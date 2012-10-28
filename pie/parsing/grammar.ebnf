@@ -122,19 +122,24 @@ notfinished_statement: expression
 # language constructs
 construct: construct_echo
          | construct_include
+         | construct_include_once
+         | construct_require
+         | construct_require_once
          | construct_return
          | construct_break
          | construct_continue;
 
-construct_echo: [T_ECHO] ["("] >expression< [")"]
-              | [T_ECHO] >comma_seperated_expressions<;
+construct_echo: [T_ECHO] >comma_seperated_expressions<
+              | [T_ECHO] ["("] >expression< [")"];
 
-construct_include: >construct_include_keyword< ["("] expression [")"]
-                 | >construct_include_keyword< expression;
-construct_include_keyword: T_INCLUDE
-                         | T_INCLUDE_ONCE
-                         | T_REQUIRE
-                         | T_REQUIRE_ONCE;
+construct_include: [T_INCLUDE] expression
+                 | [T_INCLUDE] ["("] expression [")"];
+construct_include_once: [T_INCLUDE_ONCE] expression
+                      | [T_INCLUDE_ONCE] ["("] expression [")"];
+construct_require: [T_REQUIRE] expression
+                 | [T_REQUIRE] ["("] expression [")"];
+construct_require_once: [T_REQUIRE_ONCE] expression
+                      | [T_INCLUDE] ["("] expression [")"];
 
 construct_return: [T_RETURN] expression?;
 
@@ -149,6 +154,7 @@ construct_continue: [T_CONTINUE] ["("] T_LNUMBER [")"]
 # expression is anything, that returns a value
 expression: <logical_xor_expression>;
 
+# logical are "and", "or" and "xor" operations
 logical_xor_expression: logical_or_expression [T_LOGICAL_XOR] >logical_xor_expression_inner<
                       | <logical_or_expression>;
 logical_xor_expression_inner: logical_or_expression [T_LOGICAL_XOR] >logical_xor_expression_inner<
@@ -170,6 +176,7 @@ assign_expression: variable_expression ASSIGN_OPERATOR assign_expression
 ternary_expression: boolean_or_expression [TERNARY_OPERATOR_FIRST_PART] expression [TERNARY_OPERATOR_SECOND_PART] expression
                   | <boolean_or_expression>;
 
+# boolean are "&&" and "||" operations
 boolean_or_expression: boolean_and_expression [T_BOOLEAN_OR] >boolean_or_expression_inner<
                       | <boolean_and_expression>;
 boolean_or_expression_inner: boolean_and_expression [T_BOOLEAN_OR] >boolean_or_expression_inner<
@@ -210,11 +217,11 @@ cast_expression: >cast_token< incdeccast_expression
                | <primary_expression>;
 cast_token: T_ARRAY_CAST
           | T_BOOL_CAST
-          | T_INT_CAST
           | T_DOUBLE_CAST
+          | T_INT_CAST
           | T_OBJECT_CAST
-          | T_UNSET_CAST
-          | T_STRING_CAST;
+          | T_STRING_CAST
+          | T_UNSET_CAST;
 
 primary_expression: ["("] <expression> [")"]
                   | <function_call>
