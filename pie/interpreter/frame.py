@@ -6,3 +6,6 @@ class Frame:
         self.stack = []
         self.variables = {}
         self.names = {}
+
+        # trace data
+        self.function_trace_stack = []

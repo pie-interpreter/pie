@@ -2,7 +2,7 @@ from pie.parsing import regex
 from pypy.rlib.parsing.lexer import Lexer, SourcePos, Token
 
 class PieLexer(Lexer):
-    " Special lexer for php files, adds processing of inline html content "
+    """ Special lexer for php files, adds processing of inline html content """
 
     IGNORED_TOKES = ["T_WHITESPACE",
                      "T_COMMENT",
@@ -35,7 +35,7 @@ class PieLexer(Lexer):
         return tokens
 
     def tokenize_with_grammar(self, token):
-        " Return a list of Token's from text. "
+        """ Return a list of Token's from text. """
         runner = self.get_runner(token.source, eof=False)
         runner.lineno = token.source_pos.lineno
         runner.columnno = token.source_pos.columnno
@@ -54,7 +54,7 @@ class PieLexer(Lexer):
 
 
 class PiePreTokenizer(object):
-    " Class, creating code/notcode tokens "
+    """ Class, creating code/notcode tokens """
 
     PHP_OPEN_TAG = "<?php"
     PHP_CLOSE_TAG = "?>"
@@ -77,7 +77,7 @@ class PiePreTokenizer(object):
         self.column = 0
 
     def get_tokens(self):
-        if len(self.tokens) == 0:
+        if not self.tokens:
             self.run()
 
         return self.tokens
@@ -127,7 +127,7 @@ class PiePreTokenizer(object):
         token = self.text[self.last_start: index]
 
         if self.is_html:
-            if len(self.tokens) > 0 and token[0] == "\n":
+            if self.tokens and token[0] == "\n":
                 # PHP parser ignores first newline symbol after close tag,
                 # so we are doing the same
                 self.adjust_position("\n")

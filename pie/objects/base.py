@@ -17,3 +17,8 @@ class W_Root(object):
 
     def conststr_w(self, space):
         raise InterpreterError("TypeError: casting to string of wrong type")
+
+class W_Undefined(W_Root):
+
+    def __init__(self, variable_name):
+        self.name = variable_name

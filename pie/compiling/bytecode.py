@@ -1,3 +1,4 @@
+
 __author__ = 'sery0ga'
 
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name
@@ -15,9 +16,15 @@ class Bytecode(object):
         self.functions = {}
         self.code = ""
 
+        # trace data
+        self.lines_by_positions = []
+        self.filename = ""
+
     def __repr__(self):
         return disassemble(self)
 
+    def get_line(self, position):
+        return self.lines_by_positions[position]
 
 def disassemble(bytecode):
     """Function to disassemble code to human-readable form"""

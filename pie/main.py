@@ -1,5 +1,6 @@
 from pie.ast.building import build
 from pie.compiling.compiling import compile_ast
+from pie.error import InterpreterError, PHPError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.interpreter.interpreter import Interpreter
@@ -22,19 +23,19 @@ def entry_point(argv):
     try:
         parseTree = parsing.parse(data)
 #        parseTree.view()
-#        sys.exit()
-
         ast = build(parseTree)
 #        print ast
-#        sys.exit()
-
-        bytecode = compile_ast(ast)
+        bytecode = compile_ast(ast, argv[1])
 #        print bytecode
-#        sys.exit()
-
-        objSpace = ObjSpace()
-        Interpreter(objSpace, Context()).interpret(Frame(), bytecode)
-
+        context = Context()
+        context.initialize_function_trace_stack(argv[1])
+        Interpreter(ObjSpace(), context).interpret(Frame(), bytecode)
+    except PHPError as e:
+        print e
+        return 1
+    except InterpreterError as e:
+        print e
+        return 1
     except ParseError as e:
         print e.nice_error_message(argv[1], data)
         return 1
