@@ -46,17 +46,24 @@ def disassemble(bytecode):
     position = 0
     code = bytecode.code
     code_length = len(code)
+    line = 0
     while True:
         if position >= code_length:
             break
 
         next_instr = ord(code[position])
-        result += '      p: %-4d l: %-4d' % (position,
-                                             bytecode.opcode_lines[position])
+        result += '      '
+        if bytecode.opcode_lines[position] != line:
+            line = bytecode.opcode_lines[position]
+            result += '%5d   ' % line
+        else:
+            result += '        '
+
+        result += '%4d ' % (position)
 
         position += 1
         opcode_name = get_opcode_name(next_instr)
-        result += ': ' + opcode_name
+        result += ' %-20s' % opcode_name
 
         if next_instr > OPCODE_INDEX_DIVIDER:
             arg = ord(code[position]) + (ord(code[position + 1]) << 8)

@@ -77,10 +77,10 @@ OPCODE = {
     # function calling by name, which is loaded from stack
     140: 'CALL_FUNCTION', # number of arguments to load from stack
 
-    # moving around the code (relative is TODO, for now it is absolute)
-    150: 'JUMP', # relative position to current
-    151: 'JUMP_IF_FALSE', # relative position to current
-    152: 'JUMP_IF_TRUE', # relative position to current
+    # moving around the code
+    150: 'JUMP', # absolute position
+    151: 'JUMP_IF_FALSE', # absolute position
+    152: 'JUMP_IF_TRUE', # absolute position
 }
 
 OPCODE_INDEXES = {}
