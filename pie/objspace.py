@@ -40,6 +40,21 @@ class ObjSpace(object):
             return w_left.as_int().multiply(w_right.as_int())
         raise NotImplementedError
 
+    def divide(self, w_left, w_right):
+        """
+        In PHP '*' is supported only for numbers
+        """
+        raise NotImplementedError
+
+    def mod(self, w_left, w_right):
+        """
+        In PHP '%' is supported only for numbers
+        """
+        type = self.get_common_type(w_left, w_right)
+        if type == self.w_int:
+            return w_left.as_int().mod(w_right.as_int())
+        raise NotImplementedError
+
     def concatenate(self, w_left, w_right):
         return w_left.as_string().concatenate(w_right.as_string())
 

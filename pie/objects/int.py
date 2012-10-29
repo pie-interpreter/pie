@@ -43,3 +43,11 @@ class W_IntObject(W_Root):
 
     def multiply(self, number):
         return W_IntObject(self.intval * number.intval)
+
+    def mod(self, number):
+        divider = number.intval
+        if self.intval < 0 and divider > 0:
+            divider *= -1
+        elif self.intval > 0 and divider < 0:
+            divider *= -1
+        return W_IntObject(self.intval % divider)

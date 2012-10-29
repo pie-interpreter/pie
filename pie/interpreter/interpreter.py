@@ -164,7 +164,10 @@ class Interpreter(object):
         raise InterpreterError, "Not implemented"
 
     def MOD(self, value):
-        raise InterpreterError, "Not implemented"
+        right = self.frame.stack.pop()
+        left = self.frame.stack.pop()
+        result = self.space.mod(left, right)
+        self.frame.stack.append(result)
 
     def LESS_THAN(self, value):
         right = self.frame.stack.pop()

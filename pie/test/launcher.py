@@ -3,10 +3,12 @@ import os
 import sys
 import tempfile
 from parser import Parser
+from pie.error import PHPError, InterpreterError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.objspace import ObjSpace
 from pie.parsing.parsing import interpret_file, InterpretedFile
+from pypy.rlib.parsing.parsing import ParseError
 
 __author__ = 'sery0ga'
 
@@ -53,8 +55,18 @@ def _add_test(filename, test_name):
         # create temporary file and redirect output to it
         old_fileno = os.dup(sys.stdout.fileno())
         os.dup2(self.output_file.fileno(), 1)
-        interpret_file(file, self.context, self.objspace, self.frame)
-        os.dup2(old_fileno, 1)
+        try:
+            interpret_file(file, self.context, self.objspace, self.frame)
+            os.dup2(old_fileno, 1)
+        except PHPError as e:
+            os.dup2(old_fileno, 1)
+            print e.print_message()
+        except InterpreterError as e:
+            os.dup2(old_fileno, 1)
+            print e
+        except ParseError as e:
+            os.dup2(old_fileno, 1)
+            print e.nice_error_message(file.filename, file.data)
         # rewind file pointer and read content
         self.output_file.seek(self.current_position)
 
