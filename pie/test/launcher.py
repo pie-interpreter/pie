@@ -6,7 +6,7 @@ from parser import Parser
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.objspace import ObjSpace
-from pie.parsing.parsing import interpretFile, InterpretedFile
+from pie.parsing.parsing import interpret_file, InterpretedFile
 
 __author__ = 'sery0ga'
 
@@ -53,7 +53,7 @@ def _add_test(filename, test_name):
         # create temporary file and redirect output to it
         old_fileno = os.dup(sys.stdout.fileno())
         os.dup2(self.output_file.fileno(), 1)
-        interpretFile(file, self.context, self.objspace, self.frame)
+        interpret_file(file, self.context, self.objspace, self.frame)
         os.dup2(old_fileno, 1)
         # rewind file pointer and read content
         self.output_file.seek(self.current_position)

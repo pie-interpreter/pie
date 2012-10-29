@@ -3,7 +3,7 @@ from pie.error import InterpreterError, PHPError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.objspace import ObjSpace
-from pie.parsing.parsing import interpretFile, InterpretedFile
+from pie.parsing.parsing import interpret_file, InterpretedFile
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
 import sys
@@ -22,7 +22,7 @@ def entry_point(argv):
     try:
         context = Context()
         context.initialize_function_trace_stack(file.filename)
-        interpretFile(file, context, ObjSpace(), Frame())
+        interpret_file(file, context, ObjSpace(), Frame())
     except PHPError as e:
         print e.print_message()
         return 1
