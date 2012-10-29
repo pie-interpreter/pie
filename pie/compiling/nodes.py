@@ -420,5 +420,6 @@ class __extend__(ConstantInt):
 class __extend__(ConstantString):
 
     def compile_node(self, builder):
-        index = builder.register_string_const(self.value)
+        value = self.value.replace("\\\\", "\\").replace("\\'", "'")
+        index = builder.register_string_const(value)
         builder.emit('LOAD_CONST', index)

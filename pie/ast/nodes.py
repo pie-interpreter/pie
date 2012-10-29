@@ -341,11 +341,19 @@ class ConstantInt(Constant):
 
 class ConstantString(Constant):
 
+    TYPE_SINGLE_QUOTE = 'single'
+    TYPE_DOUBLE_QUOTE = 'double'
+    TYPE_HEREDOC = 'heredoc'
+    TYPE_NOWDOC = 'nowdoc'
+
     def __init__(self, value):
         self.value = value
 
     def repr(self):
-        return "ConstantString(%s)" % self.value
+        return "ConstantString(\"%s\")" % (self.value)
+
+class PreprocessedConstantString(ConstantString):
+    " String, that needs to be pre-processed "
 
 
 class Identifier(Item):

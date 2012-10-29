@@ -267,11 +267,17 @@ class AstBuilder(RPythonVisitor):
     def visit_T_LNUMBER(self, node):
         return ConstantInt(int(node.token.source))
 
-    def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
+    def visit_SINGLE_QUOTED_STRING(self, node):
         end = len(node.token.source) - 1
         assert end >= 0
 
         return ConstantString(node.token.source[1:end])
+
+    def visit_DOUBLE_QUOTED_STRING(self, node):
+        end = len(node.token.source) - 1
+        assert end >= 0
+
+        return PreprocessedConstantString(node.token.source[1:end])
 
     def visit_TRUE(self, node):
         return ConstantInt(1)
