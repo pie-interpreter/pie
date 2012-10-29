@@ -1,0 +1,6 @@
+
+---- EXPECTED OUTPUT
+%unicode|string%(26) "A::func: This should work!"
+---- ACTUAL OUTPUT
+This method shouldn't be called when using parent::func!
+---- FAILED

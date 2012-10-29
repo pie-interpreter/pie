@@ -6,22 +6,23 @@ class Test(object):
 
     def __init__(self):
         self.result = ''
-        self.file = ''
+        self.data = ''
         self.doc = ''
         self.is_true = True
 
     def __str__(self):
         return "Result: %s\n File: %s\n Doc: %s\n" \
-            % (self.result, self.file, self.doc)
+            % (self.result, self.data, self.doc)
 
 class Parser(object):
 
-    (initial, doc, file, result) = range(4)
+    (initial, doc, file, result, skip) = range(5)
 
     def parse(self, filename):
         test = Test()
         mode = self.initial
-        for line in open(filename, 'r'):
+        file = open(filename, 'r')
+        for line in file:
             line = line.strip('\n')
             current_mode = mode
             if line == "--TEST--":
@@ -30,21 +31,35 @@ class Parser(object):
             elif line == "--FILE--":
                 mode = self.file
                 continue
+            elif line == "--SKIPIF--":
+                mode = self.skip
+                continue
             elif line == "--EXPECTF--" or line == "--EXPECT--":
                 mode = self.result
                 if line == "--EXPECTF--":
                     test.is_true = False
                 continue
             if current_mode == self.doc:
-                test.doc = "\n".join([test.doc, line])
+                if not test.doc:
+                    test.doc = line
+                else:
+                    test.doc = "\n".join([test.doc, line])
                 continue
             elif current_mode == self.result:
-                test.result = "\n".join([test.result, line])
+                if not test.result:
+                    test.result = line
+                else:
+                    test.result = "\n".join([test.result, line])
                 continue
             elif current_mode == self.file:
-                test.file = "\n".join([test.file, line])
+                if not test.data:
+                    test.data = line
+                else:
+                    test.data = "\n".join([test.data, line])
                 continue
-
+            elif current_mode == self.skip:
+                continue
+        file.close()
         return test
 
 

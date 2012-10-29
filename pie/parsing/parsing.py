@@ -7,13 +7,18 @@ from pypy.rlib.parsing.parsing import PackratParser, ParseError
 import os
 import py
 
+class InterpretedFile(object):
 
-def interpretFile(filename, data, context, objspace, frame):
+    def __init__(self, filename, data = ""):
+        self.filename = filename
+        self.data     = data
+
+def interpretFile(file, context, objspace, frame):
     """ Parse and interpret one code file
     """
-    parseTree = parse(data)
+    parseTree = parse(file.data)
     ast = build(parseTree)
-    bytecode = compile_ast(ast, filename)
+    bytecode = compile_ast(ast, file.filename)
     Interpreter(objspace, context).interpret(frame, bytecode)
 
 def parse(data):

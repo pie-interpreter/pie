@@ -1,11 +1,11 @@
+import sys
 from pie.error import InterpreterError, PHPError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.objspace import ObjSpace
-from pie.parsing.parsing import interpretFile
+from pie.parsing.parsing import interpretFile, InterpretedFile
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
-import sys
 
 
 def entry_point(argv):
@@ -13,14 +13,15 @@ def entry_point(argv):
         print 'No input file provided'
         return 1
 
-    input_file = open_file_as_stream(argv[1])
-    data = input_file.readall()
+    file = InterpretedFile(argv[1])
+    input_file = open_file_as_stream(file.filename)
+    file.data = input_file.readall()
     input_file.close()
 
     try:
         context = Context()
-        context.initialize_function_trace_stack(argv[1])
-        interpretFile(argv[1], data, context, ObjSpace(), Frame())
+        context.initialize_function_trace_stack(file.filename)
+        interpretFile(file, context, ObjSpace(), Frame())
     except PHPError as e:
         print e
         return 1
@@ -28,7 +29,7 @@ def entry_point(argv):
         print e
         return 1
     except ParseError as e:
-        print e.nice_error_message(argv[1], data)
+        print e.nice_error_message(file.filename, file.data)
         return 1
 
     return 0
