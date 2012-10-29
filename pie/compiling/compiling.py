@@ -1,8 +1,8 @@
 " Module, providing compiling tools "
 
 from pie.compiling.bytecode import Bytecode
-from pie.compiling.nodes import *
 from pie.error import CompilerError
+from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
 from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
@@ -27,6 +27,7 @@ class BytecodeBuilder(object):
         # caching lists
         self.int_consts_cache = {}
         self.string_consts_cache = {}
+        self.bool_consts_cache = {}
         self.names_cache = {}
 
         # lists to keep stack of loops
@@ -82,6 +83,15 @@ class BytecodeBuilder(object):
             constants_count = len(self.consts)
             self.consts.append(W_IntObject(value))
             self.int_consts_cache[value] = constants_count
+            return constants_count
+
+    def register_bool_const(self, value):
+        try:
+            return self.bool_consts_cache[value]
+        except KeyError:
+            constants_count = len(self.consts)
+            self.consts.append(W_BoolObject(value))
+            self.bool_consts_cache[value] = constants_count
             return constants_count
 
     def register_string_const(self, value):

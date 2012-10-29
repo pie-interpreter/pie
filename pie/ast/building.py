@@ -6,7 +6,7 @@ from pypy.rlib.parsing.tree import RPythonVisitor
 
 def build(parseTree):
     """ Build as AST from parse tree """
-    return builder.transform(parseTree);
+    return builder.transform(parseTree)
 
 
 class AstBuilder(RPythonVisitor):
@@ -274,13 +274,13 @@ class AstBuilder(RPythonVisitor):
         return ConstantString(node.token.source[1:end])
 
     def visit_TRUE(self, node):
-        return ConstantInt(1)
+        return Boolean(True)
 
     def visit_FALSE(self, node):
-        return ConstantInt(0)
+        return Boolean(False)
 
     def visit_IDENTIFIER(self, node):
-        return Identifier(node.token.source);
+        return Identifier(node.token.source)
 
     def visit_T_INLINE_HTML(self, node):
         return Echo([ConstantString(node.token.source)])

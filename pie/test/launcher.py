@@ -27,22 +27,31 @@ def fill_test_class_with_tests(test_to_run = [], with_php_source = False):
     """ Read directory contains test files and create a test method for each
     test file
     """
-    _fill_test_class_with_tests_from_directory('/coverage/', test_to_run)
+    _fill_test_class_with_tests_from_dir('/coverage/', test_to_run)
     if with_php_source:
-        _fill_test_class_with_tests_from_directory('/from_php_source/', test_to_run)
+        _fill_test_class_with_tests_from_dir('/from_php_source/', test_to_run)
 
-def _fill_test_class_with_tests_from_directory(directory, test_to_run):
+def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix = ''):
     """ Read directory contains test files and create a test method for each
     test file
     """
     path = os.path.dirname(__file__) + directory
     listing = os.listdir(path)
-    for infile in listing:
-        filename = infile.split('.')[0]
-        test_name = 'test_' + filename
+    for entry in listing:
+        # here we suppose that all files except directories contain '.'
+        #  in their name
+        entry_structure = entry.split('.')
+        if len(entry_structure) == 1:
+            sub_dir = directory + entry + '/'
+            _fill_test_class_with_tests_from_dir(sub_dir,
+                                                 test_to_run,
+                                                 entry + '_')
+            continue
+        filename = entry_structure[0]
+        test_name = 'test_' + prefix + filename
         if test_to_run and test_name not in test_to_run:
             continue
-        full_filename = path + infile
+        full_filename = path + entry
         _add_test(full_filename, test_name)
 
 def _add_test(filename, test_name):

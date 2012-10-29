@@ -24,7 +24,7 @@ class __extend__(StatementsList):
             # for statements, that have results, we need to remove it from the
             # stack, because it won't be used anyway
             if isinstance(statement, AstNodeWithResult):
-                builder.emit('POP_STACK');
+                builder.emit('POP_STACK')
 
 
 class __extend__(Echo):
@@ -377,7 +377,7 @@ class __extend__(For):
         # init statements are compiled only once, before loop
         for statement in self.init_statements:
             statement.compile(builder)
-            builder.emit('POP_STACK');
+            builder.emit('POP_STACK')
 
         # saving starting position to return here after one iteration ends
         start_position = builder.get_current_position()
@@ -387,7 +387,7 @@ class __extend__(For):
             # but only the last one is considered condition
             for index in range(0, len(self.condition_statements) - 1):
                 self.condition_statements[index].compile(builder)
-                builder.emit('POP_STACK');
+                builder.emit('POP_STACK')
             self.condition_statements[-1].compile(builder)
             # now we can check if condition is false and jump out
             jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
@@ -398,7 +398,7 @@ class __extend__(For):
         # compiling loop expressions
         for statement in self.expression_statements:
             statement.compile(builder)
-            builder.emit('POP_STACK');
+            builder.emit('POP_STACK')
 
         # jumping back to the start
         builder.emit('JUMP', start_position)
@@ -416,6 +416,11 @@ class __extend__(ConstantInt):
         index = builder.register_int_const(self.value)
         builder.emit('LOAD_CONST', index)
 
+class __extend__(Boolean):
+
+    def compile_node(self, builder):
+        index = builder.register_bool_const(self.value)
+        builder.emit('LOAD_CONST', index)
 
 class __extend__(ConstantString):
 

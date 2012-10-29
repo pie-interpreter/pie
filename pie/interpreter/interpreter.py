@@ -77,7 +77,7 @@ class Interpreter(object):
 
     def ECHO(self, value):
         stack_value = self.frame.stack.pop()
-        os.write(1, stack_value.str_w())
+        os.write(1, stack_value.as_string().str_w())
 
     def RETURN(self, value):
         self.position = self.RETURN_FLAG

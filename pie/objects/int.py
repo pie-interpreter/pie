@@ -10,9 +10,6 @@ class W_IntObject(W_Root):
     def int_w(self, space):
         return self.intval
 
-    def str_w(self):
-        return str(self.intval)
-
     def as_int(self):
         return self
 
@@ -21,16 +18,18 @@ class W_IntObject(W_Root):
         return W_ConstStringObject(str(self.intval))
 
     def less(self, object):
+        from pie.objects.bool import W_BoolObject
         if self.intval < object.intval:
-            return W_IntObject(1)
+            return W_BoolObject(True)
         else:
-            return W_IntObject(0)
+            return W_BoolObject(False)
 
     def more(self, object):
+        from pie.objects.bool import W_BoolObject
         if self.intval > object.intval:
-            return W_IntObject(1)
+            return W_BoolObject(True)
         else:
-            return W_IntObject(0)
+            return W_BoolObject(False)
 
     def is_true(self):
         return self.intval > 0

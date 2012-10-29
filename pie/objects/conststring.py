@@ -32,6 +32,9 @@ class W_ConstStringObject(W_Root):
             return W_IntObject(0)
         return W_IntObject(int(self.val[begin:end]) * minus)
 
+    def as_number(self):
+        return self.as_int()
+
     def as_string(self):
         return self
 

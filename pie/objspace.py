@@ -1,3 +1,4 @@
+from pie.objects.bool import W_BoolObject
 from pie.objects.conststring import W_ConstStringObject
 from pie.objects.int import W_IntObject
 
@@ -5,13 +6,16 @@ __author__ = 'sery0ga'
 
 class ObjSpace(object):
 
-    (w_int, w_str, w_array) = range(3)
+    (w_int, w_str, w_bool, w_array) = range(4)
 
     def int(self, value):
         return W_IntObject(value)
 
     def str(self, value):
         return W_ConstStringObject(value)
+
+    def bool(self, value):
+        return W_BoolObject(value)
 
     def plus(self, w_left, w_right):
         """
@@ -20,7 +24,8 @@ class ObjSpace(object):
         type = self.get_common_type(w_left, w_right)
         if type == self.w_int:
             return w_left.as_int().plus(w_right.as_int())
-        raise NotImplementedError
+        else:
+            return w_left.as_number().plus(w_right.as_number())
 
     def minus(self, w_left, w_right):
         """
@@ -29,7 +34,8 @@ class ObjSpace(object):
         type = self.get_common_type(w_left, w_right)
         if type == self.w_int:
             return w_left.as_int().minus(w_right.as_int())
-        raise NotImplementedError
+        else:
+            return w_left.as_number().minus(w_right.as_number())
 
     def multiply(self, w_left, w_right):
         """
@@ -38,7 +44,8 @@ class ObjSpace(object):
         type = self.get_common_type(w_left, w_right)
         if type == self.w_int:
             return w_left.as_int().multiply(w_right.as_int())
-        raise NotImplementedError
+        else:
+            return w_left.as_number().minus(w_right.as_number())
 
     def divide(self, w_left, w_right):
         """
@@ -70,3 +77,4 @@ class ObjSpace(object):
 
 W_IntObject.type = ObjSpace.w_int
 W_ConstStringObject.type = ObjSpace.w_str
+W_BoolObject.type = ObjSpace.w_bool
