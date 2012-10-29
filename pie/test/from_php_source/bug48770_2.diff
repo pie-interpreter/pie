@@ -1,0 +1,10 @@
+001+ string(27) "B::func2: This should work!"
+002+ string(27) "B::func3: This should work!"
+003+ 
+004+ Warning: call_user_func_array() expects parameter 1 to be a valid callback, cannot access private method B::func22() in /home/sery0ga/work/php-src/Zend/tests/bug48770_2.php on line 22
+001- %unicode|string%(27) "A::func2: This should work!"
+002- %unicode|string%(27) "A::func3: This should work!"
+004- Warning: call_user_func_array() expects parameter 1 to be a valid callback, cannot access private method A::func22() in %s on line %d
+006+ Warning: call_user_func_array() expects parameter 1 to be a valid callback, class 'B' does not have a method 'inexistent' in /home/sery0ga/work/php-src/Zend/tests/bug48770_2.php on line 23
+005- 
+006- Warning: call_user_func_array() expects parameter 1 to be a valid callback, class 'A' does not have a method 'inexistent' in %s on line %d

@@ -1,0 +1,2 @@
+001+ This method shouldn't be called when using parent::func!
+001- %unicode|string%(26) "A::func: This should work!"
