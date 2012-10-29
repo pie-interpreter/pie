@@ -17,20 +17,20 @@ class Bytecode(object):
         self.code = ""
 
         # trace data
-        self.lines_by_positions = []
         self.filename = ""
+        self.opcode_lines = {}
 
     def __repr__(self):
         return disassemble(self)
 
-    def get_line(self, position):
-        return self.lines_by_positions[position]
 
 def disassemble(bytecode):
     """Function to disassemble code to human-readable form"""
 
     assert isinstance(bytecode, Bytecode)
-    result = 'Bytecode object: <' + str(compute_unique_id(bytecode)) + '>\n'
+    result = 'Bytecode object: <' \
+        + str(compute_unique_id(bytecode)) \
+        + '> ' + bytecode.filename + '\n'
 
     if bytecode.consts:
         result +=  '\n  Consts:\n'
@@ -51,10 +51,12 @@ def disassemble(bytecode):
             break
 
         next_instr = ord(code[position])
-        position += 1
+        result += '      p: %-4d l: %-4d' % (position,
+                                             bytecode.opcode_lines[position])
 
+        position += 1
         opcode_name = get_opcode_name(next_instr)
-        result += '      ' + opcode_name
+        result += ': ' + opcode_name
 
         if next_instr > OPCODE_INDEX_DIVIDER:
             arg = ord(code[position]) + (ord(code[position + 1]) << 8)
@@ -69,6 +71,5 @@ def disassemble(bytecode):
             function = bytecode.functions[name]
             result += '%s(%s)\n' % (name, ", ".join(function.arguments))
             result += function.bytecode.__repr__()
-
 
     return result

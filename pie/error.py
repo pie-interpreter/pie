@@ -11,9 +11,9 @@ class PHPError(Exception):
         self.trace_stack = trace_stack
 
     def __repr__(self):
-        return self.__str__()
+        return self.print_message()
 
-    def __str__(self):
+    def print_message(self):
         import os.path
 
         message = "PHP %s error: %s in %s on line %s\n" \

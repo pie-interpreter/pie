@@ -2,16 +2,23 @@
 
 from pie.ast.nodes import *
 
-class __extend__(EmptyStatement):
+class __extend__(AstNode):
 
     def compile(self, builder):
+        builder.line = self.line
+        self.compile_node(builder)
+
+
+class __extend__(EmptyStatement):
+
+    def compile_node(self, builder):
         # it is really empty
         pass
 
 
 class __extend__(StatementsList):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         for statement in self.list:
             statement.compile(builder)
             # for statements, that have results, we need to remove it from the
@@ -22,7 +29,7 @@ class __extend__(StatementsList):
 
 class __extend__(Echo):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         # echoing expressions one by one
         for expression in self.list:
             expression.compile(builder)
@@ -31,56 +38,56 @@ class __extend__(Echo):
 
 class __extend__(Include):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('INCLUDE')
 
 
 class __extend__(IncludeOnce):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('INCLUDE_ONCE')
 
 
 class __extend__(Require):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('REQUIRE')
 
 
 class __extend__(RequireOnce):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('REQUIRE_ONCE')
 
 
 class __extend__(Return):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.expression.compile(builder)
         builder.emit('RETURN')
 
 
 class __extend__(Break):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         jump_position = builder.emit('JUMP', 0) + 1
         builder.add_break_position_to_patch(self.level, jump_position)
 
 
 class __extend__(Continue):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         jump_position = builder.emit('JUMP', 0) + 1
         builder.add_continue_position_to_patch(self.level, jump_position)
 
 
 class __extend__(BinaryOperator):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.left.compile(builder)
         self.right.compile(builder)
         opcode = self.get_binary_opcode()
@@ -110,15 +117,15 @@ class __extend__(BinaryOperator):
 
 class __extend__(Xor):
 
-    def compile(self, builder):
-        self.left.compile()
-        self.right.compile()
+    def compile_node(self, builder):
+        self.left.compile(builder)
+        self.right.compile(builder)
         builder.emit('XOR')
 
 
 class __extend__(Or):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.left.compile(builder)
         jump_if_false_position = builder.emit('JUMP_IF_TRUE') + 1
         builder.emit('POP_STACK')
@@ -129,7 +136,7 @@ class __extend__(Or):
 
 class __extend__(And):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.left.compile(builder)
         jump_if_false_position = builder.emit('JUMP_IF_FALSE') + 1
         builder.emit('POP_STACK')
@@ -140,7 +147,7 @@ class __extend__(And):
 
 class __extend__(Assignment):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         # compiling value first, so result would be on the stack for us
         self.value.compile(builder)
         # registering var name in builder
@@ -172,7 +179,7 @@ class __extend__(Assignment):
 
 class __extend__(TernaryOperator):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         # TODO optimize
         # evaluating condition
         self.condition.compile(builder)
@@ -191,14 +198,14 @@ class __extend__(TernaryOperator):
 
 class __extend__(Not):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('NOT')
 
 
 class __extend__(IncrementDecrement):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         # registering var name in builder
         assert isinstance(self.variable, Variable)
         identifier = self.variable.name
@@ -225,7 +232,7 @@ class __extend__(IncrementDecrement):
 
 class __extend__(Cast):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit(self.get_operation())
 
@@ -245,7 +252,7 @@ class __extend__(Cast):
 
 class __extend__(Variable):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         identifier = self.name
         assert isinstance(identifier, Identifier)
         index = builder.register_name(identifier.value)
@@ -254,7 +261,7 @@ class __extend__(Variable):
 
 class __extend__(FunctionCall):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         for i in range(0, len(self.parameters)):
             self.parameters[-1 * i].compile(builder)
 
@@ -270,11 +277,9 @@ class __extend__(FunctionCall):
 
 class __extend__(FunctionDeclaration):
 
-    def compile(self, builder):
-        from pie.compiling.compiling import BytecodeBuilder
-
+    def compile_node(self, builder):
         # creating context to compile function's body
-        function_bytecode_builder = BytecodeBuilder()
+        function_bytecode_builder = builder.get_child_builder()
         # compiling
         self.body.compile(function_bytecode_builder)
         bytecode = function_bytecode_builder.create_bytecode()
@@ -295,7 +300,7 @@ class __extend__(FunctionDeclaration):
 
 class __extend__(If):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         self.condition.compile(builder)
         # in case body or else branch is empty, we don't need some jumps
         bodyempty = isinstance(self.body, EmptyStatement)
@@ -326,7 +331,7 @@ class __extend__(If):
 
 class __extend__(While):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         builder.register_loop()
 
         # first we need to save position, so we can get back here after block
@@ -351,7 +356,7 @@ class __extend__(While):
 
 class __extend__(DoWhile):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         builder.register_loop()
 
         start_position = builder.get_current_position()
@@ -366,7 +371,7 @@ class __extend__(DoWhile):
 
 class __extend__(For):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         builder.register_loop()
 
         # init statements are compiled only once, before loop
@@ -407,13 +412,13 @@ class __extend__(For):
 
 class __extend__(ConstantInt):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         index = builder.register_int_const(self.value)
         builder.emit('LOAD_CONST', index)
 
 
 class __extend__(ConstantString):
 
-    def compile(self, builder):
+    def compile_node(self, builder):
         index = builder.register_string_const(self.value)
         builder.emit('LOAD_CONST', index)

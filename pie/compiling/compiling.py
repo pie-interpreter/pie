@@ -8,7 +8,7 @@ from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
 
 
-def compile_ast(ast):
+def compile_ast(ast, filename):
     builder = BytecodeBuilder()
     builder.filename = filename
     ast.compile(builder)
@@ -34,28 +34,34 @@ class BytecodeBuilder(object):
         self.continue_positions = []
 
         # trace data
-        self.current_line = 0
-        self.lines_by_positions = []
-        self.offset = 0
         self.filename = ""
+        self.line = 0
+        self.opcode_lines = {}
+
+    def set_line(self, line):
+        self.line = line
 
     def emit(self, opcode_name, arg=-1):
         current_position = self.get_current_position()
 
         assert arg < 1<<16
-        # lines are numbered from 0 so we add +1 to get human-readable results
-        line = self.current_line + self.offset + 1
-        self.lines_by_positions.append(line)
+        self.opcode_lines[current_position] = self.line
         self.code.append(chr(get_opcode_index(opcode_name)))
         if arg != -1:
             # writing first byte of the argument
             self.code.append(chr(arg & 0xff))
             # writing second byte of the argument
             self.code.append(chr(arg >> 8))
-            self.lines_by_positions.append(line)
-            self.lines_by_positions.append(line)
 
         return current_position
+
+    def get_child_builder(self):
+        " Create builder, based on this one to compile inner entities "
+        builder = BytecodeBuilder()
+        builder.filename = self.filename
+        builder.line = self.line
+
+        return builder
 
     def create_bytecode(self):
         bytecode = Bytecode()
@@ -63,6 +69,9 @@ class BytecodeBuilder(object):
         bytecode.consts = self.consts
         bytecode.names = self.names
         bytecode.functions = self.functions
+
+        bytecode.filename = self.filename
+        bytecode.opcode_lines = self.opcode_lines
 
         return bytecode
 

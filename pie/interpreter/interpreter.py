@@ -1,17 +1,11 @@
-from pie.error import InterpreterError
+from pie.error import InterpreterError, PHPError
 from pie.interpreter.frame import Frame
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
-#from pypy.rlib import jit
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
 import os
 
 __author__ = 'sery0ga'
-
-#driver = jit.JitDriver(reds = ['frame'],
-#    greens = ['position', 'self'],
-#    virtualizables = ['frame'],
-#    should_unroll_one_iteration = lambda *args: True)
 
 class InterpreterArg:
     """
@@ -21,9 +15,10 @@ class InterpreterArg:
         self.frame = frame
         self.bytecode = bytecode
         self.position = 0
+        self.opcode_position = 0
 
     def get_line(self):
-        return self.bytecode.get_line(self.position)
+        return self.bytecode.opcode_lines[self.opcode_position]
 
 class Interpreter:
 
@@ -43,19 +38,22 @@ class Interpreter:
         args = InterpreterArg(frame, bytecode)
         try:
             while True:
-                #driver.jit_merge_point(frame=frame,
-                #    position=position, self=self)
                 if position >= bytecode_length:
                     break
 
+                args.opcode_position = position
+
                 next_instr = ord(code[position])
                 position += 1
+
                 if next_instr > OPCODE_INDEX_DIVIDER:
                     arg = ord(code[position]) + (ord(code[position + 1]) << 8)
                     position += 2
                 else:
                     arg = 0 # don't make it negative
+
                 assert arg >= 0
+
                 args.position = position
                 if we_are_translated():
                     for index, name in unrolling_bc:
@@ -88,6 +86,62 @@ class Interpreter:
     def RETURN(self, args, value):
         return self.RETURN_FLAG
 
+    def POP_STACK(self, args, value):
+        args.frame.stack.pop()
+        return args.position
+
+    def DUPLICATE_TOP(self, args, value):
+        args.frame.stack.append(args.frame.stack[-1])
+        return args.position
+
+    def INCLUDE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INCLUDE_ONCE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def REQUIRE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def REQUIRE_ONCE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def NOT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_ARRAY(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_BOOL(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_DOUBLE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_INT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_OBJECT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_STRING(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def CAST_TO_UNSET(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def PRE_INCREMENT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def PRE_DECREMENT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def POST_INCREMENT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def POST_DECREMENT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
     def ADD(self, args, value):
         right = args.frame.stack.pop()
         left = args.frame.stack.pop()
@@ -102,12 +156,25 @@ class Interpreter:
         args.frame.stack.append(result)
         return args.position
 
+    def CONCAT(self, args, value):
+        right = args.frame.stack.pop()
+        left = args.frame.stack.pop()
+        result = self.space.concatenate(left, right)
+        args.frame.stack.append(result)
+        return args.position
+
     def MULTIPLY(self, args, value):
         right = args.frame.stack.pop()
         left = args.frame.stack.pop()
         result = self.space.multiply(left, right)
         args.frame.stack.append(result)
         return args.position
+
+    def DIVIDE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def MOD(self, args, value):
+        raise InterpreterError, "Not implemented"
 
     def LESS_THAN(self, args, value):
         right = args.frame.stack.pop()
@@ -123,20 +190,50 @@ class Interpreter:
         args.frame.stack.append(result)
         return args.position
 
-    def CONCAT(self, args, value):
-        right = args.frame.stack.pop()
-        left = args.frame.stack.pop()
-        result = self.space.concatenate(left, right)
-        args.frame.stack.append(result)
-        return args.position
+    def LESS_THAN_OR_EQUAL(self, args, value):
+        raise InterpreterError, "Not implemented"
 
-    def POP_STACK(self, args, value):
-        args.frame.stack.pop()
-        return args.position
+    def MORE_THAN_OR_EQUAL(self, args, value):
+        raise InterpreterError, "Not implemented"
 
-    def DUPLICATE_TOP(self, args, value):
-        args.frame.stack.append(args.frame.stack[-1])
-        return args.position
+    def EQUAL(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def NOT_EQUAL(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def IDENTICAL(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def NOT_IDENTICAL(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def XOR(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INPLACE_ADD(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INPLACE_SUBSTRACT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INPLACE_CONCAT(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INPLACE_MULTIPLY(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INPLACE_DIVIDE(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def INPLACE_MOD(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def LOAD_VAR(self, args, value):
+        raise InterpreterError, "Not implemented"
+
+    def STORE_VAR(self, args, value):
+        raise InterpreterError, "Not implemented"
 
     def LOAD_CONST(self, args, value):
         args.frame.stack.append(args.bytecode.consts[value])
@@ -158,7 +255,7 @@ class Interpreter:
 
     def STORE_VAR_FAST(self, args, var_index):
         var_name = args.bytecode.names[var_index]
-        value = args.frame.stack.pop()
+        value = args.frame.stack[-1] # we need to leave value on the stack
         args.frame.variables[var_name] = value
 
         return args.position
@@ -214,7 +311,7 @@ class Interpreter:
             return args.position
         return new_position
 
-    def JUMP_IF_TRUE(self, frame, bytecode, position, new_position):
+    def JUMP_IF_TRUE(self, args, new_position):
         value = args.frame.stack.pop()
         if value.is_true():
             return new_position

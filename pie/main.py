@@ -23,15 +23,21 @@ def entry_point(argv):
     try:
         parseTree = parsing.parse(data)
 #        parseTree.view()
+#        sys.exit()
+
         ast = build(parseTree)
 #        print ast
+#        sys.exit()
+
         bytecode = compile_ast(ast, argv[1])
 #        print bytecode
+#        sys.exit()
+
         context = Context()
         context.initialize_function_trace_stack(argv[1])
         Interpreter(ObjSpace(), context).interpret(Frame(), bytecode)
     except PHPError as e:
-        print e
+        print e.print_message()
         return 1
     except InterpreterError as e:
         print e

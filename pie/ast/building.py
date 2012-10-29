@@ -6,11 +6,17 @@ from pypy.rlib.parsing.tree import RPythonVisitor
 
 def build(parseTree):
     """ Build as AST from parse tree """
-    return builder.dispatch(parseTree);
+    return builder.transform(parseTree);
 
 
 class AstBuilder(RPythonVisitor):
     """ Class, than transforms parse tree to AST """
+
+    def transform(self, node):
+        ast_node = self.dispatch(node)
+        ast_node.line = node.getsourcepos().lineno + 1
+
+        return ast_node
 
     def visit_file(self, node):
         """ Visit root node of the parse tree """
@@ -61,11 +67,11 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count >= 2
 
-        left = self.dispatch(node.children[0])
-        right = self.dispatch(node.children[1])
+        left = self.transform(node.children[0])
+        right = self.transform(node.children[1])
         operator = Xor(left, right)
         for index in range(2, children_count):
-            operator = Xor(operator, self.dispatch(node.children[index]))
+            operator = Xor(operator, self.transform(node.children[index]))
 
         return operator
 
@@ -73,11 +79,11 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count >= 2
 
-        left = self.dispatch(node.children[0])
-        right = self.dispatch(node.children[1])
+        left = self.transform(node.children[0])
+        right = self.transform(node.children[1])
         operator = Or(left, right)
         for index in range(2, children_count):
-            operator = Or(operator, self.dispatch(node.children[index]))
+            operator = Or(operator, self.transform(node.children[index]))
 
         return operator
 
@@ -85,29 +91,29 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count >= 2
 
-        left = self.dispatch(node.children[0])
-        right = self.dispatch(node.children[1])
+        left = self.transform(node.children[0])
+        right = self.transform(node.children[1])
         operator = And(left, right)
         for index in range(2, children_count):
-            operator = And(operator, self.dispatch(node.children[index]))
+            operator = And(operator, self.transform(node.children[index]))
 
         return operator
 
     def visit_assign_expression(self, node):
         assert len(node.children) == 3
 
-        variable = self.dispatch(node.children[0])
+        variable = self.transform(node.children[0])
         operator = node.children[1].token.source
-        value = self.dispatch(node.children[2])
+        value = self.transform(node.children[2])
 
         return Assignment(variable, operator, value)
 
     def visit_ternary_expression(self, node):
         assert len(node.children) == 3
 
-        condition = self.dispatch(node.children[0])
-        left = self.dispatch(node.children[1])
-        right = self.dispatch(node.children[2])
+        condition = self.transform(node.children[0])
+        left = self.transform(node.children[1])
+        right = self.transform(node.children[2])
 
         return TernaryOperator(condition, left, right)
 
@@ -137,18 +143,18 @@ class AstBuilder(RPythonVisitor):
         if node.children[0].symbol == "variable_identifier":
             operation_type = IncrementDecrement.POST
             operator = node.children[1].token.source
-            variable = self.dispatch(node.children[0])
+            variable = self.transform(node.children[0])
         else:
             operation_type = IncrementDecrement.PRE
             operator = node.children[0].token.source
-            variable = self.dispatch(node.children[1])
+            variable = self.transform(node.children[1])
 
         return IncrementDecrement(operation_type, operator, variable)
 
     def visit_cast_expression(self, node):
         assert len(node.children) == 2
         symbol = node.children[0].symbol
-        value = self.dispatch(node.children[1])
+        value = self.transform(node.children[1])
 
         return Cast(symbol, value)
 
@@ -159,9 +165,9 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count == 1 or children_count == 2
 
-        name = self.dispatch(node.children[0])
+        name = self.transform(node.children[0])
         if children_count == 2:
-            parameters = self.dispatch(node.children[1])
+            parameters = self.transform(node.children[1])
         else:
             parameters = ItemsList()
 
@@ -171,18 +177,18 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count >= 1 or children_count <= 3
 
-        name = self.dispatch(node.children[0])
+        name = self.transform(node.children[0])
         # function declaration can have arguments list or/and function body
         # missing, we need to check which is which
         if children_count > 1 \
                 and node.children[1].symbol == "function_arguments_list" :
-            arguments = self.dispatch(node.children[1])
+            arguments = self.transform(node.children[1])
         else:
             arguments = ItemsList()
 
         if children_count > 2 \
                 or node.children[1].symbol == "statements_block" :
-            body = self.dispatch(node.children[-1])
+            body = self.transform(node.children[-1])
         else:
             body = EmptyStatement()
 
@@ -192,15 +198,15 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count > 0 and children_count < 4
 
-        condition = self.dispatch(node.children[0])
+        condition = self.transform(node.children[0])
         body = EmptyStatement()
         else_branch = EmptyStatement()
         for index in range(1, children_count):
             child = node.children[index]
             if child.symbol == 'else' or child.symbol == 'elseif':
-                else_branch = self.dispatch(child)
+                else_branch = self.transform(child)
             else:
-                body = self.dispatch(child)
+                body = self.transform(child)
 
         return If(condition, body, else_branch)
 
@@ -214,9 +220,9 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count == 1 or children_count == 2
 
-        expression = self.dispatch(node.children[0])
+        expression = self.transform(node.children[0])
         if children_count > 1:
-            body = self.dispatch(node.children[1])
+            body = self.transform(node.children[1])
         else:
             body = EmptyStatement()
 
@@ -226,9 +232,9 @@ class AstBuilder(RPythonVisitor):
         children_count = len(node.children)
         assert children_count == 1 or children_count == 2
 
-        expression = self.dispatch(node.children[-1])
+        expression = self.transform(node.children[-1])
         if children_count > 1:
-            body = self.dispatch(node.children[0])
+            body = self.transform(node.children[0])
         else:
             body = EmptyStatement()
 
@@ -245,13 +251,13 @@ class AstBuilder(RPythonVisitor):
 
         for child in node.children:
             if child.symbol == 'for_init':
-                init_statements = self.dispatch(child).list
+                init_statements = self.transform(child).list
             elif child.symbol == 'for_condition':
-                condition_statements = self.dispatch(child).list
+                condition_statements = self.transform(child).list
             elif child.symbol == 'for_expression':
-                expression_statements = self.dispatch(child).list
+                expression_statements = self.transform(child).list
             elif child.symbol == 'statements_block':
-                body = self.dispatch(child)
+                body = self.transform(child)
 
         return For(init_statements,
                    condition_statements,
@@ -287,19 +293,19 @@ class AstBuilder(RPythonVisitor):
 
     def get_single_child(self, node):
         assert len(node.children) == 1
-        return self.dispatch(node.children[0])
+        return self.transform(node.children[0])
 
     def get_binary_operator(self, node):
         children_count = len(node.children)
         assert children_count >= 3 and children_count % 2 == 1
 
-        left = self.dispatch(node.children[0])
-        right = self.dispatch(node.children[2])
+        left = self.transform(node.children[0])
+        right = self.transform(node.children[2])
         operator = BinaryOperator(node.children[1].token.source, left, right)
         for index in range(3, children_count, 2):
             operator = BinaryOperator(node.children[index].token.source,
                                       operator,
-                                      self.dispatch(node.children[index + 1]))
+                                      self.transform(node.children[index + 1]))
 
         return operator
 
@@ -308,7 +314,7 @@ class AstBuilder(RPythonVisitor):
 
         children_list = []
         for child in node.children:
-            children_list.append(self.dispatch(child))
+            children_list.append(self.transform(child))
 
         return children_list
 

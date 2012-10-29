@@ -8,7 +8,7 @@ class AstNode:
     __metaclass__ = extendabletype
 
     def __repr__(self):
-        return self.repr()
+        return "%s:%s" % (self.repr(), self.line)
 
     def repr(self):
         """ Pure AstNode objects should not exist """
