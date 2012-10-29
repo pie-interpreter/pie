@@ -34,7 +34,7 @@ T_INCLUDE: "include";
 T_INCLUDE_ONCE: "include_once";
 T_INT_CAST: "\([ \t]*((int)|(integer))[ \t]*\)";
 T_INLINE_HTML: "\?><\?php";
-T_LNUMBER: "-?0|[1-9][0-9]*";
+T_LNUMBER: "(0|[1-9])[0-9]*";
 T_LOGICAL_AND: "and";
 T_LOGICAL_OR: "or";
 T_LOGICAL_XOR: "xor";
@@ -60,7 +60,8 @@ IDENTIFIER: "[a-z_][a-z0-9_]*";
 # operations in decreasing order of priorities:
 # ones, that executed first are first in the list
 MULTITIVE_OPERATOR: "\*|/|%";
-ADDITIVE_OPERATOR: "\+|-|\.";
+ADDITIVE_OPERATOR: "[+\.]";
+MINUS_OPERATOR: "-";
 COMPARE_OPERATOR: "(<=)|(>=)|<|>";
 EQUALITY_OPERATOR: "(===)|(!==)|(==)|(!=)|(<>)";
 TERNARY_OPERATOR_FIRST_PART: "\?";
@@ -193,7 +194,8 @@ equality_expression: compare_expression EQUALITY_OPERATOR equality_expression
 compare_expression: additive_expression COMPARE_OPERATOR compare_expression
                   | <additive_expression>;
 
-additive_expression: multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
+additive_expression: MINUS_OPERATOR >additive_expression_inner<
+                   | multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
                    | <multitive_expression>;
 additive_expression_inner: multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
                          | multitive_expression;
