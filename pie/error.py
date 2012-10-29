@@ -13,6 +13,9 @@ class PHPError(Exception):
     def __repr__(self):
         return self.print_message()
 
+    def __str__(self):
+        return self.print_message()
+
     def print_message(self):
         import os.path
 

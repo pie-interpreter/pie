@@ -7,6 +7,8 @@ class AstNode:
     """ Base class for all nodes in ast """
     __metaclass__ = extendabletype
 
+    line = 0
+
     def __repr__(self):
         return "%s:%s" % (self.repr(), self.line)
 
