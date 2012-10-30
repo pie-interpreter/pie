@@ -49,16 +49,13 @@ T_WHILE: "while";
 # non-original PHP tokens, that are in most cases
 # treated as simple strings in PHP parser
 
-# misc
-IDENTIFIER: "[a-z_][a-z0-9_]*";
-
 # primitive types
 INTEGER_DECIMAL: "(0|[1-9])[0-9]*";
 TRUE: "true";
 FALSE: "false";
 NULL: "null";
-SINGLE_QUOTED_STRING: "'([^\\']|(\\\\)|(\\')|(\\[^\\']))*'";
-DOUBLE_QUOTED_STRING: "\"([^\\\"]|(\\[nrtvef\\$\"])|(\\[^nrtvef\\$\"]))*\"";
+SINGLE_QUOTED_STRING: "'([^\\']|(\\.))*'";
+DOUBLE_QUOTED_STRING: "\"([^\\\"\{]|(\\.))*\"";
 
 # operations in decreasing order of priorities:
 # ones, that executed first are first in the list
@@ -71,6 +68,9 @@ TERNARY_OPERATOR_FIRST_PART: "\?";
 TERNARY_OPERATOR_SECOND_PART: ":";
 ASSIGN_OPERATOR: "(\+=)|(-=)|(\*=)|(/=)|(\.=)|(%=)|(=)";
 LOGICAL_NOT_OPERATOR: "!";
+
+# misc
+IDENTIFIER: "[a-z_][a-z0-9_]*";
 
 
 #

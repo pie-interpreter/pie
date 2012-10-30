@@ -278,13 +278,13 @@ class AstBuilder(RPythonVisitor):
         end = len(node.token.source) - 1
         assert end >= 0
 
-        return ConstantString(node.token.source[1:end])
+        return ConstantSingleQuotedString(node.token.source[1:end])
 
     def visit_DOUBLE_QUOTED_STRING(self, node):
         end = len(node.token.source) - 1
         assert end >= 0
 
-        return PreprocessedConstantString(node.token.source[1:end])
+        return ConstantDoubleQuotedString(node.token.source[1:end])
 
     def visit_TRUE(self, node):
         return ConstantInt(1)

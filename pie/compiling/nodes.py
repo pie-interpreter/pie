@@ -1,6 +1,8 @@
 " Module, defining how each node of ast is compiled "
 
 from pie.ast.nodes import *
+from pie.compiling.util import process_single_quoted_string,\
+    process_double_quoted_string
 
 class __extend__(AstNode):
 
@@ -420,6 +422,23 @@ class __extend__(ConstantInt):
 class __extend__(ConstantString):
 
     def compile_node(self, builder):
-        value = self.value.replace("\\\\", "\\").replace("\\'", "'")
+        index = builder.register_string_const(self.value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantSingleQuotedString):
+
+    def compile_node(self, builder):
+        value = process_single_quoted_string(self.value)
         index = builder.register_string_const(value)
         builder.emit('LOAD_CONST', index)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantDoubleQuotedString):
+
+    def compile_node(self, builder):
+        value = process_double_quoted_string(self.value)
+        index = builder.register_string_const(value)
+        builder.emit('LOAD_CONST', index)
+
