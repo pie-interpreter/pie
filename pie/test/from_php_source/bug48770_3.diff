@@ -1,0 +1,2 @@
+004+ Warning: call_user_func_array() expects parameter 1 to be a valid callback, class 'C' does not have a method 'inexistent' in /home/sery0ga/work/php-src/Zend/tests/bug48770_3.php on line 22
+004- Warning: call_user_func_array() expects parameter 1 to be a valid callback, class 'B' does not have a method 'inexistent' in %s on line %d
