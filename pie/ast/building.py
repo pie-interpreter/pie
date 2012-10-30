@@ -161,6 +161,13 @@ class AstBuilder(RPythonVisitor):
     def visit_variable_identifier(self, node):
         return Variable(self.get_single_child(node))
 
+    def visit_constant_int_expression(self, node):
+        assert len(node.children) == 2
+        sign = node.children[0].token.source
+        value = node.children[1].token.source
+
+        return ConstantInt(int(sign + value))
+
     def visit_function_call(self, node):
         children_count = len(node.children)
         assert children_count == 1 or children_count == 2
@@ -264,7 +271,7 @@ class AstBuilder(RPythonVisitor):
                    expression_statements,
                    body)
 
-    def visit_T_LNUMBER(self, node):
+    def visit_INTEGER_DECIMAL(self, node):
         return ConstantInt(int(node.token.source))
 
     def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
