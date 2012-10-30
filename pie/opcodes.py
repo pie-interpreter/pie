@@ -19,7 +19,7 @@ OPCODE = {
     7: 'REQUIRE_ONCE',
 
     # unary operations
-    # operate on variable, retreived by name from stack
+    # operate on variable, retrieved by name from stack
     10: 'NOT', # logical not
     11: 'CAST_TO_ARRAY',
     12: 'CAST_TO_BOOL',

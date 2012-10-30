@@ -1,5 +1,6 @@
 from pie.error import InterpreterError, PHPError
 from pie.interpreter.frame import Frame
+from pie.objspace import space
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
@@ -22,8 +23,7 @@ class Interpreter(object):
 
     RETURN_FLAG = -1
 
-    def __init__(self, space, context, frame, bytecode):
-        self.space = space
+    def __init__(self, context, frame, bytecode):
         self.context = context
         self.position = 0
         self.frame = frame
@@ -73,11 +73,11 @@ class Interpreter(object):
         if self.frame.stack:
             return self.frame.stack.pop()
         else:
-            return self.space.int(0)
+            return space.int(0)
 
     def ECHO(self, value):
         stack_value = self.frame.stack.pop()
-        os.write(1, stack_value.str_w())
+        os.write(1, stack_value.as_string().str_w())
 
     def RETURN(self, value):
         self.position = self.RETURN_FLAG
@@ -136,64 +136,7 @@ class Interpreter(object):
     def POST_DECREMENT(self, value):
         raise InterpreterError, "Not implemented"
 
-    def ADD(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = self.space.plus(left, right)
-        self.frame.stack.append(result)
-
-    def SUBSTRACT(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = self.space.minus(left, right)
-        self.frame.stack.append(result)
-
-    def CONCAT(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = self.space.concatenate(left, right)
-        self.frame.stack.append(result)
-
-    def MULTIPLY(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = self.space.multiply(left, right)
-        self.frame.stack.append(result)
-
     def DIVIDE(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def MOD(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def LESS_THAN(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = left.less(right)
-        self.frame.stack.append(result)
-
-    def MORE_THAN(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = left.more(right)
-        self.frame.stack.append(result)
-
-    def LESS_THAN_OR_EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def MORE_THAN_OR_EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def NOT_EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def IDENTICAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def NOT_IDENTICAL(self, value):
         raise InterpreterError, "Not implemented"
 
     def XOR(self, value):
@@ -228,7 +171,7 @@ class Interpreter(object):
 
     def LOAD_NAME(self, function_index):
         function_name = self.bytecode.names[function_index]
-        self.frame.stack.append(self.space.str(function_name))
+        self.frame.stack.append(space.str(function_name))
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -245,7 +188,7 @@ class Interpreter(object):
 
     def CALL_FUNCTION(self, arguments_number):
         # load function name
-        function_name = self.frame.stack.pop().val
+        function_name = self.frame.stack.pop().str_w()
         # load function bytecode
         try:
             function = self.context.functions[function_name]
@@ -278,7 +221,7 @@ class Interpreter(object):
         self.context.function_trace_stack.append(
             (function_name, self._get_line(), function.bytecode.filename)
         )
-        interpreter = Interpreter(self.space, self.context, function_frame, function.bytecode)
+        interpreter = Interpreter(self.context, function_frame, function.bytecode)
         return_value = interpreter.interpret()
         self.context.function_trace_stack.pop()
 
@@ -305,10 +248,24 @@ class Interpreter(object):
                          self._get_line(),
                          self.context.function_trace_stack)
         print error
-        return self.space.str("")
+        return space.str("")
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]
+
+def _new_binary_op(name, space_name):
+    def func(self, value):
+        right = self.frame.stack.pop()
+        left = self.frame.stack.pop()
+        result = getattr(space, space_name)(left, right)
+        self.frame.stack.append(result)
+    func.func_name = name
+    return func
+
+for _name in ['ADD', 'SUBSTRACT', 'CONCAT', 'MULTIPLY', 'MOD', 'LESS_THAN',
+              'MORE_THAN', 'LESS_THAN_OR_EQUAL' ,'MORE_THAN_OR_EQUAL', 'EQUAL',
+              'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
+    setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))
 
 def _define_opcodes():
     for index in OPCODE:

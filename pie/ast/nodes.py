@@ -340,6 +340,13 @@ class ConstantInt(Constant):
     def repr(self):
         return "ConstantInt(%s)" % self.value
 
+class Boolean(Constant):
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "Boolean(%s)" % self.value
 
 class ConstantString(Constant):
 
