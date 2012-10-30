@@ -34,7 +34,6 @@ T_INCLUDE: "include";
 T_INCLUDE_ONCE: "include_once";
 T_INT_CAST: "\([ \t]*((int)|(integer))[ \t]*\)";
 T_INLINE_HTML: "\?><\?php";
-T_LNUMBER: "(0|[1-9])[0-9]*";
 T_LOGICAL_AND: "and";
 T_LOGICAL_OR: "or";
 T_LOGICAL_XOR: "xor";
@@ -52,16 +51,19 @@ T_WHILE: "while";
 # treated as simple strings in PHP parser
 
 # misc
+IDENTIFIER: "[a-z_][a-z0-9_]*";
+
+# primitive types
+INTEGER_DECIMAL: "(0|[1-9])[0-9]*";
 TRUE: "true";
 FALSE: "false";
 NULL: "null";
-IDENTIFIER: "[a-z_][a-z0-9_]*";
 
 # operations in decreasing order of priorities:
 # ones, that executed first are first in the list
 MULTITIVE_OPERATOR: "\*|/|%";
-ADDITIVE_OPERATOR: "[+\.]";
-MINUS_OPERATOR: "-";
+ADDITIVE_OPERATOR: "[-+]";
+CONCATENATION_OPERATOR: "\.";
 COMPARE_OPERATOR: "(<=)|(>=)|<|>";
 EQUALITY_OPERATOR: "(===)|(!==)|(==)|(!=)|(<>)";
 TERNARY_OPERATOR_FIRST_PART: "\?";
@@ -144,11 +146,11 @@ construct_require_once: [T_REQUIRE_ONCE] expression
 
 construct_return: [T_RETURN] expression?;
 
-construct_break: [T_BREAK] ["("] T_LNUMBER [")"]
-               | [T_BREAK] T_LNUMBER?;
+construct_break: [T_BREAK] ["("] INTEGER_DECIMAL [")"]
+               | [T_BREAK] INTEGER_DECIMAL?;
 
-construct_continue: [T_CONTINUE] ["("] T_LNUMBER [")"]
-                  | [T_CONTINUE] T_LNUMBER?;
+construct_continue: [T_CONTINUE] ["("] INTEGER_DECIMAL [")"]
+                  | [T_CONTINUE] INTEGER_DECIMAL?;
 
 
 # expressions definition, based on priority of operators
@@ -194,10 +196,11 @@ equality_expression: compare_expression EQUALITY_OPERATOR equality_expression
 compare_expression: additive_expression COMPARE_OPERATOR compare_expression
                   | <additive_expression>;
 
-additive_expression: MINUS_OPERATOR >additive_expression_inner<
-                   | multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
+additive_expression: multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
+                   | multitive_expression CONCATENATION_OPERATOR >additive_expression_inner<
                    | <multitive_expression>;
 additive_expression_inner: multitive_expression ADDITIVE_OPERATOR >additive_expression_inner<
+                         | multitive_expression CONCATENATION_OPERATOR >additive_expression_inner<
                          | multitive_expression;
 
 multitive_expression: logical_not_expression MULTITIVE_OPERATOR >multitive_expression_inner<
@@ -232,11 +235,13 @@ primary_expression: ["("] <expression> [")"]
 
 variable_expression: <variable_identifier>;
 variable_identifier: ["$"] IDENTIFIER;
-constant_expression: <T_LNUMBER>
+constant_expression: <constant_int_expression>
                    | <T_CONSTANT_ENCAPSED_STRING>
                    | <TRUE>
                    | <FALSE>
                    | <NULL>;
+constant_int_expression: ADDITIVE_OPERATOR INTEGER_DECIMAL
+                       | <INTEGER_DECIMAL>;
 
 function_call: >function_call_identifier< >function_parameters<;
 function_call_identifier: IDENTIFIER
