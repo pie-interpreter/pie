@@ -31,9 +31,16 @@ class PHPError(Exception):
                 depth += 1
         return message
 
+class PHPWarning(PHPError):
+
+    def __init__(self, message, file, line, trace_stack = []):
+        PHPError.__init__(self, message, PHPError.WARNING, file, line, trace_stack)
+
 class InterpreterError(Exception):
     pass
 
+class DivisionByZero(InterpreterError):
+    pass
 
 class CompilerError(Exception):
     pass

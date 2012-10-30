@@ -1,4 +1,4 @@
-from pie.error import InterpreterError, PHPError
+from pie.error import InterpreterError, PHPError, DivisionByZero, PHPWarning
 from pie.interpreter.frame import Frame
 from pie.objspace import space
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
@@ -194,11 +194,7 @@ class Interpreter(object):
             function = self.context.functions[function_name]
         except KeyError:
             message = "Call to undefined function %s()" % function_name
-            raise PHPError(message,
-                           PHPError.FATAL,
-                           self.bytecode.filename,
-                           self._get_line(),
-                           self.context.function_trace_stack)
+            self._fatal(message, True)
 
         function_frame = Frame()
         # put function arguments to frame
@@ -207,12 +203,7 @@ class Interpreter(object):
             if not self.frame.stack:
                 message = "Missing argument %s for %s(), called" \
                     % (arg_position, function_name)
-                error = PHPError(message,
-                                 PHPError.WARNING,
-                                 self.bytecode.filename,
-                                 self._get_line(),
-                                 self.context.function_trace_stack)
-                print error
+                self._warning(message)
             else:
                 function_frame.variables[argument] = self.frame.stack.pop()
             arg_position += 1
@@ -242,22 +233,40 @@ class Interpreter(object):
 
     def _handle_undefined(self, name):
         message = "Undefined variable: %s" % name
-        error = PHPError(message,
-                         PHPError.NOTICE,
-                         self.bytecode.filename,
-                         self._get_line(),
-                         self.context.function_trace_stack)
-        print error
+        self._notice(message)
         return space.str("")
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]
 
+    def _error(self, message, type, throw = False):
+        error = PHPError(message,
+                         type,
+                         self.bytecode.filename,
+                         self._get_line(),
+                         self.context.function_trace_stack)
+        if throw:
+            raise error
+        print error
+
+    def _warning(self, message, throw = False):
+        self._error(message, PHPError.WARNING, throw)
+
+    def _fatal(self, message, throw = False):
+        self._error(message, PHPError.FATAL, throw)
+
+    def _notice(self, message, throw = False):
+        self._error(message, PHPError.NOTICE, throw)
+
 def _new_binary_op(name, space_name):
     def func(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = getattr(space, space_name)(left, right)
+        try:
+            result = getattr(space, space_name)(left, right)
+        except DivisionByZero:
+            self._warning('Division by zero')
+            result = space.bool(False)
         self.frame.stack.append(result)
     func.func_name = name
     return func

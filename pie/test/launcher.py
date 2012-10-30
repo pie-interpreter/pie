@@ -20,6 +20,7 @@ class TestPHPLanguageCoverage(unittest.TestCase):
 
     def setUp(self):
         self.current_position = self.output_file.tell()
+        self.context.function_trace_stack = []
 
 def fill_test_class_with_tests(test_to_run = [], with_php_source = False):
     """ Read directory contains test files and create a test method for each
