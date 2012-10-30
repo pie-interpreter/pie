@@ -1,11 +1,16 @@
 from pie.error import InterpreterError, PHPError
 from pie.interpreter.frame import Frame
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
+from pypy.rlib.jit import JitDriver
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
 import os
 
 __author__ = 'sery0ga'
+
+jitdriver = JitDriver(
+    greens=['bytecode_length', 'position', 'code', 'space', 'self'],
+    reds=['args', 'frame'])
 
 class InterpreterArg:
     """
@@ -38,6 +43,14 @@ class Interpreter:
         args = InterpreterArg(frame, bytecode)
         try:
             while True:
+                jitdriver.jit_merge_point(bytecode_length=bytecode_length,
+                                          space=self.space,
+                                          position=position,
+                                          code=code,
+                                          args=args,
+                                          frame=frame,
+                                          self=self)
+
                 if position >= bytecode_length:
                     break
 

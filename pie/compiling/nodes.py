@@ -1,8 +1,7 @@
 " Module, defining how each node of ast is compiled "
 
 from pie.ast.nodes import *
-from pie.compiling.util import process_single_quoted_string,\
-    process_double_quoted_string
+from pie.compiling import util
 
 class __extend__(AstNode):
 
@@ -412,10 +411,43 @@ class __extend__(For):
         builder.patch_break_positions(builder.get_current_position())
 
 
-class __extend__(ConstantInt):
+class __extend__(ConstantIntBin):
 
     def compile_node(self, builder):
-        index = builder.register_int_const(self.value)
+        value = int(self.value[2:], 2)
+        if self.sign == '-':
+            value = -value
+        index = builder.register_int_const(value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantIntOct):
+
+    def compile_node(self, builder):
+        value = int(util.validate_oct(self.value), 8)
+        if self.sign == '-':
+            value = -value
+        index = builder.register_int_const(value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantIntDec):
+
+    def compile_node(self, builder):
+        value = int(self.value)
+        if self.sign == '-':
+            value = -value
+        index = builder.register_int_const(value)
+        builder.emit('LOAD_CONST', index)
+
+
+class __extend__(ConstantIntHex):
+
+    def compile_node(self, builder):
+        value = int(self.value[2:], 16)
+        if self.sign == '-':
+            value = -value
+        index = builder.register_int_const(value)
         builder.emit('LOAD_CONST', index)
 
 
@@ -429,16 +461,15 @@ class __extend__(ConstantString):
 class __extend__(ConstantSingleQuotedString):
 
     def compile_node(self, builder):
-        value = process_single_quoted_string(self.value)
+        value = util.process_single_quoted_string(self.value)
         index = builder.register_string_const(value)
-        builder.emit('LOAD_CONST', index)
         builder.emit('LOAD_CONST', index)
 
 
 class __extend__(ConstantDoubleQuotedString):
 
     def compile_node(self, builder):
-        value = process_double_quoted_string(self.value)
+        value = util.process_double_quoted_string(self.value)
         index = builder.register_string_const(value)
         builder.emit('LOAD_CONST', index)
 

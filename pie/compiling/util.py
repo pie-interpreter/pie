@@ -3,6 +3,21 @@
 HEX_CHARS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f']
 OCT_CHARS = ['0', '1', '2', '3', '4', '5', '6', '7']
 
+def validate_oct(string):
+    index = 0
+    string_len = len(string)
+    result = []
+
+    while index < string_len:
+        char = string[index]
+        if char not in OCT_CHARS:
+            return "".join(result)
+
+        result.append(char)
+        index += 1
+
+    return "".join(result)
+
 def process_single_quoted_string(string):
     index = 0
     string_len = len(string)
@@ -44,7 +59,7 @@ def process_double_quoted_string(string):
             if next_char in replace_chars:
                 char = replace_chars[next_char]
                 index += 1
-            elif next_char == 'x':
+            elif next_char == 'x' or next_char == 'X':
                 matched_digits = []
                 offset = index + 2
                 while offset < index + 4 and offset < string_len:
