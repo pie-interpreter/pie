@@ -18,14 +18,14 @@ class W_Root(object):
     def conststr_w(self, space):
         raise InterpreterError("TypeError: casting to string of wrong type")
 
-    def less(self, object):
+    def less_than(self, object):
         from pie.objects.bool import W_BoolObject
         if self.value < object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
-    def more(self, object):
+    def more_than(self, object):
         from pie.objects.bool import W_BoolObject
         if self.value > object.value:
             return W_BoolObject(True)

@@ -65,45 +65,47 @@ class ObjSpace(object):
     def concatenate(self, w_left, w_right):
         return w_left.as_string().concatenate(w_right.as_string())
 
-    def less(self, w_left, w_right):
+    def less_than(self, w_left, w_right):
+        name = 'less_than'
         type = self.get_common_comparison_type(w_left, w_right)
         if type == self.w_str:
-            # this situation is possible only if both arguments are strings
-            return w_left.less(w_right)
+            try:
+                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
+            except NotConvertibleToNumber:
+                return getattr(w_left, name)(w_right)
         elif type == self.w_int:
-            return w_left.as_int().less(w_right.as_int())
+            return getattr(w_left.as_int(), name)(w_right.as_int())
         elif type == self.w_bool:
-            return w_left.as_bool().less(w_right.as_bool())
+            return getattr(w_left.as_bool(), name)(w_right.as_bool())
 
-    def more(self, w_left, w_right):
+    def more_than(self, w_left, w_right):
+        name = 'more_than'
         type = self.get_common_comparison_type(w_left, w_right)
         if type == self.w_str:
-            # this situation is possible only if both arguments are strings
-            return w_left.more(w_right)
+            try:
+                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
+            except NotConvertibleToNumber:
+                return getattr(w_left, name)(w_right)
         elif type == self.w_int:
-            return w_left.as_int().more(w_right.as_int())
+            return getattr(w_left.as_int(), name)(w_right.as_int())
         elif type == self.w_bool:
-            return w_left.as_bool().more(w_right.as_bool())
+            return getattr(w_left.as_bool(), name)(w_right.as_bool())
 
     def equal(self, w_left, w_right):
+        name = 'equal'
         type = self.get_common_comparison_type(w_left, w_right)
         if type == self.w_str:
-            # this situation is possible only if both arguments are strings
             try:
-                return w_left.as_int_strict().equal(w_right.as_int_strict())
+                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
             except NotConvertibleToNumber:
-                return w_left.equal(w_right)
+                return getattr(w_left, name)(w_right)
         elif type == self.w_int:
-            return w_left.as_int().equal(w_right.as_int())
+            return getattr(w_left.as_int(), name)(w_right.as_int())
         elif type == self.w_bool:
-            return w_left.as_bool().equal(w_right.as_bool())
+            return getattr(w_left.as_bool(), name)(w_right.as_bool())
 
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
-
-        This function supports all strange comparing rules:
-           - "5Allo" != "5Hello"
-           - "50" == "5e1"
         """
         left_type = w_left.type
         if left_type == self.w_str and w_right.type == self.w_int:

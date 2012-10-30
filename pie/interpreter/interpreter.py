@@ -172,13 +172,13 @@ class Interpreter(object):
     def LESS_THAN(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.less(left, right)
+        result = self.space.less_than(left, right)
         self.frame.stack.append(result)
 
     def MORE_THAN(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.more(left, right)
+        result = self.space.more_than(left, right)
         self.frame.stack.append(result)
 
     def LESS_THAN_OR_EQUAL(self, value):
