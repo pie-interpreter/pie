@@ -2,6 +2,9 @@ from pie.objects.base import W_Root
 from pie.objects.int import W_IntObject
 
 class W_BoolObject(W_Root):
+
+    _immutable_fields_ = ['value']
+
     def __init__(self, value):
         self.value = bool(value)
 
@@ -34,3 +37,45 @@ class W_BoolObject(W_Root):
 
     def mod(self, number):
         raise NotImplemented
+
+    def less_than(self, object):
+        assert isinstance(object, W_BoolObject)
+        if self.value < object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def more_than(self, object):
+        assert isinstance(object, W_BoolObject)
+        if self.value > object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def equal(self, object):
+        assert isinstance(object, W_BoolObject)
+        if self.value == object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def not_equal(self, object):
+        assert isinstance(object, W_BoolObject)
+        if self.value != object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def less_than_or_equal(self, object):
+        assert isinstance(object, W_BoolObject)
+        if self.value <= object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def more_than_or_equal(self, object):
+        assert isinstance(object, W_BoolObject)
+        if self.value >= object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)

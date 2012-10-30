@@ -11,6 +11,7 @@ class NotConvertibleToNumber(Exception):
     pass
 
 class W_ConstStringObject(W_Root):
+    _immutable_fields_ = ['value']
 
     def __init__(self, value):
         self.value = value
@@ -41,6 +42,54 @@ class W_ConstStringObject(W_Root):
     def concatenate(self, string):
         return W_ConstStringObject(''.join([self.value, string.value]))
 
+    def less_than(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_ConstStringObject)
+        if self.value < object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def more_than(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_ConstStringObject)
+        if self.value > object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_ConstStringObject)
+        if self.value == object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def not_equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_ConstStringObject)
+        if self.value != object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def less_than_or_equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_ConstStringObject)
+        if self.value <= object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def more_than_or_equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_ConstStringObject)
+        if self.value >= object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
     def _handle_int(self, strict = False):
         if not self.value:
             return W_IntObject(0)
@@ -53,6 +102,7 @@ class W_ConstStringObject(W_Root):
             end += 2
             return self._handle_hexadecimal(self.value, begin, end, value_len, strict)
         else:
+            assert begin, end
             return self._handle_decimal(self.value, begin, end, value_len, strict)
 
     def _handle_decimal(self, value, begin, end, value_len, strict = False):
@@ -88,9 +138,10 @@ class W_ConstStringObject(W_Root):
         elif minus == -1 and end == 1:
             return W_IntObject(0)
 
+        assert begin, end
         value = self.value[begin:end]
         if e_symbol:
-            value = float(value)
+            return W_IntObject(int(float(value)) * minus)
 
         return W_IntObject(int(value) * minus)
 

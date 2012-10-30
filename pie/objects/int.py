@@ -1,13 +1,15 @@
 from pie.objects.base import W_Root
 
 class W_IntObject(W_Root):
+    _immutable_fields_ = ['value']
+
     def __init__(self, value):
         self.value = int(value)
 
     def __repr__(self):
         return "W_IntObject(%s)" % self.value
 
-    def int_w(self, space):
+    def int_w(self):
         return self.value
 
     def as_int(self):
@@ -40,3 +42,51 @@ class W_IntObject(W_Root):
         elif self.value and divider < 0:
             divider *= -1
         return W_IntObject(self.value % divider)
+
+    def less_than(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_IntObject)
+        if self.value < object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def more_than(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_IntObject)
+        if self.value > object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_IntObject)
+        if self.value == object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def not_equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_IntObject)
+        if self.value != object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def less_than_or_equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_IntObject)
+        if self.value <= object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)
+
+    def more_than_or_equal(self, object):
+        from pie.objects.bool import W_BoolObject
+        assert isinstance(object, W_IntObject)
+        if self.value >= object.value:
+            return W_BoolObject(True)
+        else:
+            return W_BoolObject(False)

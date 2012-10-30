@@ -6,6 +6,8 @@ class W_Root(object):
     """ The base class for everything that can be represented as a first-class
     object at applevel
     """
+    _attrs_ = ()
+
     def deref(self):
         return self # anything but a reference
 
@@ -15,26 +17,5 @@ class W_Root(object):
     def str_w(self):
         raise InterpreterError("TypeError: casting to string of wrong type")
 
-    def conststr_w(self, space):
+    def conststr_w(self):
         raise InterpreterError("TypeError: casting to string of wrong type")
-
-    def less_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        if self.value < object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
-
-    def more_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        if self.value > object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
-
-    def equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        if self.value == object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)

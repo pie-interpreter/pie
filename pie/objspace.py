@@ -17,7 +17,7 @@ class ObjSpace(object):
     def bool(self, value):
         return W_BoolObject(value)
 
-    def plus(self, w_left, w_right):
+    def add(self, w_left, w_right):
         """
         In PHP '+' is supported only for numbers and arrays
         """
@@ -27,7 +27,7 @@ class ObjSpace(object):
         else:
             return w_left.as_number().plus(w_right.as_number())
 
-    def minus(self, w_left, w_right):
+    def substract(self, w_left, w_right):
         """
         In PHP '-' is supported only for numbers
         """
@@ -62,8 +62,18 @@ class ObjSpace(object):
             return w_left.as_int().mod(w_right.as_int())
         raise NotImplementedError
 
-    def concatenate(self, w_left, w_right):
+    def concat(self, w_left, w_right):
         return w_left.as_string().concatenate(w_right.as_string())
+
+    def identical(self, w_left, w_right):
+        if w_left.type != w_right.type:
+            return W_BoolObject(False)
+        return w_left.equal(w_right)
+
+    def not_identical(self, w_left, w_right):
+        if w_left.type != w_right.type:
+            return W_BoolObject(True)
+        return w_left.not_equal(w_right)
 
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
@@ -101,7 +111,7 @@ def _new_comparison_op(name):
     func.func_name = name
     return func
 
-for _name in ['less_than', 'more_than', 'equal']:
+for _name in ['less_than', 'more_than', 'equal', 'not_equal', 'less_than_or_equal', 'more_than_or_equal']:
     setattr(ObjSpace, _name, _new_comparison_op(_name))
 
 W_IntObject.type = ObjSpace.w_int

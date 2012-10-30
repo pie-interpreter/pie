@@ -136,70 +136,7 @@ class Interpreter(object):
     def POST_DECREMENT(self, value):
         raise InterpreterError, "Not implemented"
 
-    def ADD(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.plus(left, right)
-        self.frame.stack.append(result)
-
-    def SUBSTRACT(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.minus(left, right)
-        self.frame.stack.append(result)
-
-    def CONCAT(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.concatenate(left, right)
-        self.frame.stack.append(result)
-
-    def MULTIPLY(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.multiply(left, right)
-        self.frame.stack.append(result)
-
     def DIVIDE(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def MOD(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.mod(left, right)
-        self.frame.stack.append(result)
-
-    def LESS_THAN(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.less_than(left, right)
-        self.frame.stack.append(result)
-
-    def MORE_THAN(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.more_than(left, right)
-        self.frame.stack.append(result)
-
-    def LESS_THAN_OR_EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def MORE_THAN_OR_EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def EQUAL(self, value):
-        right = self.frame.stack.pop()
-        left = self.frame.stack.pop()
-        result = space.equal(left, right)
-        self.frame.stack.append(result)
-
-    def NOT_EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def IDENTICAL(self, value):
-        raise InterpreterError, "Not implemented"
-
-    def NOT_IDENTICAL(self, value):
         raise InterpreterError, "Not implemented"
 
     def XOR(self, value):
@@ -251,7 +188,7 @@ class Interpreter(object):
 
     def CALL_FUNCTION(self, arguments_number):
         # load function name
-        function_name = self.frame.stack.pop().value
+        function_name = self.frame.stack.pop().str_w()
         # load function bytecode
         try:
             function = self.context.functions[function_name]
@@ -315,6 +252,20 @@ class Interpreter(object):
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]
+
+def _new_binary_op(name, space_name):
+    def func(self, value):
+        right = self.frame.stack.pop()
+        left = self.frame.stack.pop()
+        result = getattr(space, space_name)(left, right)
+        self.frame.stack.append(result)
+    func.func_name = name
+    return func
+
+for _name in ['ADD', 'SUBSTRACT', 'CONCAT', 'MULTIPLY', 'MOD', 'LESS_THAN',
+              'MORE_THAN', 'LESS_THAN_OR_EQUAL' ,'MORE_THAN_OR_EQUAL', 'EQUAL',
+              'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
+    setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))
 
 def _define_opcodes():
     for index in OPCODE:
