@@ -13,13 +13,13 @@ class InterpretedFile(object):
         self.filename = filename
         self.data     = data
 
-def interpret_file(file, context, objspace, frame):
+def interpret_file(file, context, frame):
     """ Parse and interpret one code file
     """
     parseTree = parse(file.data)
     ast = build(parseTree)
     bytecode = compile_ast(ast, file.filename)
-    Interpreter(objspace, context, frame, bytecode).interpret()
+    Interpreter(context, frame, bytecode).interpret()
 
 def parse(data):
     """ Parse php code """

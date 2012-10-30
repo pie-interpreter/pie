@@ -1,5 +1,6 @@
 from pie.error import InterpreterError, PHPError
 from pie.interpreter.frame import Frame
+from pie.objspace import space
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
@@ -22,8 +23,7 @@ class Interpreter(object):
 
     RETURN_FLAG = -1
 
-    def __init__(self, space, context, frame, bytecode):
-        self.space = space
+    def __init__(self, context, frame, bytecode):
         self.context = context
         self.position = 0
         self.frame = frame
@@ -73,7 +73,7 @@ class Interpreter(object):
         if self.frame.stack:
             return self.frame.stack.pop()
         else:
-            return self.space.int(0)
+            return space.int(0)
 
     def ECHO(self, value):
         stack_value = self.frame.stack.pop()
@@ -139,25 +139,25 @@ class Interpreter(object):
     def ADD(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.plus(left, right)
+        result = space.plus(left, right)
         self.frame.stack.append(result)
 
     def SUBSTRACT(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.minus(left, right)
+        result = space.minus(left, right)
         self.frame.stack.append(result)
 
     def CONCAT(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.concatenate(left, right)
+        result = space.concatenate(left, right)
         self.frame.stack.append(result)
 
     def MULTIPLY(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.multiply(left, right)
+        result = space.multiply(left, right)
         self.frame.stack.append(result)
 
     def DIVIDE(self, value):
@@ -166,19 +166,19 @@ class Interpreter(object):
     def MOD(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.mod(left, right)
+        result = space.mod(left, right)
         self.frame.stack.append(result)
 
     def LESS_THAN(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.less_than(left, right)
+        result = space.less_than(left, right)
         self.frame.stack.append(result)
 
     def MORE_THAN(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.more_than(left, right)
+        result = space.more_than(left, right)
         self.frame.stack.append(result)
 
     def LESS_THAN_OR_EQUAL(self, value):
@@ -190,7 +190,7 @@ class Interpreter(object):
     def EQUAL(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = self.space.equal(left, right)
+        result = space.equal(left, right)
         self.frame.stack.append(result)
 
     def NOT_EQUAL(self, value):
@@ -234,7 +234,7 @@ class Interpreter(object):
 
     def LOAD_NAME(self, function_index):
         function_name = self.bytecode.names[function_index]
-        self.frame.stack.append(self.space.str(function_name))
+        self.frame.stack.append(space.str(function_name))
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -284,7 +284,7 @@ class Interpreter(object):
         self.context.function_trace_stack.append(
             (function_name, self._get_line(), function.bytecode.filename)
         )
-        interpreter = Interpreter(self.space, self.context, function_frame, function.bytecode)
+        interpreter = Interpreter(self.context, function_frame, function.bytecode)
         return_value = interpreter.interpret()
         self.context.function_trace_stack.pop()
 
@@ -311,7 +311,7 @@ class Interpreter(object):
                          self._get_line(),
                          self.context.function_trace_stack)
         print error
-        return self.space.str("")
+        return space.str("")
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]

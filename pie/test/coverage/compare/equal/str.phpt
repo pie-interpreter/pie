@@ -14,7 +14,7 @@ echo ("26" == "0x1a"); //true
 echo "==";
 echo ("-100" == "-1e2"); //true
 echo "==";
-echo ("-100" == "-1e2A"); //true
+echo ("-100" == "-1e2A"); //false
 ?>
 --EXPECT--
 1==1==1==1==1==1==1==

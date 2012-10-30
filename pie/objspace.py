@@ -65,45 +65,6 @@ class ObjSpace(object):
     def concatenate(self, w_left, w_right):
         return w_left.as_string().concatenate(w_right.as_string())
 
-    def less_than(self, w_left, w_right):
-        name = 'less_than'
-        type = self.get_common_comparison_type(w_left, w_right)
-        if type == self.w_str:
-            try:
-                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
-            except NotConvertibleToNumber:
-                return getattr(w_left, name)(w_right)
-        elif type == self.w_int:
-            return getattr(w_left.as_int(), name)(w_right.as_int())
-        elif type == self.w_bool:
-            return getattr(w_left.as_bool(), name)(w_right.as_bool())
-
-    def more_than(self, w_left, w_right):
-        name = 'more_than'
-        type = self.get_common_comparison_type(w_left, w_right)
-        if type == self.w_str:
-            try:
-                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
-            except NotConvertibleToNumber:
-                return getattr(w_left, name)(w_right)
-        elif type == self.w_int:
-            return getattr(w_left.as_int(), name)(w_right.as_int())
-        elif type == self.w_bool:
-            return getattr(w_left.as_bool(), name)(w_right.as_bool())
-
-    def equal(self, w_left, w_right):
-        name = 'equal'
-        type = self.get_common_comparison_type(w_left, w_right)
-        if type == self.w_str:
-            try:
-                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
-            except NotConvertibleToNumber:
-                return getattr(w_left, name)(w_right)
-        elif type == self.w_int:
-            return getattr(w_left.as_int(), name)(w_right.as_int())
-        elif type == self.w_bool:
-            return getattr(w_left.as_bool(), name)(w_right.as_bool())
-
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
         """
@@ -125,6 +86,25 @@ class ObjSpace(object):
         right_type = w_right.type
         return self.w_int
 
+def _new_comparison_op(name):
+    def func(self, w_left, w_right):
+        type = self.get_common_comparison_type(w_left, w_right)
+        if type == self.w_str:
+            try:
+                return getattr(w_left.as_int_strict(), name)(w_right.as_int_strict())
+            except NotConvertibleToNumber:
+                return getattr(w_left, name)(w_right)
+        elif type == self.w_int:
+            return getattr(w_left.as_int(), name)(w_right.as_int())
+        elif type == self.w_bool:
+            return getattr(w_left.as_bool(), name)(w_right.as_bool())
+    func.func_name = name
+    return func
+
+for _name in ['less_than', 'more_than', 'equal']:
+    setattr(ObjSpace, _name, _new_comparison_op(_name))
+
 W_IntObject.type = ObjSpace.w_int
 W_ConstStringObject.type = ObjSpace.w_str
 W_BoolObject.type = ObjSpace.w_bool
+space = ObjSpace()

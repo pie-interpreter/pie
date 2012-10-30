@@ -6,7 +6,6 @@ from parser import Parser
 from pie.error import PHPError, InterpreterError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
-from pie.objspace import ObjSpace
 from pie.parsing.parsing import interpret_file, InterpretedFile
 from pypy.rlib.parsing.parsing import ParseError
 
@@ -15,7 +14,6 @@ __author__ = 'sery0ga'
 class TestPHPLanguageCoverage(unittest.TestCase):
 
     context = Context()
-    objspace = ObjSpace()
     frame = Frame()
     parser = Parser()
     output_file = tempfile.TemporaryFile()
@@ -65,7 +63,7 @@ def _add_test(filename, test_name):
         old_fileno = os.dup(sys.stdout.fileno())
         os.dup2(self.output_file.fileno(), 1)
         try:
-            interpret_file(file, self.context, self.objspace, self.frame)
+            interpret_file(file, self.context, self.frame)
             os.dup2(old_fileno, 1)
         except PHPError as e:
             os.dup2(old_fileno, 1)

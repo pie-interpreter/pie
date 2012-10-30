@@ -22,7 +22,7 @@ def entry_point(argv):
     try:
         context = Context()
         context.initialize_function_trace_stack(file.filename)
-        interpret_file(file, context, ObjSpace(), Frame())
+        interpret_file(file, context, Frame())
     except PHPError as e:
         print e.print_message()
         return 1
