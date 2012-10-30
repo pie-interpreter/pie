@@ -172,13 +172,13 @@ class Interpreter(object):
     def LESS_THAN(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = left.less(right)
+        result = self.space.less(left, right)
         self.frame.stack.append(result)
 
     def MORE_THAN(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = left.more(right)
+        result = self.space.more(left, right)
         self.frame.stack.append(result)
 
     def LESS_THAN_OR_EQUAL(self, value):
@@ -188,7 +188,10 @@ class Interpreter(object):
         raise InterpreterError, "Not implemented"
 
     def EQUAL(self, value):
-        raise InterpreterError, "Not implemented"
+        right = self.frame.stack.pop()
+        left = self.frame.stack.pop()
+        result = self.space.equal(left, right)
+        self.frame.stack.append(result)
 
     def NOT_EQUAL(self, value):
         raise InterpreterError, "Not implemented"
@@ -248,7 +251,7 @@ class Interpreter(object):
 
     def CALL_FUNCTION(self, arguments_number):
         # load function name
-        function_name = self.frame.stack.pop().val
+        function_name = self.frame.stack.pop().value
         # load function bytecode
         try:
             function = self.context.functions[function_name]

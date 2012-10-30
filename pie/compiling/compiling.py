@@ -1,6 +1,7 @@
 " Module, providing compiling tools "
 
 from pie.compiling.bytecode import Bytecode
+from pie.compiling.nodes import *
 from pie.error import CompilerError
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
