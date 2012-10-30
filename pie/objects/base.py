@@ -9,7 +9,7 @@ class W_Root(object):
     def deref(self):
         return self # anything but a reference
 
-    def int_w(self, space):
+    def int_w(self):
         raise InterpreterError("TypeError: casting to int of wrong type")
 
     def str_w(self):

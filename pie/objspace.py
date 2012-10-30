@@ -1,5 +1,5 @@
 from pie.objects.bool import W_BoolObject
-from pie.objects.conststring import W_ConstStringObject
+from pie.objects.conststring import W_ConstStringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
 
 __author__ = 'sery0ga'
@@ -89,7 +89,10 @@ class ObjSpace(object):
         type = self.get_common_comparison_type(w_left, w_right)
         if type == self.w_str:
             # this situation is possible only if both arguments are strings
-            return w_left.equal(w_right)
+            try:
+                return w_left.as_int_strict().equal(w_right.as_int_strict())
+            except NotConvertibleToNumber:
+                return w_left.equal(w_right)
         elif type == self.w_int:
             return w_left.as_int().equal(w_right.as_int())
         elif type == self.w_bool:
@@ -102,6 +105,15 @@ class ObjSpace(object):
            - "5Allo" != "5Hello"
            - "50" == "5e1"
         """
+        left_type = w_left.type
+        if left_type == self.w_str and w_right.type == self.w_int:
+            """
+            http://www.php.net/manual/en/language.operators.comparison.php
+
+            If you compare a number with a string or the comparison involves numerical strings,
+            then each string is converted to a number and the comparison performed numerically
+            """
+            return self.w_int
         return w_left.type
 
     def get_common_arithmetic_type(self, w_left, w_right):
