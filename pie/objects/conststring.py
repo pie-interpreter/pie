@@ -102,7 +102,8 @@ class W_ConstStringObject(W_Root):
             end += 2
             return self._handle_hexadecimal(self.value, begin, end, value_len, strict)
         else:
-            assert begin, end
+            assert begin >= 0
+            assert end >= 0
             return self._handle_decimal(self.value, begin, end, value_len, strict)
 
     def _handle_decimal(self, value, begin, end, value_len, strict = False):
@@ -138,7 +139,8 @@ class W_ConstStringObject(W_Root):
         elif minus == -1 and end == 1:
             return W_IntObject(0)
 
-        assert begin, end
+        assert begin >= 0
+        assert end >= 0
         value = self.value[begin:end]
         if e_symbol:
             return W_IntObject(int(float(value)) * minus)
