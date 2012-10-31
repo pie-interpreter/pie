@@ -164,9 +164,12 @@ class AstBuilder(RPythonVisitor):
     def visit_constant_int_expression(self, node):
         assert len(node.children) == 2
         sign = node.children[0].token.source
-        value = node.children[1].token.source
 
-        return ConstantInt(int(sign + value))
+        int_constant = self.transform(node.children[1])
+        assert isinstance(int_constant, ConstantInt)
+        int_constant.sign = sign
+
+        return int_constant
 
     def visit_function_call(self, node):
         children_count = len(node.children)
@@ -271,20 +274,35 @@ class AstBuilder(RPythonVisitor):
                    expression_statements,
                    body)
 
-    def visit_INTEGER_DECIMAL(self, node):
-        return ConstantInt(int(node.token.source))
+    def visit_INT_BIN(self, node):
+        return ConstantIntBin(node.token.source)
 
-    def visit_T_CONSTANT_ENCAPSED_STRING(self, node):
+    def visit_INT_OCT(self, node):
+        return ConstantIntOct(node.token.source)
+
+    def visit_INT_DEC(self, node):
+        return ConstantIntDec(node.token.source)
+
+    def visit_INT_HEX(self, node):
+        return ConstantIntHex(node.token.source)
+
+    def visit_SINGLE_QUOTED_STRING(self, node):
         end = len(node.token.source) - 1
         assert end >= 0
 
-        return ConstantString(node.token.source[1:end])
+        return ConstantSingleQuotedString(node.token.source[1:end])
+
+    def visit_DOUBLE_QUOTED_STRING(self, node):
+        end = len(node.token.source) - 1
+        assert end >= 0
+
+        return ConstantDoubleQuotedString(node.token.source[1:end])
 
     def visit_TRUE(self, node):
-        return Boolean(True)
+        return ConstantBool(True)
 
     def visit_FALSE(self, node):
-        return Boolean(False)
+        return ConstantBool(False)
 
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source)

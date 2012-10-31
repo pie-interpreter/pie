@@ -1,9 +1,9 @@
-import sys
 from pie.error import InterpreterError, PHPError
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.objspace import ObjSpace
 from pie.parsing.parsing import interpret_file, InterpretedFile
+from pypy.rlib.parsing.deterministic import LexerError
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
 import sys
@@ -28,6 +28,9 @@ def entry_point(argv):
         return 1
     except InterpreterError as e:
         print e
+        return 1
+    except LexerError as e:
+        print e.nice_error_message(file.filename)
         return 1
     except ParseError as e:
         print e.nice_error_message(file.filename, file.data)

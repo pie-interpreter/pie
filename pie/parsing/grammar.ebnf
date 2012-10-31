@@ -19,7 +19,6 @@ T_BOOLEAN_OR: "\|\|";
 T_BREAK: "break";
 T_CLOSE_TAG: "\?>";
 T_CONTINUE: "continue";
-T_CONSTANT_ENCAPSED_STRING: "(\"[^\"]*\")|('[^']*)'";
 T_DEC: "--";
 T_DO: "do";
 T_DOUBLE_CAST: "\([ \t]*((float)|(double)|(real))[ \t]*\)";
@@ -51,10 +50,18 @@ T_WHILE: "while";
 # treated as simple strings in PHP parser
 
 # primitive types
-INTEGER_DECIMAL: "(0|[1-9])[0-9]*";
+INT_BIN: "0b[01]+";
+INT_OCT: "0([0-9])+"; # 8 and 9 are allowed to be stripped later
+INT_DEC: "0|([1-9][0-9]*)";
+INT_HEX: "0x([0-9a-f]+)";
+
 TRUE: "true";
 FALSE: "false";
+
 NULL: "null";
+
+SINGLE_QUOTED_STRING: "'([^\\']|(\\.))*'";
+DOUBLE_QUOTED_STRING: "\"([^\\\"\{]|(\\.))*\"";
 
 # operations in decreasing order of priorities:
 # ones, that executed first are first in the list
@@ -146,11 +153,11 @@ construct_require_once: [T_REQUIRE_ONCE] expression
 
 construct_return: [T_RETURN] expression?;
 
-construct_break: [T_BREAK] ["("] INTEGER_DECIMAL [")"]
-               | [T_BREAK] INTEGER_DECIMAL?;
+construct_break: [T_BREAK] ["("] int_type [")"]
+               | [T_BREAK] int_type?;
 
-construct_continue: [T_CONTINUE] ["("] INTEGER_DECIMAL [")"]
-                  | [T_CONTINUE] INTEGER_DECIMAL?;
+construct_continue: [T_CONTINUE] ["("] int_type [")"]
+                  | [T_CONTINUE] int_type?;
 
 
 # expressions definition, based on priority of operators
@@ -236,12 +243,11 @@ primary_expression: ["("] <expression> [")"]
 variable_expression: <variable_identifier>;
 variable_identifier: ["$"] IDENTIFIER;
 constant_expression: <constant_int_expression>
-                   | <T_CONSTANT_ENCAPSED_STRING>
-                   | <TRUE>
-                   | <FALSE>
+                   | <string_type>
+                   | <bool_type>
                    | <NULL>;
-constant_int_expression: ADDITIVE_OPERATOR INTEGER_DECIMAL
-                       | <INTEGER_DECIMAL>;
+constant_int_expression: ADDITIVE_OPERATOR int_type
+                       | <int_type>;
 
 function_call: >function_call_identifier< >function_parameters<;
 function_call_identifier: IDENTIFIER
@@ -304,3 +310,17 @@ for_expression:  >comma_seperated_expressions<;
 for_body: ["{"] statements_block? ["}"]
         | [";"];
 
+
+#
+# BASIC RULES
+#
+
+# rules for variable types
+int_type: <INT_BIN>
+        | <INT_OCT>
+        | <INT_DEC>
+        | <INT_HEX>;
+string_type: <SINGLE_QUOTED_STRING>
+           | <DOUBLE_QUOTED_STRING>;
+bool_type: <TRUE>
+         | <FALSE>;

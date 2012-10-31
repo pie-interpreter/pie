@@ -76,12 +76,6 @@ class EmptyStatement(AstNode):
         return "EmptyStatement()"
 
 
-class Constant(AstNodeWithResult):
-    """
-    Node for constants, they all share compilation process
-    """
-
-
 class StatementsList(ItemsList):
     " Node, containing list of statement, always root node of the ast "
 
@@ -332,29 +326,67 @@ class For(AstNode):
                self.body.repr())
 
 
-class ConstantInt(Constant):
+class ConstantInt(AstNodeWithResult):
+
+    def __init__(self, value):
+        self.value = value
+        self.sign = '+'
+
+
+class ConstantIntBin(ConstantInt):
+
+    def repr(self):
+        return "ConstantIntBin(%s)" % self.value
+
+
+class ConstantIntOct(ConstantInt):
+
+    def repr(self):
+        return "ConstantIntOct(%s)" % self.value
+
+
+class ConstantIntDec(ConstantInt):
+
+    def repr(self):
+        return "ConstantIntDec(%s)" % self.value
+
+
+class ConstantIntHex(ConstantInt):
+
+    def repr(self):
+        return "ConstantIntHex(%s)" % self.value
+
+
+class ConstantString(AstNodeWithResult):
 
     def __init__(self, value):
         self.value = value
 
     def repr(self):
-        return "ConstantInt(%s)" % self.value
+        return "ConstantString(\"%s\")" % (self.value)
 
-class Boolean(Constant):
+
+class ConstantSingleQuotedString(ConstantString):
+    " String, that needs to be pre-processed "
+
+    def repr(self):
+        return "ConstantSingleQuotedString('%s')" % (self.value)
+
+
+class ConstantDoubleQuotedString(ConstantString):
+    " String, that needs to be pre-processed with more things "
+
+    def repr(self):
+        return "ConstantDoubleQuotedString(\"%s\")" % (self.value)
+
+
+class ConstantBool(AstNodeWithResult):
 
     def __init__(self, value):
         self.value = value
 
     def repr(self):
-        return "Boolean(%s)" % self.value
-
-class ConstantString(Constant):
-
-    def __init__(self, value):
-        self.value = value
-
-    def repr(self):
-        return "ConstantString(%s)" % self.value
+        return "ConstantBool(\"%s\")" % (self.value)
 
 
 class Identifier(Item):
