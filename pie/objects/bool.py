@@ -38,6 +38,12 @@ class W_BoolObject(W_Root):
     def mod(self, number):
         raise NotImplemented
 
+    def inc(self):
+        return self
+
+    def dec(self):
+        return self
+
     def less_than(self, object):
         assert isinstance(object, W_BoolObject)
         if self.value < object.value:

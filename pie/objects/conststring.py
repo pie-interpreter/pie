@@ -7,6 +7,8 @@ HEXADECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 
 DECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
+(SYMBOL_Z, SYMBOL_z, SYMBOL_9) = (90, 122, 57)
+
 class NotConvertibleToNumber(Exception):
     pass
 
@@ -41,6 +43,49 @@ class W_ConstStringObject(W_Root):
 
     def concatenate(self, string):
         return W_ConstStringObject(''.join([self.value, string.value]))
+
+    def inc(self):
+        if not self.value:
+            return W_IntObject(1)
+        length = len(self.value)
+        if length == 1:
+            symbol_number = ord(self.value)
+            if symbol_number == SYMBOL_Z:
+                value = 'AA'
+            elif symbol_number == SYMBOL_z:
+                value = 'aa'
+            else:
+                symbol_number += 1
+                value = chr(symbol_number)
+            return W_ConstStringObject(value)
+
+        value = self.value
+        for index, char in enumerate(reversed(value)):
+            symbol_number = ord(char)
+            real_index = length - 1 - index
+            if symbol_number == SYMBOL_Z:
+                value[real_index] = 'A'
+            elif symbol_number == SYMBOL_z:
+                value[real_index] = 'a'
+            elif symbol_number == SYMBOL_9:
+                value[real_index] = '0'
+            else:
+                symbol_number += 1
+                value[real_index] = chr(symbol_number)
+                break
+
+        return W_ConstStringObject(value)
+
+    def dec(self):
+        if not self.value:
+            return W_IntObject(-1)
+
+        try:
+            return self.as_int_strict().dec()
+        except NotConvertibleToNumber:
+            # there's no decrement for normal non-convertible strings in PHP
+            return self
+
 
     def less_than(self, object):
         from pie.objects.bool import W_BoolObject

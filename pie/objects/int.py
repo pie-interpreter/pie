@@ -36,6 +36,12 @@ class W_IntObject(W_Root):
     def multiply(self, number):
         return W_IntObject(self.value * number.value)
 
+    def inc(self):
+        return W_IntObject(self.value + 1)
+
+    def dec(self):
+        return W_IntObject(self.value - 1)
+
     def mod(self, number):
         if not number.value:
             raise DivisionByZero
