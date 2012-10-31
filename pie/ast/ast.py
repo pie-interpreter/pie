@@ -1,12 +1,18 @@
 " Module, providing ast building tools "
 
+from pie.parsing import parsing
 from pie.ast.nodes import *
 from pypy.rlib.parsing.tree import RPythonVisitor
 
 
-def build(parseTree):
+def build(source):
+    parse_tree = parsing.parse(source)
+    return build_ast(parse_tree)
+
+
+def build_ast(parse_tree):
     """ Build as AST from parse tree """
-    return builder.transform(parseTree)
+    return builder.transform(parse_tree)
 
 
 class AstBuilder(RPythonVisitor):

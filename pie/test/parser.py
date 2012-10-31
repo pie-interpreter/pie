@@ -12,6 +12,7 @@ class Test(object):
         self.is_true = True
         self.skip = False
         self.skip_reason = ''
+        self.compile_only = False
 
     def __str__(self):
         return "Doc:\n%s\nFILE:\n%s\nRESULT:\n%s" \
@@ -49,31 +50,17 @@ class Parser(object):
                 if line == "--EXPECTF--":
                     test.is_true = False
                 continue
+            elif line == "--COMPILEONLY--":
+                test.compile_only = True
 
             if current_mode == self.DOC:
-                if not test.doc:
-                    test.doc = line
-                else:
-                    test.doc = "\n".join([test.doc, line])
-                continue
+                test.doc += "\n" + line
             elif current_mode == self.RESULT:
-                if not test.result:
-                    test.result = line
-                else:
-                    test.result = "\n".join([test.result, line])
-                continue
+                test.result += "\n" + line
             elif current_mode == self.FILE:
-                if not test.data:
-                    test.data = line
-                else:
-                    test.data = "\n".join([test.data, line])
-                continue
+                test.data += "\n" + line
             elif current_mode == self.SKIP:
-                if not test.skip_reason:
-                    test.skip_reason = line
-                else:
-                    test.skip_reason = "\n".join([test.data, line])
-                continue
+                test.skip_reason += "\n" + line
 
         file_handler.close()
         return test

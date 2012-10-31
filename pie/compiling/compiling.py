@@ -1,5 +1,6 @@
 " Module, providing compiling tools "
 
+from pie.ast import ast
 from pie.compiling.bytecode import Bytecode
 from pie.compiling.nodes import *
 from pie.error import CompilerError
@@ -9,10 +10,15 @@ from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
 
 
-def compile_ast(ast, filename):
+def compile_source(source):
+    astree = ast.build(source)
+    return compile_ast(astree, source)
+
+
+def compile_ast(astree, source):
     builder = BytecodeBuilder()
-    builder.filename = filename
-    ast.compile(builder)
+    builder.filename = source.filename
+    astree.compile(builder)
 
     return builder.create_bytecode()
 

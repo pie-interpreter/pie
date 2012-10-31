@@ -1,9 +1,8 @@
-from parser import Parser
+from pie.compiling import compiling
 from pie.error import PHPError, InterpreterError
-from pie.interpreter.context import Context
-from pie.interpreter.frame import Frame
-from pie.parsing.parsing import interpret_file, InterpretedFile
-from pprint import pprint
+from pie.interpreter import interpreter
+from pie.interpreter.main import InterpretedSource
+from pie.test.parser import Parser
 from pypy.rlib.parsing.deterministic import LexerError
 from pypy.rlib.parsing.parsing import ParseError
 import os
@@ -16,13 +15,18 @@ __author__ = 'sery0ga'
 
 class TestPHPLanguageCoverage(unittest.TestCase):
 
-    context = Context()
-    frame = Frame()
     parser = Parser()
     output_file = tempfile.TemporaryFile()
+    stdout_no = os.dup(sys.stdout.fileno())
 
     def setUp(self):
         self.current_position = self.output_file.tell()
+
+    def redirect_output(self):
+        os.dup2(self.output_file.fileno(), sys.stdout.fileno())
+
+    def restore_output(self):
+        os.dup2(self.stdout_no, sys.stdout.fileno())
 
 
 def fill_test_class_with_tests(test_to_run = [], with_php_source = False):
@@ -74,30 +78,28 @@ def _add_test(filename, test_name):
                 self.skipTest("Mark as skipped")
             return
 
-        # initialization
-        self.context.initialize_function_trace_stack(filename)
-        interpreted_file = InterpretedFile(filename, test.data)
+        source = InterpretedSource(test.data, filename)
+        self.redirect_output()
 
-        # create temporary interpreted_file and redirect output to it
-        old_fileno = os.dup(sys.stdout.fileno())
-        os.dup2(self.output_file.fileno(), 1)
-
-#        try:
-        interpret_file(interpreted_file, self.context, self.frame)
-        os.dup2(old_fileno, 1)
-#        except PHPError as e:
-#            os.dup2(old_fileno, 1)
-#            print e.print_message()
-#        except InterpreterError as e:
-#            os.dup2(old_fileno, 1)
-#            print e
-#        except LexerError as e:
-#            print e.nice_error_message(file.filename)
-#            sys.exit(1)
-#        except ParseError as e:
-#            os.dup2(sys.stdout.fileno(), 1)
-#            pprint(e.nice_error_message(interpreted_file.filename,
-#                                        interpreted_file.data))
+        try:
+            if test.compile_only:
+                compiling.compile_source(source)
+            else:
+                interpreter.interpret(source)
+            self.restore_output()
+        except PHPError as e:
+            self.restore_output()
+            self.fail("PHPError\n\n" + e.print_message())
+        except InterpreterError as e:
+            self.restore_output()
+            self.fail("InterpreterError\n\n" + e.__str__())
+        except LexerError as e:
+            self.restore_output()
+            self.fail("LexerError\n\n" + e.nice_error_message(source.filename))
+        except ParseError as e:
+            self.restore_output()
+            self.fail("ParseError\n\n" + e.nice_error_message(source.filename,
+                                                              source.data))
 
         if test.has_result:
             # rewind file pointer and read content

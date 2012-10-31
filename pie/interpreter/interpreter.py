@@ -1,4 +1,6 @@
+from pie.compiling import compiling
 from pie.error import InterpreterError, PHPError
+from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.objspace import space
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
@@ -8,28 +10,31 @@ import os
 
 __author__ = 'sery0ga'
 
-class InterpreterArg(object):
-    """
-    Stores data required for each operand handler in interpreter
-    """
-    def __init__(self, bytecode):
-        self.bytecode = bytecode
-        self.opcode_position = 0
+def interpret(source):
+    bytecode = compiling.compile_source(source)
+    context = Context()
+    context.initialize_function_trace_stack(source.filename)
 
-    def get_line(self):
-        return self.bytecode.opcode_lines[self.opcode_position]
+    return interpret_bytecode(bytecode, context, Frame())
+
+
+def interpret_bytecode(bytecode, context, frame):
+    interpreter = Interpreter(bytecode, context, frame)
+    return interpreter.interpret()
+
 
 class Interpreter(object):
 
     RETURN_FLAG = -1
 
-    def __init__(self, context, frame, bytecode):
-        self.context = context
-        self.position = 0
-        self.frame = frame
+    def __init__(self, bytecode, context, frame):
         self.bytecode = bytecode
-        self.context.initialize_functions(self.bytecode)
+        self.context = context
+        self.frame = frame
+
+        self.position = 0
         self.opcode_position = 0
+        self.context.initialize_functions(self.bytecode)
 
     def interpret(self):
         code = self.bytecode.code
@@ -45,7 +50,8 @@ class Interpreter(object):
                 self.position += 1
 
                 if next_instr > OPCODE_INDEX_DIVIDER:
-                    arg = ord(code[self.position]) + (ord(code[self.position + 1]) << 8)
+                    arg = ord(code[self.position]) \
+                        + (ord(code[self.position + 1]) << 8)
                     self.position += 2
                 else:
                     arg = 0 # don't make it negative
@@ -221,8 +227,9 @@ class Interpreter(object):
         self.context.function_trace_stack.append(
             (function_name, self._get_line(), function.bytecode.filename)
         )
-        interpreter = Interpreter(self.context, function_frame, function.bytecode)
-        return_value = interpreter.interpret()
+        return_value = interpret_bytecode(function.bytecode,
+                                          self.context,
+                                          function_frame)
         self.context.function_trace_stack.pop()
 
         self.frame.stack.append(return_value)
