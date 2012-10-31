@@ -26,6 +26,8 @@ def run(filename):
         print e.nice_error_message(source.filename, source.data)
         return 1
 
+    return 0
+
 
 def create_source_from_filename(filename):
     " Create source object from filename "
