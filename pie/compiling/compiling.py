@@ -5,7 +5,7 @@ from pie.compiling.nodes import *
 from pie.error import CompilerError
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
-from pie.objects.conststring import W_ConstStringObject
+from pie.objects.conststring import W_StringObject
 from pie.opcodes import get_opcode_index
 
 
@@ -100,7 +100,7 @@ class BytecodeBuilder(object):
             return self.string_consts_cache[value]
         except KeyError:
             constants_count = len(self.consts)
-            self.consts.append(W_ConstStringObject(value))
+            self.consts.append(W_StringObject([char for char in value]))
             self.string_consts_cache[value] = constants_count
             return constants_count
 

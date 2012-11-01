@@ -130,9 +130,9 @@ class Interpreter(object):
             value = self.frame.variables[var_name]
         except KeyError:
             value = self._handle_undefined(var_name)
-        result = value.inc()
-        self.frame.variables[var_name] = result
-        self.frame.stack.append(result)
+        new_value = value.inc()
+        self.frame.variables[var_name] = new_value
+        self.frame.stack.append(new_value)
 
     def PRE_DECREMENT(self, value):
         var_name = self.frame.stack.pop().str_w()
@@ -140,9 +140,9 @@ class Interpreter(object):
             value = self.frame.variables[var_name]
         except KeyError:
             value = self._handle_undefined(var_name)
-        result = value.dec()
-        self.frame.variables[var_name] = result
-        self.frame.stack.append(result)
+        new_value = value.dec()
+        self.frame.variables[var_name] = new_value
+        self.frame.stack.append(new_value)
 
     def POST_INCREMENT(self, value):
         var_name = self.frame.stack.pop().str_w()
@@ -150,8 +150,9 @@ class Interpreter(object):
             value = self.frame.variables[var_name]
         except KeyError:
             value = self._handle_undefined(var_name)
+        old_value = value.copy()
         self.frame.variables[var_name] = value.inc()
-        self.frame.stack.append(value)
+        self.frame.stack.append(old_value)
 
     def POST_DECREMENT(self, value):
         var_name = self.frame.stack.pop().str_w()
@@ -159,8 +160,9 @@ class Interpreter(object):
             value = self.frame.variables[var_name]
         except KeyError:
             value = self._handle_undefined(var_name)
+        old_value = value.copy()
         self.frame.variables[var_name] = value.dec()
-        self.frame.stack.append(value)
+        self.frame.stack.append(old_value)
 
     def DIVIDE(self, value):
         raise InterpreterError, "Not implemented"
@@ -188,17 +190,17 @@ class Interpreter(object):
 
     def LOAD_VAR(self, var_index):
         var_name = self.bytecode.names[var_index]
-        self.frame.stack.append(space.str(var_name))
+        self.frame.stack.append(space.const_str(var_name))
 
     def STORE_VAR(self, value):
         raise InterpreterError, "Not implemented"
 
     def LOAD_CONST(self, value):
-        self.frame.stack.append(self.bytecode.consts[value])
+        self.frame.stack.append(self.bytecode.consts[value].copy())
 
-    def LOAD_NAME(self, function_index):
-        function_name = self.bytecode.names[function_index]
-        self.frame.stack.append(space.str(function_name))
+    def LOAD_NAME(self, index):
+        name = self.bytecode.names[index]
+        self.frame.stack.append(space.const_str(name))
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -265,7 +267,7 @@ class Interpreter(object):
     def _handle_undefined(self, name):
         message = "Undefined variable: %s" % name
         self._notice(message)
-        return space.str("")
+        return space.str([])
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]

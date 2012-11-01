@@ -1,9 +1,9 @@
 <?php
 $i = 0;
-$a = "zzzzy";
-while ($i < 1) {
+$a = "hello";
+while ($i < 1000000) {
     ++$i;
     ++$a;
 }
-//echo $a;
+echo $a;
 ?>

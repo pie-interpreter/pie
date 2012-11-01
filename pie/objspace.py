@@ -1,5 +1,5 @@
 from pie.objects.bool import W_BoolObject
-from pie.objects.conststring import W_ConstStringObject, NotConvertibleToNumber
+from pie.objects.conststring import W_StringObject, NotConvertibleToNumber, W_ConstStringObject
 from pie.objects.int import W_IntObject
 
 __author__ = 'sery0ga'
@@ -12,6 +12,9 @@ class ObjSpace(object):
         return W_IntObject(value)
 
     def str(self, value):
+        return W_StringObject(value)
+
+    def const_str(self, value):
         return W_ConstStringObject(value)
 
     def bool(self, value):
@@ -63,7 +66,7 @@ class ObjSpace(object):
         raise NotImplementedError
 
     def concat(self, w_left, w_right):
-        return w_left.as_string().concatenate(w_right.as_string())
+        return w_left.copy().as_string().concatenate(w_right.as_string())
 
     def identical(self, w_left, w_right):
         if w_left.type != w_right.type:
@@ -115,6 +118,7 @@ for _name in ['less_than', 'more_than', 'equal', 'not_equal', 'less_than_or_equa
     setattr(ObjSpace, _name, _new_comparison_op(_name))
 
 W_IntObject.type = ObjSpace.w_int
-W_ConstStringObject.type = ObjSpace.w_str
+W_StringObject.type = ObjSpace.w_str
 W_BoolObject.type = ObjSpace.w_bool
+W_ConstStringObject.type = ObjSpace.w_str
 space = ObjSpace()

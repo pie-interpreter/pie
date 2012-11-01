@@ -19,10 +19,21 @@ class W_ConstStringObject(W_Root):
         self.value = value
 
     def __repr__(self):
-        return "W_ConstStringObject(%s)" % self.value
+        return "W_StringObject(%s)" % self.value
 
     def str_w(self):
         return self.value
+
+class W_StringObject(W_Root):
+
+    def __init__(self, value):
+        self.value = value[:]
+
+    def __repr__(self):
+        return "W_StringObject(%s)" % self.str_w()
+
+    def str_w(self):
+        return ''.join(self.value)
 
     def as_int(self):
         return self._handle_int()
@@ -31,7 +42,7 @@ class W_ConstStringObject(W_Root):
         return self._handle_int(True)
 
     def as_bool(self):
-        if not self.value or self.value == '0':
+        if not self.value or self.value[0] == '0':
             return W_BoolObject(False)
         return W_BoolObject(True)
 
@@ -42,39 +53,44 @@ class W_ConstStringObject(W_Root):
         return self
 
     def concatenate(self, string):
-        return W_ConstStringObject(''.join([self.value, string.value]))
+        if string.value:
+            self.value.extend(string.value)
+        return self
+
+    def copy(self):
+        return W_StringObject(self.value)
 
     def inc(self):
         if not self.value:
             return W_IntObject(1)
         length = len(self.value)
         if length == 1:
-            symbol_number = ord(self.value)
+            symbol_number = ord(self.value[0])
             if symbol_number == SYMBOL_Z:
-                value = 'AA'
+                self.value = ['A', 'A']
             elif symbol_number == SYMBOL_z:
-                value = 'aa'
+                self.value = ['a', 'a']
             else:
                 symbol_number += 1
-                value = chr(symbol_number)
-            return W_ConstStringObject(value)
+                self.value = [chr(symbol_number)]
+            return self
 
-        value = self.value
-        for index, char in enumerate(reversed(value)):
-            symbol_number = ord(char)
-            real_index = length - 1 - index
+        index = length - 1
+        while index >= 0:
+            symbol_number = ord(self.value[index])
             if symbol_number == SYMBOL_Z:
-                value[real_index] = 'A'
+                self.value[index] = 'A'
             elif symbol_number == SYMBOL_z:
-                value[real_index] = 'a'
+                self.value[index] = 'a'
             elif symbol_number == SYMBOL_9:
-                value[real_index] = '0'
+                self.value[index] = '0'
             else:
                 symbol_number += 1
-                value[real_index] = chr(symbol_number)
+                self.value[index] = chr(symbol_number)
                 break
+            index -= 1
 
-        return W_ConstStringObject(value)
+        return self
 
     def dec(self):
         if not self.value:
@@ -89,48 +105,63 @@ class W_ConstStringObject(W_Root):
 
     def less_than(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_ConstStringObject)
-        if self.value < object.value:
+        assert isinstance(object, W_StringObject)
+        left_value = self.str_w()
+        right_value = object.str_w()
+        if left_value < right_value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def more_than(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_ConstStringObject)
-        if self.value > object.value:
+        assert isinstance(object, W_StringObject)
+        left_value = self.str_w()
+        right_value = object.str_w()
+        if left_value > right_value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def equal(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_ConstStringObject)
-        if self.value == object.value:
-            return W_BoolObject(True)
-        else:
+        assert isinstance(object, W_StringObject)
+        left_length = len(self.value)
+        if left_length != len(object.value):
             return W_BoolObject(False)
+        index = 0
+        for left in self.value:
+            if left != object.value[index]:
+                return W_BoolObject(False)
+            index += 1
+        return W_BoolObject(True)
 
     def not_equal(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_ConstStringObject)
-        if self.value != object.value:
+        assert isinstance(object, W_StringObject)
+        left_value = self.str_w()
+        right_value = object.str_w()
+        if left_value != right_value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def less_than_or_equal(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_ConstStringObject)
-        if self.value <= object.value:
+        assert isinstance(object, W_StringObject)
+        left_value = self.str_w()
+        right_value = object.str_w()
+        if left_value <= right_value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def more_than_or_equal(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_ConstStringObject)
-        if self.value >= object.value:
+        assert isinstance(object, W_StringObject)
+        left_value = self.str_w()
+        right_value = object.str_w()
+        if left_value >= right_value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
@@ -142,7 +173,7 @@ class W_ConstStringObject(W_Root):
         (begin, end) = (0, 0)
         value_len = len(self.value)
         # check for hexadecimal
-        if value_len > 2 and self.value[end] == '0' and\
+        if value_len > 2 and self.value[end] == '0' and \
            (self.value[end + 1] == 'x' or self.value[end + 1] == 'X'):
             end += 2
             return self._handle_hexadecimal(self.value, begin, end, value_len, strict)
@@ -175,6 +206,7 @@ class W_ConstStringObject(W_Root):
             if e_symbol:
                 number_after_e_symbol = True
             end += 1
+
         # truncate 'e' if it's the last symbol in number
         if e_symbol and not number_after_e_symbol:
             end -= 1
@@ -186,11 +218,11 @@ class W_ConstStringObject(W_Root):
 
         assert begin >= 0
         assert end >= 0
-        value = self.value[begin:end]
+        value = self.str_w()[begin:end]
         if e_symbol:
             return W_IntObject(int(float(value)) * minus)
 
-        return W_IntObject(int(value) * minus)
+        return W_IntObject(int(value[:]) * minus)
 
     def _handle_hexadecimal(self, value, begin, end, value_len, strict = False):
         while end < value_len:
@@ -204,4 +236,4 @@ class W_ConstStringObject(W_Root):
         if not end:
             return W_IntObject(0)
 
-        return W_IntObject(int(value[begin:end], 0))
+        return W_IntObject(int(self.str_w()[begin:end], 0))

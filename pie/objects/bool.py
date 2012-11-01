@@ -15,13 +15,16 @@ class W_BoolObject(W_Root):
         return W_IntObject(int(self.value))
 
     def as_string(self):
-        from pie.objects.conststring import W_ConstStringObject
+        from pie.objects.conststring import W_StringObject
         if self.value:
-            return W_ConstStringObject('1')
-        return W_ConstStringObject('')
+            return W_StringObject(['1'])
+        return W_StringObject([])
 
     def as_bool(self):
         return self
+
+    def copy(self):
+        return W_BoolObject(self.value)
 
     def is_true(self):
         return self.value
