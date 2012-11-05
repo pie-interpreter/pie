@@ -4,10 +4,8 @@ from pie.ast import ast
 from pie.compiling.bytecode import Bytecode
 from pie.compiling.nodes import *
 from pie.error import CompilerError
-from pie.objects.bool import W_BoolObject
-from pie.objects.int import W_IntObject
-from pie.objects.conststring import W_ConstStringObject
 from pie.opcodes import get_opcode_index
+from pie.objspace import space
 
 
 def compile_source(source):
@@ -23,7 +21,7 @@ def compile_ast(astree, source):
     return builder.create_bytecode()
 
 class BytecodeBuilder(object):
-    " Helper class to build bycode "
+    " Helper class to build byte-code "
 
     def __init__(self):
         self.code = []
@@ -36,6 +34,7 @@ class BytecodeBuilder(object):
         self.string_consts_cache = {}
         self.bool_consts_cache = {}
         self.names_cache = {}
+        self.null_const_index = None
 
         # lists to keep stack of loops
         self.break_positions = []
@@ -88,7 +87,7 @@ class BytecodeBuilder(object):
             return self.int_consts_cache[value]
         except KeyError:
             constants_count = len(self.consts)
-            self.consts.append(W_IntObject(value))
+            self.consts.append(space.int(value))
             self.int_consts_cache[value] = constants_count
             return constants_count
 
@@ -97,7 +96,7 @@ class BytecodeBuilder(object):
             return self.bool_consts_cache[value]
         except KeyError:
             constants_count = len(self.consts)
-            self.consts.append(W_BoolObject(value))
+            self.consts.append(space.bool(value))
             self.bool_consts_cache[value] = constants_count
             return constants_count
 
@@ -106,9 +105,17 @@ class BytecodeBuilder(object):
             return self.string_consts_cache[value]
         except KeyError:
             constants_count = len(self.consts)
-            self.consts.append(W_ConstStringObject(value))
+            self.consts.append(space.str(value))
             self.string_consts_cache[value] = constants_count
             return constants_count
+
+    def register_null_const(self):
+        if self.null_const_index is None:
+            constants_count = len(self.consts)
+            self.consts.append(space.null())
+            self.null_const_index = constants_count
+
+        return self.null_const_index
 
     def register_name(self, name):
         try:

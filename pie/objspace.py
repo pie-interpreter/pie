@@ -1,6 +1,7 @@
 from pie.objects.bool import W_BoolObject
 from pie.objects.conststring import W_ConstStringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
+from distutils.errors import CompileError
 
 __author__ = 'sery0ga'
 
@@ -16,6 +17,12 @@ class ObjSpace(object):
 
     def bool(self, value):
         return W_BoolObject(value)
+
+    def float(self, value):
+        raise CompileError, "Not implemented"
+
+    def null(self):
+        raise CompileError, "Not implemented"
 
     def add(self, w_left, w_right):
         """

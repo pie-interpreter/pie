@@ -3,6 +3,7 @@
 from pie.ast.nodes import *
 from pie.compiling import util
 
+
 class __extend__(AstNode):
 
     def compile(self, builder):
@@ -75,7 +76,12 @@ class __extend__(RequireOnce):
 class __extend__(Return):
 
     def compile_node(self, builder):
-        self.expression.compile(builder)
+        if isinstance(self.expression, EmptyStatement):
+            index = builder.register_null_const()
+            builder.emit('LOAD_CONST', index)
+        else:
+            self.expression.compile(builder)
+
         builder.emit('RETURN')
 
 
@@ -165,10 +171,10 @@ class __extend__(Assignment):
         index = builder.register_name(identifier.value)
 
         operation = self.get_modification_operation()
-        if operation: #inplace operation
+        if operation:  # inplace operation
             builder.emit('LOAD_NAME', index)
             builder.emit(operation)
-        else: # simple assign
+        else:  # simple assign
             builder.emit('STORE_VAR_FAST', index)
 
     def get_modification_operation(self):
@@ -486,4 +492,3 @@ class __extend__(ConstantDoubleQuotedString):
         value = util.process_double_quoted_string(self.value)
         index = builder.register_string_const(value)
         builder.emit('LOAD_CONST', index)
-

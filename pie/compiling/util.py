@@ -1,7 +1,7 @@
 """ Util module for compiling """
 
-HEX_CHARS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f']
-OCT_CHARS = ['0', '1', '2', '3', '4', '5', '6', '7']
+HEX_CHARS = list('01234567890ABCDEFabcdef')
+OCT_CHARS = list('01234567')
 
 def validate_oct(string):
     index = 0
@@ -17,6 +17,7 @@ def validate_oct(string):
         index += 1
 
     return "".join(result)
+
 
 def process_single_quoted_string(string):
     index = 0
@@ -35,6 +36,7 @@ def process_single_quoted_string(string):
         index += 1
 
     return "".join(result)
+
 
 def process_double_quoted_string(string):
     index = 0
@@ -90,7 +92,6 @@ def process_double_quoted_string(string):
                 if matched_digits:
                     index += len(matched_digits)
                     char = chr(int("".join(matched_digits[1:]), 16))
-
 
         result.append(char)
         index += 1
