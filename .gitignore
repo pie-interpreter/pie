@@ -2,6 +2,8 @@
 .project
 .pydevproject
 .idea
+*.sublime-*
+.ropeproject/*
 
 # Python compiled files
 *.pyc
