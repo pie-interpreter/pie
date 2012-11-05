@@ -270,7 +270,7 @@ class AstBuilder(RPythonVisitor):
 
     def visit_for(self, node):
         children_count = len(node.children)
-        assert children_count in range(1, 6)
+        assert children_count in [1, 2, 3, 4, 5]
 
         init_statements = []
         condition_statements = []
