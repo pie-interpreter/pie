@@ -83,6 +83,15 @@ class StatementsList(ItemsList):
         return "StatementsList(%s)" % self.get_list_repr(self.list)
 
 
+class Print(AstNodeWithResult):
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "Print(%s)" % self.value.repr()
+
+
 class Echo(ItemsList):
 
     def repr(self):

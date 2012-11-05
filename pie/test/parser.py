@@ -54,13 +54,25 @@ class Parser(object):
                 test.compile_only = True
 
             if current_mode == self.DOC:
-                test.doc += "\n" + line
+                if test.doc:
+                    test.doc += "\n" + line
+                else:
+                    test.doc = line
             elif current_mode == self.RESULT:
-                test.result += "\n" + line
+                if test.result:
+                    test.result += "\n" + line
+                else:
+                    test.result = line
             elif current_mode == self.FILE:
-                test.data += "\n" + line
+                if test.data:
+                    test.data += "\n" + line
+                else:
+                    test.data = line
             elif current_mode == self.SKIP:
-                test.skip_reason += "\n" + line
+                if test.skip_reason:
+                    test.skip_reason += "\n" + line
+                else:
+                    test.skip_reason = line
 
         file_handler.close()
         return test

@@ -10,13 +10,14 @@ OPCODE = {
 
     # common operations
     0: 'ECHO',
-    1: 'RETURN',
-    2: 'POP_STACK',
-    3: 'DUPLICATE_TOP',
-    4: 'INCLUDE',
-    5: 'INCLUDE_ONCE',
-    6: 'REQUIRE',
-    7: 'REQUIRE_ONCE',
+    1: 'PRINT',
+    2: 'RETURN',
+    3: 'POP_STACK',
+    4: 'DUPLICATE_TOP',
+    5: 'INCLUDE',
+    6: 'INCLUDE_ONCE',
+    7: 'REQUIRE',
+    8: 'REQUIRE_ONCE',
 
     # unary operations
     # operate on variable, retrieved by name from stack

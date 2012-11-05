@@ -37,3 +37,22 @@ class InterpreterError(Exception):
 
 class CompilerError(Exception):
     pass
+
+
+class LexerError(Exception):
+
+    def __init__(self, error, text):
+        self.lexer_error = error
+        self.text = text
+
+    def nice_error_message(self, filename="<unknown>"):
+        import os.path
+        error_line = self.text.split("\n")[self.lexer_error.source_pos.lineno]
+
+        result = ["PHP Lexing error in %s, line %s" %
+                  (os.path.abspath(filename), self.lexer_error.source_pos.lineno + 1)]
+        result.append(error_line)
+        result.append(" " * self.lexer_error.source_pos.columnno + "^")
+        result.append("Unexpected '%s'" % error_line[self.lexer_error.source_pos.columnno])
+
+        return "\n".join(result)

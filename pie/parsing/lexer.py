@@ -1,5 +1,8 @@
 from pie.parsing import regex
+from pypy.rlib.parsing.deterministic import LexerError
 from pypy.rlib.parsing.lexer import Lexer, SourcePos, Token
+import pie.error
+
 
 class PieLexer(Lexer):
     """ Special lexer for php files, adds processing of inline html content """
@@ -27,7 +30,11 @@ class PieLexer(Lexer):
         tokens = []
         for token in pre_parsed_tokens:
             if token.name == PiePreTokenizer.PHP_CODE_TOKEN:
-                grammar_tokens = self.tokenize_with_grammar(token)
+                try :
+                    grammar_tokens = self.tokenize_with_grammar(token)
+                except LexerError as e:
+                    raise pie.error.LexerError(e, text)
+
                 tokens.extend(grammar_tokens)
             else:
                 tokens.append(token)
@@ -99,14 +106,14 @@ class PiePreTokenizer(object):
                 break
 
             self.add_content_token(index)
+            self.last_start = index
             if self.is_html:
                 self.add_open_tag_token()
-                index += open_tag_length
+                self.last_start += open_tag_length
             else:
                 self.add_close_tag_token()
-                index += close_tag_length
+                self.last_start += close_tag_length
 
-            self.last_start = index
             self.is_html = not self.is_html
 
         if self.last_start < len(self.text):
@@ -139,6 +146,8 @@ class PiePreTokenizer(object):
             self.add_token(self.INHLINE_HTML_TOKEN, token)
         else:
             self.add_token(self.PHP_CODE_TOKEN, token)
+            # adding new line and separator helps with parsing
+            self.tokens[-1].source += ";\n"
 
     def add_open_tag_token(self):
         self.add_token(self.OPEN_TAG_TOKEN, self.PHP_OPEN_TAG)
@@ -158,4 +167,5 @@ class PiePreTokenizer(object):
         if newlines == 0:
             self.column += len(text)
         else:
-            self.column = text.rfind("\n")
+            self.column = len(text) - text.rfind("\n") - 1
+

@@ -28,6 +28,13 @@ class __extend__(StatementsList):
                 builder.emit('POP_STACK')
 
 
+class __extend__(Print):
+
+    def compile_node(self, builder):
+        self.value.compile(builder)
+        builder.emit('PRINT')
+
+
 class __extend__(Echo):
 
     def compile_node(self, builder):

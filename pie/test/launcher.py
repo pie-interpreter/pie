@@ -1,9 +1,8 @@
 from pie.compiling import compiling
-from pie.error import PHPError, InterpreterError
+from pie.error import PHPError, InterpreterError, LexerError
 from pie.interpreter import interpreter
 from pie.interpreter.main import InterpretedSource
 from pie.test.parser import Parser
-from pypy.rlib.parsing.deterministic import LexerError
 from pypy.rlib.parsing.parsing import ParseError
 import os
 import sys
@@ -30,19 +29,22 @@ class TestPHPLanguageCoverage(unittest.TestCase):
 
 
 def fill_test_class_with_tests(test_to_run = [], with_php_source = False):
-    """ Read directory contains test files and create a test method for each
-    test file
     """
+    Read all test files create a test method for each
+    """
+
     _fill_test_class_with_tests_from_dir('/coverage/', test_to_run, 'coverage_')
-    _fill_test_class_with_tests_from_dir('/grammar/', test_to_run, 'grammar_')
+    _fill_test_class_with_tests_from_dir('/parsing/', test_to_run, 'parsing_')
     if with_php_source:
         _fill_test_class_with_tests_from_dir('/from_php_source/', test_to_run)
 
 
 def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix = ''):
-    """ Read directory contains test files and create a test method for each
-    test file
     """
+    Read directory that contains test files and create
+    a test method for each test file
+    """
+
     path = os.path.dirname(__file__) + directory
     listing = os.listdir(path)
     for entry in listing:

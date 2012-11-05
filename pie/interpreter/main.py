@@ -2,9 +2,8 @@
 Entry point module for interpreting
 """
 
-from pie.error import PHPError, InterpreterError
+from pie.error import PHPError, InterpreterError, LexerError
 from pie.interpreter import interpreter
-from pypy.rlib.parsing.deterministic import LexerError
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
 

@@ -6,7 +6,7 @@
 #
 
 # ignored tokens (specified in PieLexer class)
-T_COMMENT: "//([^\n])*\n";
+T_COMMENT: "((//)|#)[^\n]*\n";
 T_DOC_COMMENT: "/\*\*([^\*]|\*[^/])*\*?\*/";
 T_INLINE_COMMENT: "/\*([^\*]|\*[^/])*\*?\*/";
 T_WHITESPACE: "\s";
@@ -25,6 +25,9 @@ T_DOUBLE_CAST: "\([ \t]*((float)|(double)|(real))[ \t]*\)";
 T_ECHO: "echo";
 T_ELSEIF: "elseif";
 T_ELSE: "else";
+T_ENDFOR: "endfor";
+T_ENDIF: "endif";
+T_ENDWHILE: "endwhile";
 T_FOR: "for";
 T_FUNCTION: "function";
 T_IF: "if";
@@ -39,6 +42,7 @@ T_LOGICAL_XOR: "xor";
 T_UNSET_CAST: "\([ \t]*(unset)[ \t]*\)";
 T_OBJECT_CAST: "\([ \t]*(object)[ \t]*\)";
 T_OPEN_TAG: "<\?php";
+T_PRINT: "print";
 T_RETURN: "return";
 T_REQUIRE: "require";
 T_REQUIRE_ONCE: "require_once";
@@ -99,13 +103,12 @@ file: >contents<;
 contents: >content_block< >contents< | [EOF];
 content_block: T_INLINE_HTML
              | >code<;
-code: [T_OPEN_TAG] >top_level_statements_block<;
+code: [T_OPEN_TAG] [T_CLOSE_TAG]
+    | [T_OPEN_TAG] >top_level_statements_block<;
 
 # top level list of statements include top level finished statements
 top_level_statements_block: >tol_level_statement< >top_level_statements_block<
-                          | >notfinished_statement< [";"]? [T_CLOSE_TAG]
-                          | >top_level_finished_statement< [T_CLOSE_TAG]
-                          | [";"] [T_CLOSE_TAG];
+                          | >tol_level_statement< [T_CLOSE_TAG];
 
 tol_level_statement: >notfinished_statement< [";"]
                    | >top_level_finished_statement<
@@ -118,6 +121,7 @@ statements_block: >statement< >statements_block<
 # basic common statement
 statement: >notfinished_statement< [";"]
          | >finished_statement<
+         | [T_CLOSE_TAG] T_INLINE_HTML [T_OPEN_TAG]
          | [";"];
 
 
@@ -131,33 +135,37 @@ notfinished_statement: expression
 
 # language constructs
 construct: construct_echo
-         | construct_include
-         | construct_include_once
-         | construct_require
-         | construct_require_once
          | construct_return
          | construct_break
          | construct_continue;
 
-construct_echo: [T_ECHO] >comma_seperated_expressions<
-              | [T_ECHO] ["("] >expression< [")"];
+# used later, as part of primary expressions
+constructs_with_return_value: <construct_print>
+                            | <construct_include>
+                            | <construct_include_once>
+                            | <construct_require>
+                            | <construct_require_once>;
 
-construct_include: [T_INCLUDE] expression
-                 | [T_INCLUDE] ["("] expression [")"];
-construct_include_once: [T_INCLUDE_ONCE] expression
-                      | [T_INCLUDE_ONCE] ["("] expression [")"];
-construct_require: [T_REQUIRE] expression
-                 | [T_REQUIRE] ["("] expression [")"];
-construct_require_once: [T_REQUIRE_ONCE] expression
-                      | [T_INCLUDE] ["("] expression [")"];
+construct_print: T_PRINT expression;
 
-construct_return: [T_RETURN] expression?;
+construct_echo: T_ECHO >comma_seperated_expressions<;
 
-construct_break: [T_BREAK] ["("] int_type [")"]
-               | [T_BREAK] int_type?;
+construct_include: T_INCLUDE expression
+                 | T_INCLUDE ["("] expression [")"];
+construct_include_once: T_INCLUDE_ONCE expression
+                      | T_INCLUDE_ONCE ["("] expression [")"];
+construct_require: T_REQUIRE expression
+                 | T_REQUIRE ["("] expression [")"];
+construct_require_once: T_REQUIRE_ONCE expression
+                      | T_INCLUDE ["("] expression [")"];
 
-construct_continue: [T_CONTINUE] ["("] int_type [")"]
-                  | [T_CONTINUE] int_type?;
+construct_return: T_RETURN expression?;
+
+construct_break: T_BREAK ["("] int_type [")"]
+               | T_BREAK int_type?;
+
+construct_continue: T_CONTINUE ["("] int_type [")"]
+                  | T_CONTINUE int_type?;
 
 
 # expressions definition, based on priority of operators
@@ -238,7 +246,8 @@ cast_token: T_ARRAY_CAST
 primary_expression: ["("] <expression> [")"]
                   | <function_call>
                   | <variable_expression>
-                  | <constant_expression>;
+                  | <constant_expression>
+                  | <constructs_with_return_value>;
 
 variable_expression: <variable_identifier>;
 variable_identifier: ["$"] IDENTIFIER;
@@ -270,7 +279,7 @@ top_level_finished_statement: function_declaration
                             | >finished_statement<;
 
 
-function_declaration: [T_FUNCTION] IDENTIFIER >function_arguments< ["{"] statements_block? ["}"];
+function_declaration: T_FUNCTION IDENTIFIER >function_arguments< ["{"] statements_block? ["}"];
 function_arguments: ["("] function_arguments_list? [")"];
 function_arguments_list: >function_argument< [","] >function_arguments_list<
                        | >function_argument<;
@@ -288,27 +297,32 @@ finished_statement: if
                   | dowhile
                   | for;
 
-if: [T_IF] ["("] expression [")"] >ifelse_body< >else_inner<?;
-else_inner: [T_ELSE] ["{"] ["}"]
-          | else
+if: T_IF >if_condition< >control_structure_body< >else_inner<?
+  | T_IF >if_condition< [":"] statements_block? >else_inner_alt<
+  | T_IF >if_condition< [":"] statements_block? [T_ENDIF] [";"];
+if_condition: ["("] expression [")"];
+else_inner: else
           | elseif;
-else: [T_ELSE] >ifelse_body<;
-elseif: [T_ELSEIF] ["("] expression [")"] >ifelse_body< >else_inner<?;
-ifelse_body: ["{"] statements_block? ["}"]
-           | >statement<;
+else: T_ELSE >control_structure_body<;
+elseif: T_ELSEIF >if_condition< >control_structure_body< >else_inner<?;
+else_inner_alt: else_alt
+              | elseif_alt;
+else_alt: T_ELSE [":"] statements_block? [T_ENDIF] [";"];
+elseif_alt: T_ELSEIF >if_condition< [":"] statements_block? >else_inner_alt<?;
 
-while: [T_WHILE] ["("] expression [")"] >while_body<;
-while_body: ["{"] statements_block? ["}"]
-          | [";"];
+while: T_WHILE ["("] expression [")"] >control_structure_body<
+     | T_WHILE ["("] expression [")"] [":"] statements_block? [T_ENDWHILE] [";"];
 
-dowhile: [T_DO] ["{"] statements_block? ["}"] [T_WHILE] ["("] expression [")"] [";"];
+dowhile: T_DO >control_structure_body< [T_WHILE] ["("] expression [")"] [";"];
 
-for: [T_FOR] ["("] for_init? [";"] for_condition? [";"] for_expression? [")"] >for_body<;
+for: T_FOR ["("] for_init? [";"] for_condition? [";"] for_expression? [")"] >control_structure_body<
+   | T_FOR ["("] for_init? [";"] for_condition? [";"] for_expression? [")"] [":"] statements_block? [T_ENDFOR] [";"];
 for_init: >comma_seperated_expressions<;
 for_condition:  >comma_seperated_expressions<;
 for_expression:  >comma_seperated_expressions<;
-for_body: ["{"] statements_block? ["}"]
-        | [";"];
+
+control_structure_body: ["{"] statements_block? ["}"]
+                      | >statement<;
 
 
 #

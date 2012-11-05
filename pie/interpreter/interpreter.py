@@ -85,6 +85,11 @@ class Interpreter(object):
         stack_value = self.frame.stack.pop()
         os.write(1, stack_value.as_string().str_w())
 
+    def PRINT(self, value):
+        stack_value = self.frame.stack.pop()
+        os.write(1, stack_value.as_string().str_w())
+        self.frame.stack.append(space.int(1))
+
     def RETURN(self, value):
         self.position = self.RETURN_FLAG
 

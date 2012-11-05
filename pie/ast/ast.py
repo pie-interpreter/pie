@@ -1,13 +1,14 @@
 " Module, providing ast building tools "
 
-from pie.parsing import parsing
 from pie.ast.nodes import *
+from pie.parsing import parsing
 from pypy.rlib.parsing.tree import RPythonVisitor
 
 
 def build(source):
     parse_tree = parsing.parse(source)
-    return build_ast(parse_tree)
+    astree = build_ast(parse_tree)
+    return astree
 
 
 def build_ast(parse_tree):
@@ -31,41 +32,46 @@ class AstBuilder(RPythonVisitor):
     def visit_statements_block(self, node):
         return StatementsList(self.get_children_as_list(node))
 
+    def visit_construct_print(self, node):
+        return Print(self.get_second_child(node))
+
     def visit_construct_echo(self, node):
-        return Echo(self.get_children_as_list(node))
+        statments_list = self.get_children_as_list(node)
+        # first item in the list is "echo" token
+        return Echo(statments_list[1:])
 
     def visit_construct_include(self, node):
-        return Include(self.get_single_child(node))
+        return Include(self.get_second_child(node))
 
     def visit_construct_include_once(self, node):
-        return IncludeOnce(self.get_single_child(node))
+        return IncludeOnce(self.get_second_child(node))
 
     def visit_construct_require(self, node):
-        return Require(self.get_single_child(node))
+        return Require(self.get_second_child(node))
 
     def visit_construct_include_once(self, node):
-        return RequireOnce(self.get_single_child(node))
+        return RequireOnce(self.get_second_child(node))
 
     def visit_construct_return(self, node):
-        return Return(self.get_single_child(node))
+        return Return(self.get_second_child_if_exists(node))
 
     def visit_construct_break(self, node):
         children_count = len(node.children)
-        assert children_count == 0 or children_count == 1
+        assert children_count in [1, 2]
 
         level = 1
-        if children_count == 1:
-            level = int(node.children[0].token.source)
+        if children_count == 2:
+            level = int(node.children[1].token.source)
 
         return Break(level)
 
     def visit_construct_continue(self, node):
         children_count = len(node.children)
-        assert children_count == 0 or children_count == 1
+        assert children_count in [1, 2]
 
         level = 1
-        if children_count == 1:
-            level = int(node.children[0].token.source)
+        if children_count == 2:
+            level = int(node.children[1].token.source)
 
         return Continue(level)
 
@@ -179,7 +185,7 @@ class AstBuilder(RPythonVisitor):
 
     def visit_function_call(self, node):
         children_count = len(node.children)
-        assert children_count == 1 or children_count == 2
+        assert children_count in [1, 2]
 
         name = self.transform(node.children[0])
         if children_count == 2:
@@ -191,19 +197,19 @@ class AstBuilder(RPythonVisitor):
 
     def visit_function_declaration(self, node):
         children_count = len(node.children)
-        assert children_count >= 1 or children_count <= 3
+        assert children_count in [2, 3, 4]
 
-        name = self.transform(node.children[0])
+        name = self.transform(node.children[1])
         # function declaration can have arguments list or/and function body
         # missing, we need to check which is which
-        if children_count > 1 \
-                and node.children[1].symbol == "function_arguments_list" :
-            arguments = self.transform(node.children[1])
+        if children_count > 2 \
+                and node.children[2].symbol == "function_arguments_list" :
+            arguments = self.transform(node.children[2])
         else:
             arguments = ItemsList()
 
-        if children_count > 2 \
-                or node.children[1].symbol == "statements_block" :
+        if children_count > 3 \
+                or node.children[2].symbol == "statements_block" :
             body = self.transform(node.children[-1])
         else:
             body = EmptyStatement()
@@ -212,14 +218,16 @@ class AstBuilder(RPythonVisitor):
 
     def visit_if(self, node):
         children_count = len(node.children)
-        assert children_count > 0 and children_count < 4
+        assert children_count in [2, 3, 4]
 
-        condition = self.transform(node.children[0])
+        # condition always present
+        condition = self.transform(node.children[1])
         body = EmptyStatement()
         else_branch = EmptyStatement()
-        for index in range(1, children_count):
+
+        for index in range(2, children_count):
             child = node.children[index]
-            if child.symbol == 'else' or child.symbol == 'elseif':
+            if child.symbol in ['else', 'else_alt', 'elseif', 'elseif_alt']:
                 else_branch = self.transform(child)
             else:
                 body = self.transform(child)
@@ -227,52 +235,57 @@ class AstBuilder(RPythonVisitor):
         return If(condition, body, else_branch)
 
     def visit_else(self, node):
-        return self.get_single_child(node)
+        return self.get_second_child_if_exists(node)
 
     def visit_elseif(self, node):
         return self.visit_if(node)
 
+    def visit_else_alt(self, node):
+        return self.get_second_child_if_exists(node)
+
+    def visit_elseif_alt(self, node):
+        return self.visit_if(node)
+
     def visit_while(self, node):
         children_count = len(node.children)
-        assert children_count == 1 or children_count == 2
+        assert children_count in [2, 3]
 
-        expression = self.transform(node.children[0])
-        if children_count > 1:
-            body = self.transform(node.children[1])
-        else:
-            body = EmptyStatement()
+        expression = self.transform(node.children[1])
+        body = EmptyStatement()
+        if children_count > 2:
+            body = self.transform(node.children[2])
 
         return While(expression, body)
 
     def visit_dowhile(self, node):
         children_count = len(node.children)
-        assert children_count == 1 or children_count == 2
+        assert children_count in [2, 3]
 
         expression = self.transform(node.children[-1])
-        if children_count > 1:
-            body = self.transform(node.children[0])
-        else:
-            body = EmptyStatement()
+        body = EmptyStatement()
+        if children_count > 2:
+            body = self.transform(node.children[1])
 
         return DoWhile(expression, body)
 
     def visit_for(self, node):
         children_count = len(node.children)
-        assert children_count > 0 or children_count < 4
+        assert children_count in range(1, 6)
 
         init_statements = []
         condition_statements = []
         expression_statements = []
         body = EmptyStatement()
 
-        for child in node.children:
+        for index in range(1, children_count):
+            child = node.children[index]
             if child.symbol == 'for_init':
                 init_statements = self.transform(child).list
             elif child.symbol == 'for_condition':
                 condition_statements = self.transform(child).list
             elif child.symbol == 'for_expression':
                 expression_statements = self.transform(child).list
-            elif child.symbol == 'statements_block':
+            else:
                 body = self.transform(child)
 
         return For(init_statements,
@@ -325,6 +338,19 @@ class AstBuilder(RPythonVisitor):
     def get_single_child(self, node):
         assert len(node.children) == 1
         return self.transform(node.children[0])
+
+    def get_second_child(self, node):
+        assert len(node.children) >= 2
+        return self.transform(node.children[1])
+
+    def get_second_child_if_exists(self, node):
+        children_count = len(node.children)
+        assert children_count in [1, 2]
+
+        if children_count == 1:
+            return EmptyStatement()
+
+        return self.transform(node.children[1])
 
     def get_binary_operator(self, node):
         children_count = len(node.children)
