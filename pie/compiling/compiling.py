@@ -100,7 +100,7 @@ class BytecodeBuilder(object):
             return self.string_consts_cache[value]
         except KeyError:
             constants_count = len(self.consts)
-            self.consts.append(W_StringObject([char for char in value]))
+            self.consts.append(W_StringObject(value))
             self.string_consts_cache[value] = constants_count
             return constants_count
 

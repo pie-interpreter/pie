@@ -1,5 +1,5 @@
 from pie.objects.bool import W_BoolObject
-from pie.objects.conststring import W_StringObject, NotConvertibleToNumber, W_ConstStringObject
+from pie.objects.conststring import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
 
 __author__ = 'sery0ga'
@@ -13,9 +13,6 @@ class ObjSpace(object):
 
     def str(self, value):
         return W_StringObject(value)
-
-    def const_str(self, value):
-        return W_ConstStringObject(value)
 
     def bool(self, value):
         return W_BoolObject(value)
@@ -120,5 +117,4 @@ for _name in ['less_than', 'more_than', 'equal', 'not_equal', 'less_than_or_equa
 W_IntObject.type = ObjSpace.w_int
 W_StringObject.type = ObjSpace.w_str
 W_BoolObject.type = ObjSpace.w_bool
-W_ConstStringObject.type = ObjSpace.w_str
 space = ObjSpace()

@@ -77,7 +77,7 @@ class Interpreter(object):
 
     def ECHO(self, value):
         stack_value = self.frame.stack.pop()
-        os.write(1, stack_value.as_string().str_w())
+        os.write(1, stack_value.as_string().conststr_w())
 
     def RETURN(self, value):
         self.position = self.RETURN_FLAG
@@ -176,8 +176,17 @@ class Interpreter(object):
     def INPLACE_SUBSTRACT(self, value):
         raise InterpreterError, "Not implemented"
 
-    def INPLACE_CONCAT(self, value):
-        raise InterpreterError, "Not implemented"
+    def INPLACE_CONCAT(self, var_index):
+        var_name = self.frame.stack.pop().str_w()
+        concat_value = self.frame.stack.pop()
+        try:
+            value = self.frame.variables[var_name]
+        except KeyError:
+            value = self._handle_undefined(var_name)
+            # operation itself
+        value = value.as_string().concatenate(concat_value.as_string())
+        self.frame.variables[var_name] = value
+        self.frame.stack.append(value)
 
     def INPLACE_MULTIPLY(self, value):
         raise InterpreterError, "Not implemented"
@@ -190,7 +199,7 @@ class Interpreter(object):
 
     def LOAD_VAR(self, var_index):
         var_name = self.bytecode.names[var_index]
-        self.frame.stack.append(space.const_str(var_name))
+        self.frame.stack.append(space.str(var_name))
 
     def STORE_VAR(self, value):
         raise InterpreterError, "Not implemented"
@@ -200,7 +209,7 @@ class Interpreter(object):
 
     def LOAD_NAME(self, index):
         name = self.bytecode.names[index]
-        self.frame.stack.append(space.const_str(name))
+        self.frame.stack.append(space.str(name))
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -264,10 +273,15 @@ class Interpreter(object):
         if value.is_true():
             self.position = new_position
 
+    def CONCAT(self, value):
+        right = self.frame.stack.pop()
+        left = self.frame.stack.pop()
+        self.frame.stack.append(space.concat(left, right))
+
     def _handle_undefined(self, name):
         message = "Undefined variable: %s" % name
         self._notice(message)
-        return space.str([])
+        return space.str('')
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]
@@ -305,7 +319,7 @@ def _new_binary_op(name, space_name):
     func.func_name = name
     return func
 
-for _name in ['ADD', 'SUBSTRACT', 'CONCAT', 'MULTIPLY', 'MOD', 'LESS_THAN',
+for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'LESS_THAN',
               'MORE_THAN', 'LESS_THAN_OR_EQUAL' ,'MORE_THAN_OR_EQUAL', 'EQUAL',
               'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
     setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))

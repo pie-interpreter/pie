@@ -17,14 +17,17 @@ class W_BoolObject(W_Root):
     def as_string(self):
         from pie.objects.conststring import W_StringObject
         if self.value:
-            return W_StringObject(['1'])
-        return W_StringObject([])
+            return W_StringObject('1')
+        return W_StringObject('')
 
     def as_bool(self):
         return self
 
     def copy(self):
         return W_BoolObject(self.value)
+
+    def hard_copy(self):
+        return self.copy()
 
     def is_true(self):
         return self.value

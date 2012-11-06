@@ -18,7 +18,7 @@ class W_IntObject(W_Root):
 
     def as_string(self):
         from pie.objects.conststring import W_StringObject
-        return W_StringObject([char for char in (str(self.value))])
+        return W_StringObject(str(self.value))
 
     def as_bool(self):
         from pie.objects.bool import W_BoolObject
@@ -26,6 +26,9 @@ class W_IntObject(W_Root):
 
     def copy(self):
         return W_IntObject(self.value)
+
+    def hard_copy(self):
+        return self.copy()
 
     def is_true(self):
         return self.value > 0
