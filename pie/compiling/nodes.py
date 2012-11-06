@@ -194,20 +194,24 @@ class __extend__(Assignment):
 class __extend__(TernaryOperator):
 
     def compile_node(self, builder):
-        # TODO optimize
-        # evaluating condition
+        leftempty = isinstance(self.left, EmptyStatement)
+
         self.condition.compile(builder)
-        jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
 
-        self.left.compile(builder)
-        builder.emit('JUMP', 0)
-        # adding jump opcode and saving position of it's parameter
-        # to patch it later to end of statement's position
-        jump_position = builder.get_current_position() - 2
-        builder.update_to_current_position(jump_if_false_position)
-
-        self.right.compile(builder)
-        builder.update_to_current_position(jump_position)
+        # if first expression is empty, we need to use result of condition instead
+        if leftempty:
+            builder.emit("DUPLICATE_TOP")
+            jump_if_true_position = builder.emit('JUMP_IF_TRUE', 0) + 1
+            builder.emit('POP_STACK')
+            self.right.compile(builder)
+            builder.update_to_current_position(jump_if_true_position)
+        else:
+            jump_if_false_position = builder.emit('JUMP_IF_FALSE', 0) + 1
+            self.left.compile(builder)
+            jump_position = builder.emit('JUMP', 0) + 1
+            builder.update_to_current_position(jump_if_false_position)
+            self.right.compile(builder)
+            builder.update_to_current_position(jump_position)
 
 
 class __extend__(Not):

@@ -49,7 +49,7 @@ class AstBuilder(RPythonVisitor):
     def visit_construct_require(self, node):
         return Require(self.get_second_child(node))
 
-    def visit_construct_include_once(self, node):
+    def visit_construct_require_once(self, node):
         return RequireOnce(self.get_second_child(node))
 
     def visit_construct_return(self, node):
@@ -121,11 +121,15 @@ class AstBuilder(RPythonVisitor):
         return Assignment(variable, operator, value)
 
     def visit_ternary_expression(self, node):
-        assert len(node.children) == 3
+        children_count = len(node.children)
+        assert children_count in [2, 3]
 
         condition = self.transform(node.children[0])
-        left = self.transform(node.children[1])
-        right = self.transform(node.children[2])
+        left = EmptyStatement()
+        if children_count == 3:
+            left = self.transform(node.children[1])
+
+        right = self.transform(node.children[-1])
 
         return TernaryOperator(condition, left, right)
 
@@ -203,13 +207,13 @@ class AstBuilder(RPythonVisitor):
         # function declaration can have arguments list or/and function body
         # missing, we need to check which is which
         if children_count > 2 \
-                and node.children[2].symbol == "function_arguments_list" :
+                and node.children[2].symbol == "function_arguments_list":
             arguments = self.transform(node.children[2])
         else:
             arguments = ItemsList()
 
         if children_count > 3 \
-                or node.children[2].symbol == "statements_block" :
+                or node.children[2].symbol == "statements_block":
             body = self.transform(node.children[-1])
         else:
             body = EmptyStatement()

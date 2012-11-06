@@ -74,8 +74,6 @@ ADDITIVE_OPERATOR: "[-+]";
 CONCATENATION_OPERATOR: "\.";
 COMPARE_OPERATOR: "(<=)|(>=)|<|>";
 EQUALITY_OPERATOR: "(===)|(!==)|(==)|(!=)|(<>)";
-TERNARY_OPERATOR_FIRST_PART: "\?";
-TERNARY_OPERATOR_SECOND_PART: ":";
 ASSIGN_OPERATOR: "(\+=)|(-=)|(\*=)|(/=)|(\.=)|(%=)|(=)";
 LOGICAL_NOT_OPERATOR: "!";
 
@@ -191,7 +189,7 @@ logical_and_expression_inner: assign_expression [T_LOGICAL_AND] >logical_and_exp
 assign_expression: variable_expression ASSIGN_OPERATOR assign_expression
                  | <ternary_expression>;
 
-ternary_expression: boolean_or_expression [TERNARY_OPERATOR_FIRST_PART] expression [TERNARY_OPERATOR_SECOND_PART] expression
+ternary_expression: boolean_or_expression ["?"] expression? [":"] expression
                   | <boolean_or_expression>;
 
 # boolean are "&&" and "||" operations

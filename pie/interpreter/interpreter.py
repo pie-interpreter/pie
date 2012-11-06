@@ -10,6 +10,7 @@ import os
 
 __author__ = 'sery0ga'
 
+
 def interpret(source):
     bytecode = compiling.compile_source(source)
     context = Context()
@@ -54,7 +55,7 @@ class Interpreter(object):
                         + (ord(code[self.position + 1]) << 8)
                     self.position += 2
                 else:
-                    arg = 0 # don't make it negative
+                    arg = 0  # don't make it negative
 
                 assert arg >= 0
 
