@@ -1,5 +1,5 @@
 from pie.objects.bool import W_BoolObject
-from pie.objects.conststring import W_StringObject, NotConvertibleToNumber
+from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
 
 __author__ = 'sery0ga'

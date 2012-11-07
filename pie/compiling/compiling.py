@@ -5,7 +5,7 @@ from pie.compiling.nodes import *
 from pie.error import CompilerError
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
-from pie.objects.conststring import W_StringObject
+from pie.objects.string import W_StringObject
 from pie.opcodes import get_opcode_index
 
 

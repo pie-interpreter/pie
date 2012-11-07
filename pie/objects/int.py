@@ -17,7 +17,7 @@ class W_IntObject(W_Root):
         return self
 
     def as_string(self):
-        from pie.objects.conststring import W_StringObject
+        from pie.objects.string import W_StringObject
         return W_StringObject(str(self.value))
 
     def as_bool(self):

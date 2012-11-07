@@ -15,7 +15,7 @@ class W_BoolObject(W_Root):
         return W_IntObject(int(self.value))
 
     def as_string(self):
-        from pie.objects.conststring import W_StringObject
+        from pie.objects.string import W_StringObject
         if self.value:
             return W_StringObject('1')
         return W_StringObject('')
