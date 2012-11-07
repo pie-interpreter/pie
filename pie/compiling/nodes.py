@@ -99,6 +99,38 @@ class __extend__(Continue):
         builder.add_continue_position_to_patch(self.level, jump_position)
 
 
+class __extend__(Isset):
+
+    def compile_node(self, builder):
+        for statement in self.list:
+            index = builder.register_name(_get_variable_name(statement))
+            builder.emit('LOAD_NAME', index)
+
+        builder.emit('ISSET', len(self.list))
+
+
+class __extend__(Unset):
+
+    def compile_node(self, builder):
+        for statement in self.list:
+            index = builder.register_name(_get_variable_name(statement))
+            builder.emit('LOAD_NAME', index)
+
+        builder.emit('UNSET', len(self.list))
+
+
+class __extend__(Empty):
+
+    def compile_node(self, builder):
+        if isinstance(self.expression, Variable):
+            index = builder.register_name(_get_variable_name(self.expression))
+            builder.emit('LOAD_NAME', index)
+            builder.emit('EMPTY_VAR')
+        else:
+            self.expression.compile(builder)
+            builder.emit('EMPTY_RESULT')
+
+
 class __extend__(BinaryOperator):
 
     def compile_node(self, builder):
@@ -164,11 +196,7 @@ class __extend__(Assignment):
     def compile_node(self, builder):
         # compiling value first, so result would be on the stack for us
         self.value.compile(builder)
-        # registering var name in builder
-        assert isinstance(self.variable, Variable)
-        identifier = self.variable.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
+        index = builder.register_name(_get_variable_name(self.variable))
 
         operation = self.get_modification_operation()
         if operation:  # inplace operation
@@ -225,10 +253,7 @@ class __extend__(IncrementDecrement):
 
     def compile_node(self, builder):
         # registering var name in builder
-        assert isinstance(self.variable, Variable)
-        identifier = self.variable.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
+        index = builder.register_name(_get_variable_name(self.variable))
 
         builder.emit('LOAD_NAME', index)
         builder.emit(self.get_operation())
@@ -271,9 +296,7 @@ class __extend__(Cast):
 class __extend__(Variable):
 
     def compile_node(self, builder):
-        identifier = self.name
-        assert isinstance(identifier, Identifier)
-        index = builder.register_name(identifier.value)
+        index = builder.register_name(_get_variable_name(self))
         builder.emit('LOAD_VAR_FAST', index)
 
 
@@ -475,6 +498,13 @@ class __extend__(ConstantBool):
         builder.emit('LOAD_CONST', index)
 
 
+class __extend__(ConstantNull):
+
+    def compile_node(self, builder):
+        index = builder.register_null_const()
+        builder.emit('LOAD_CONST', index)
+
+
 class __extend__(ConstantString):
 
     def compile_node(self, builder):
@@ -496,3 +526,11 @@ class __extend__(ConstantDoubleQuotedString):
         value = util.process_double_quoted_string(self.value)
         index = builder.register_string_const(value)
         builder.emit('LOAD_CONST', index)
+
+
+def _get_variable_name(var):
+    assert isinstance(var, Variable)
+    identifier = var.name
+    assert isinstance(identifier, Identifier)
+
+    return identifier.value

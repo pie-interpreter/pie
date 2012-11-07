@@ -75,6 +75,21 @@ class AstBuilder(RPythonVisitor):
 
         return Continue(level)
 
+    def visit_construct_isset(self, node):
+        assert len(node.children) == 2
+
+        expressions = self.transform(node.children[1])
+        return Isset(expressions.list)
+
+    def visit_construct_unset(self, node):
+        assert len(node.children) == 2
+
+        expressions = self.transform(node.children[1])
+        return Unset(expressions.list)
+
+    def visit_construct_empty(self, node):
+        return Empty(self.get_second_child(node))
+
     def visit_logical_xor_expression(self, node):
         children_count = len(node.children)
         assert children_count >= 2
@@ -326,6 +341,9 @@ class AstBuilder(RPythonVisitor):
 
     def visit_FALSE(self, node):
         return ConstantBool(False)
+
+    def visit_NULL(self, node):
+        return ConstantNull()
 
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source)

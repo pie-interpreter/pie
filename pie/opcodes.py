@@ -18,73 +18,80 @@ OPCODE = {
     6: 'INCLUDE_ONCE',
     7: 'REQUIRE',
     8: 'REQUIRE_ONCE',
+    9: 'EMPTY_VAR',  # check if var with name from the stack is empty
+    10: 'EMPTY_RESULT',  # check if value on the stack is empty
 
     # unary operations
     # operate on variable, retrieved by name from stack
-    10: 'NOT', # logical not
-    11: 'CAST_TO_ARRAY',
-    12: 'CAST_TO_BOOL',
-    13: 'CAST_TO_DOUBLE',
-    14: 'CAST_TO_INT',
-    15: 'CAST_TO_OBJECT',
-    16: 'CAST_TO_STRING',
-    17: 'CAST_TO_UNSET',
+    20: 'NOT',  # logical not
+    21: 'CAST_TO_ARRAY',
+    22: 'CAST_TO_BOOL',
+    23: 'CAST_TO_DOUBLE',
+    24: 'CAST_TO_INT',
+    25: 'CAST_TO_OBJECT',
+    26: 'CAST_TO_STRING',
+    27: 'CAST_TO_UNSET',
     # increment/decrement
-    20: 'PRE_INCREMENT',
-    21: 'PRE_DECREMENT',
-    22: 'POST_INCREMENT',
-    23: 'POST_DECREMENT',
+    30: 'PRE_INCREMENT',
+    31: 'PRE_DECREMENT',
+    32: 'POST_INCREMENT',
+    33: 'POST_DECREMENT',
 
     # binary operations
     # operate on two values on stack
-    30: 'ADD',
-    31: 'SUBSTRACT',
-    32: 'CONCAT',
-    33: 'MULTIPLY',
-    34: 'DIVIDE',
-    35: 'MOD',
-    36: 'LESS_THAN',
-    37: 'MORE_THAN',
-    38: 'LESS_THAN_OR_EQUAL',
-    39: 'MORE_THAN_OR_EQUAL',
-    40: 'EQUAL',
-    41: 'NOT_EQUAL',
-    42: 'IDENTICAL',
-    43: 'NOT_IDENTICAL',
-    44: 'XOR', # logical xor
+    40: 'ADD',
+    41: 'SUBSTRACT',
+    42: 'CONCAT',
+    43: 'MULTIPLY',
+    44: 'DIVIDE',
+    45: 'MOD',
+    46: 'LESS_THAN',
+    47: 'MORE_THAN',
+    48: 'LESS_THAN_OR_EQUAL',
+    49: 'MORE_THAN_OR_EQUAL',
+    50: 'EQUAL',
+    51: 'NOT_EQUAL',
+    52: 'IDENTICAL',
+    53: 'NOT_IDENTICAL',
+    54: 'XOR',  # logical xor
 
     # inplace operations (+=, -=, etc)
     # operate on variable, retreived by name from stack and value following it
-    50: 'INPLACE_ADD',
-    51: 'INPLACE_SUBSTRACT',
-    52: 'INPLACE_CONCAT',
-    53: 'INPLACE_MULTIPLY',
-    54: 'INPLACE_DIVIDE',
-    55: 'INPLACE_MOD',
+    60: 'INPLACE_ADD',
+    61: 'INPLACE_SUBSTRACT',
+    62: 'INPLACE_CONCAT',
+    63: 'INPLACE_MULTIPLY',
+    64: 'INPLACE_DIVIDE',
+    65: 'INPLACE_MOD',
 
     # loading and storing by name on stack
-    60: 'LOAD_VAR',
-    61: 'STORE_VAR',
+    70: 'LOAD_VAR',
+    71: 'STORE_VAR',
 
     # from here operations require argument
     # in comment meaning of the argument is provideds
 
     # loading/storing from bytecode pre-cached values
-    128: 'LOAD_CONST', # index of the constant to load
-    129: 'LOAD_NAME', # index of the name to load
-    130: 'LOAD_VAR_FAST', # index of the name of the variable to load
-    131: 'STORE_VAR_FAST', # index of the name of the varibale to store value to
+    128: 'LOAD_CONST',  # index of the constant to load
+    129: 'LOAD_NAME',  # index of the name to load
+    130: 'LOAD_VAR_FAST',  # index of the name of the variable to load
+    131: 'STORE_VAR_FAST',  # index of the name of the varibale to store value to
 
     # function calling by name, which is loaded from stack
-    140: 'CALL_FUNCTION', # number of arguments to load from stack
+    140: 'CALL_FUNCTION',  # number of arguments to load from stack
 
     # moving around the code
-    150: 'JUMP', # absolute position
-    151: 'JUMP_IF_FALSE', # absolute position
-    152: 'JUMP_IF_TRUE', # absolute position
+    150: 'JUMP',  # absolute position
+    151: 'JUMP_IF_FALSE',  # absolute position
+    152: 'JUMP_IF_TRUE',  # absolute position
+
+    # other common operations
+    160: 'ISSET',  # number of var names on the stack to check set status
+    161: 'UNSET',  # number of var names on the stack to unset
 }
 
 OPCODE_INDEXES = {}
+
 
 def get_opcode_name(index):
     try:
@@ -92,11 +99,13 @@ def get_opcode_name(index):
     except KeyError:
         return ""
 
+
 def get_opcode_index(name):
     try:
         return OPCODE_INDEXES[name]
     except KeyError:
         return -1
+
 
 def _initialize():
     for (key, value) in OPCODE.items():

@@ -112,6 +112,12 @@ class Interpreter(object):
     def REQUIRE_ONCE(self, value):
         raise InterpreterError, "Not implemented"
 
+    def EMPTY_VAR(self, value):
+        raise InterpreterError, "Not implemented"
+
+    def EMPTY_RESULT(self, value):
+        raise InterpreterError, "Not implemented"
+
     def NOT(self, value):
         raise InterpreterError, "Not implemented"
 
@@ -252,6 +258,12 @@ class Interpreter(object):
         value = self.frame.stack.pop()
         if value.is_true():
             self.position = new_position
+
+    def ISSET(self, names_count):
+        raise InterpreterError("Not implemented")
+
+    def UNSET(self, names_count):
+        raise InterpreterError("Not implemented")
 
     def _handle_undefined(self, name):
         message = "Undefined variable: %s" % name

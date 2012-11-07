@@ -25,6 +25,7 @@ T_DOUBLE_CAST: "\([ \t]*((float)|(double)|(real))[ \t]*\)";
 T_ECHO: "echo";
 T_ELSEIF: "elseif";
 T_ELSE: "else";
+T_EMPTY: "empty";
 T_ENDFOR: "endfor";
 T_ENDIF: "endif";
 T_ENDWHILE: "endwhile";
@@ -36,10 +37,10 @@ T_INCLUDE: "include";
 T_INCLUDE_ONCE: "include_once";
 T_INT_CAST: "\([ \t]*((int)|(integer))[ \t]*\)";
 T_INLINE_HTML: "\?><\?php";
+T_ISSET: "isset";
 T_LOGICAL_AND: "and";
 T_LOGICAL_OR: "or";
 T_LOGICAL_XOR: "xor";
-T_UNSET_CAST: "\([ \t]*(unset)[ \t]*\)";
 T_OBJECT_CAST: "\([ \t]*(object)[ \t]*\)";
 T_OPEN_TAG: "<\?php";
 T_PRINT: "print";
@@ -47,6 +48,8 @@ T_RETURN: "return";
 T_REQUIRE: "require";
 T_REQUIRE_ONCE: "require_once";
 T_STRING_CAST: "\([ \t]*(string)[ \t]*\)";
+T_UNSET: "unset";
+T_UNSET_CAST: "\([ \t]*(unset)[ \t]*\)";
 T_WHILE: "while";
 
 
@@ -92,7 +95,7 @@ IDENTIFIER: "[a-z_][a-z0-9_]*";
 # - finished statements don't require a semicolon in the end of it
 # - not finished statements do
 #
-# - finished statements divided in two groups: top level ones and other
+# - finished statements are divided in two groups: top level ones and other
 #   top level are the ones, that can be found only in main part of the file:
 #   statements like class or function declarations, the rest are control
 #   structures like for, switch, while
@@ -135,14 +138,17 @@ notfinished_statement: expression
 construct: construct_echo
          | construct_return
          | construct_break
-         | construct_continue;
+         | construct_continue
+         | construct_unset;
 
 # used later, as part of primary expressions
 constructs_with_return_value: <construct_print>
                             | <construct_include>
                             | <construct_include_once>
                             | <construct_require>
-                            | <construct_require_once>;
+                            | <construct_require_once>
+                            | <construct_isset>
+                            | <construct_empty>;
 
 construct_print: T_PRINT expression;
 
@@ -164,6 +170,12 @@ construct_break: T_BREAK ["("] int_type [")"]
 
 construct_continue: T_CONTINUE ["("] int_type [")"]
                   | T_CONTINUE int_type?;
+
+construct_isset: T_ISSET ["("] comma_seperated_variables [")"];
+
+construct_unset: T_UNSET ["("] comma_seperated_variables [")"];
+
+construct_empty: T_EMPTY ["("] expression [")"];
 
 
 # expressions definition, based on priority of operators
@@ -267,6 +279,10 @@ function_parameters_list: expression [","] >function_parameters_list<
 # expressions block, that can be found in for loop and other places
 comma_seperated_expressions: expression [","] >comma_seperated_expressions<
                            | expression;
+
+# variables block, that can be found in constructs, working only on variables
+comma_seperated_variables: variable_expression [","] >comma_seperated_variables<
+                         | variable_expression;
 
 
 

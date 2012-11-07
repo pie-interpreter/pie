@@ -59,7 +59,7 @@ class ItemsList(AstNode):
     Nodes, subclassed from this one can be in ast.
     """
 
-    def __init__(self, items_list = []):
+    def __init__(self, items_list=[]):
         self.list = items_list
 
     def repr(self):
@@ -152,12 +152,36 @@ class Continue(AstNode):
         return "Continue(%s)" % self.level
 
 
+class Isset(AstNodeWithResult):
+
+    def __init__(self, items_list=[]):
+        self.list = items_list
+
+    def repr(self):
+        return "Isset(%s)" % self.get_list_repr(self.list)
+
+
+class Unset(ItemsList):
+
+    def repr(self):
+        return "Unset(%s)" % self.get_list_repr(self.list)
+
+
+class Empty(AstNodeWithResult):
+
+        def __init__(self, expression):
+            self.expression = expression
+
+        def repr(self):
+            return "Empty(%s)" % self.expression.repr()
+
+
 class BinaryOperator(AstNodeWithResult):
 
     def __init__(self, operation, left, right):
         self.operation = operation
         self.left = left
-        self.right= right
+        self.right = right
 
     def repr(self):
         return "BinaryOperator(%s %s %s)" % (self.left.repr(),
@@ -169,7 +193,7 @@ class Xor(AstNodeWithResult):
 
     def __init__(self, left, right):
         self.left = left
-        self.right= right
+        self.right = right
 
     def repr(self):
         return "Xor(%s xor %s)" % (self.left.repr(), self.right.repr())
@@ -185,7 +209,6 @@ class And(Xor):
 
     def repr(self):
         return "And(%s or %s)" % (self.left.repr(), self.right.repr())
-
 
 
 class Assignment(AstNodeWithResult):
@@ -398,8 +421,13 @@ class ConstantBool(AstNodeWithResult):
         return "ConstantBool(\"%s\")" % (self.value)
 
 
+class ConstantNull(AstNodeWithResult):
+
+    def repr(self):
+        return "ConstantNull()"
+
+
 class Identifier(Item):
 
     def repr(self):
         return "Identifier: %s" % self.value
-

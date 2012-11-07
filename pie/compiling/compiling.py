@@ -20,6 +20,7 @@ def compile_ast(astree, source):
 
     return builder.create_bytecode()
 
+
 class BytecodeBuilder(object):
     " Helper class to build byte-code "
 
@@ -51,7 +52,7 @@ class BytecodeBuilder(object):
     def emit(self, opcode_name, arg=-1):
         current_position = self.get_current_position()
 
-        assert arg < 1<<16
+        assert arg < (1 << 16)
         self.opcode_lines[current_position] = self.line
         self.code.append(chr(get_opcode_index(opcode_name)))
         if arg != -1:
@@ -166,13 +167,13 @@ class BytecodeBuilder(object):
 
     def add_break_position_to_patch(self, level, position):
         if len(self.break_positions) < level:
-            raise CompilerError, "Cannot break %s levels" % level
+            raise CompilerError("Cannot break %s levels" % level)
 
         self.break_positions[-1 * level].append(position)
 
     def add_continue_position_to_patch(self, level, position):
         if len(self.continue_positions) < level:
-            raise CompilerError, "Cannot continue %s levels" % level
+            raise CompilerError("Cannot continue %s levels" % level)
 
         self.continue_positions[-1 * level].append(position)
 
