@@ -49,6 +49,21 @@ echo --$d;
 $e = "hellz";
 echo "=";
 echo ++$e;
+$w = "zzz";
+echo "=";
+echo ++$w;
+$z = "9";
+echo "=";
+echo ++$z;
+$a = 'ф';
+echo "=";
+echo ++$a;
+$a = "z{z";
+echo "=";
+echo ++$a;
+$a = "A109";
+echo "=";
+echo ++$a;
 ?>
 --EXPECT--
-Hellp=Hellp=Hellq=H=H=H=Z=AA=z=aa=1=2=-1=1=11=9=-1=-101=helma
+Hellp=Hellp=Hellq=H=H=H=Z=AA=z=aa=1=2=-1=1=11=9=-1=-101=helma=aaaa=10=ф=z{a=A110

@@ -11,7 +11,7 @@ HEXADECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 
 DECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
-(SYMBOL_Z, SYMBOL_z, SYMBOL_9) = (90, 122, 57)
+(SYMBOL_Z, SYMBOL_A, SYMBOL_a, SYMBOL_z, SYMBOL_0, SYMBOL_9) = (90, 65, 97, 122, 48, 57)
 
 METHOD_TO_OPERATOR = {
     'equal': 'eq',
@@ -29,7 +29,7 @@ class NotConvertibleToNumber(Exception):
 class W_StringObject(W_Root):
 
     def __init__(self, strval):
-        strategy = new_strategy(ConstantStringStrategy)
+        strategy = get_new_strategy(ConstantStringStrategy)
         self.storage = strategy.erase(strval)
         self.strategy = strategy
         self.copies = None
@@ -40,7 +40,7 @@ class W_StringObject(W_Root):
     @staticmethod
     def newstr(strval):
         w_s = instantiate(W_StringObject)
-        strategy = new_strategy(MutableStringStrategy)
+        strategy = get_new_strategy(MutableStringStrategy)
         w_s.storage = strategy.erase(strval)
         w_s.strategy = strategy
         w_s.copies = None
@@ -49,7 +49,7 @@ class W_StringObject(W_Root):
     @staticmethod
     def newcopiedstr(origobj):
         w_s = instantiate(W_StringObject)
-        strategy = new_strategy(StringCopyStrategy)
+        strategy = get_new_strategy(StringCopyStrategy)
         w_s.copies = None
         w_s.storage = strategy.erase(origobj)
         w_s.strategy = strategy
@@ -58,7 +58,7 @@ class W_StringObject(W_Root):
     @staticmethod
     def newstrconcat(origobj, other):
         w_s = instantiate(W_StringObject)
-        strategy = new_strategy(StringConcatStrategy)
+        strategy = get_new_strategy(StringConcatStrategy)
         w_s.copies = None
         w_s.storage = strategy.erase((origobj, other, origobj.strlen() +
                                                       other.strlen()))
@@ -94,27 +94,26 @@ class W_StringObject(W_Root):
         self.force()
         if self.copies:
             self._force_mutable_copies()
-        self.strategy.force_mutable(self)
+        self.strategy.make_mutable(self)
 
     def conststr_w(self):
         self.force()
         return self.strategy.conststr_w(self.storage)
 
-    def getitem(self, space, w_arg):
-        return space.newstrconst(str(self.strategy.getitem(self.storage,
-            space.int_w(w_arg))))
+#    def getitem(self, space, w_arg):
+#        return space.newstrconst(str(self.strategy.getitem(self.storage,
+#            space.int_w(w_arg))))
 
     def setitem(self, space, w_arg, w_value):
         self.force_mutable()
-        self.strategy.setitem(self.storage, space.int_w(w_arg),
-            space.getchar(w_value))
+        self.strategy.setitem(self.storage,
+                              space.int_w(w_arg),
+                              space.getchar(w_value)
+        )
 
     def str_w(self):
         self.force()
         return self.strategy.str_w(self.storage)
-
-    def getchar(self, space):
-        return self.strategy.getchar(self.storage)
 
     def strlen(self):
         return self.strategy.len(self.storage)
@@ -150,35 +149,41 @@ class W_StringObject(W_Root):
     def inc(self):
         if not self.is_true():
             return W_IntObject(1)
+        try:
+            return self.as_int_strict().inc()
+        except NotConvertibleToNumber:
+            #TODO make a flag for convertible to string
+            pass
         self.force_mutable()
-        length = self.strlen()
-        if length == 1:
-            symbol_number = ord(self.strategy.getitem(self.storage, 0))
-            if symbol_number == SYMBOL_Z:
-                self.strategy.setitem(self.storage, 0, 'A')
-            elif symbol_number == SYMBOL_z:
-                self.strategy.setitem(self.storage, 0, 'a')
-            else:
-                symbol_number += 1
-                self.strategy.setitem(self.storage, 0, chr(symbol_number))
-            return self
-
-        index = length - 1
+        index = self.strlen() - 1
+        symbol = ''
         while index >= 0:
-            symbol_number = ord(self.strategy.getitem(self.storage, index))
-            if symbol_number == SYMBOL_Z:
-                self.strategy.setitem(self.storage, index, 'A')
-            elif symbol_number == SYMBOL_z:
-                self.strategy.setitem(self.storage, index, 'a')
-            elif symbol_number == SYMBOL_9:
-                self.strategy.setitem(self.storage, index, '0')
+            item = self.strategy.getitem(self.storage, index)
+            symbol_index = ord(item[0])
+            if SYMBOL_A <= symbol_index <= SYMBOL_z or SYMBOL_0 <= symbol_index <= SYMBOL_9:
+                if symbol_index == SYMBOL_9:
+                    symbol = '0'
+                    self.strategy.setitem(self.storage, index, symbol)
+                elif symbol_index == SYMBOL_Z:
+                    symbol = 'A'
+                    self.strategy.setitem(self.storage, index, symbol)
+                elif symbol_index == SYMBOL_z:
+                    symbol = 'a'
+                    self.strategy.setitem(self.storage, index, symbol)
+                else:
+                    symbol_index += 1
+                    self.strategy.setitem(self.storage, index, chr(symbol_index))
+                    return self
             else:
-                symbol_number += 1
-                self.strategy.setitem(self.storage, index, chr(symbol_number))
-                break
+                return self
             index -= 1
+        if index < 0 and symbol:
+            self.strategy.append(self, symbol)
 
         return self
+
+    def _ord(self, character):
+        return ord(character)
 
     def dec(self):
         if not self.is_true():
@@ -194,44 +199,44 @@ class W_StringObject(W_Root):
             return W_BoolObject(True)
         if self.strlen() != w_object.strlen():
             return W_BoolObject(False)
-        return self._compare(w_object, 'equal')
-#        assert isinstance(w_object, W_StringObject)
-#        self.force_concatenate()
-#        w_object.force_concatenate()
-#        if self.strategy is w_object.strategy:
-#            return W_BoolObject(self.strategy.equal(self, w_object))
-#        return W_BoolObject(self.str_w() == w_object.str_w())
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        if self.strategy is w_object.strategy:
+            return W_BoolObject(self.strategy.equal(self, w_object))
+        return W_BoolObject(self.str_w() == w_object.str_w())
 
     def less_than(self, w_object):
         if self is w_object:
             return W_BoolObject(False)
-        return self._compare(w_object, 'less_than')
-#
-#        assert isinstance(object, W_StringObject)
-#        left_value = self.str_w()
-#        right_value = object.str_w()
-#        if left_value < right_value:
-#            return W_BoolObject(True)
-#        else:
-#            return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        if self.strategy is w_object.strategy:
+            return W_BoolObject(self.strategy.less_than(self, w_object))
+        return W_BoolObject(self.str_w() < w_object.str_w())
 
-    def more_than(self, object):
-        assert isinstance(object, W_StringObject)
-        left_value = self.str_w()
-        right_value = object.str_w()
-        if left_value > right_value:
-            return W_BoolObject(True)
-        else:
+    def more_than(self, w_object):
+        if self is w_object:
             return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        if self.strategy is w_object.strategy:
+            return W_BoolObject(self.strategy.more_than(self, w_object))
+        return W_BoolObject(self.str_w() > w_object.str_w())
 
-    def not_equal(self, object):
-        assert isinstance(object, W_StringObject)
-        left_value = self.str_w()
-        right_value = object.str_w()
-        if left_value != right_value:
-            return W_BoolObject(True)
-        else:
+    def not_equal(self, w_object):
+        if self is w_object:
             return W_BoolObject(False)
+        if self.strlen() != w_object.strlen():
+            return W_BoolObject(True)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        if self.strategy is w_object.strategy:
+            return W_BoolObject(self.strategy.not_equal(self, w_object))
+        return W_BoolObject(self.str_w() != w_object.str_w())
 
     def less_than_or_equal(self, object):
         assert isinstance(object, W_StringObject)
@@ -250,16 +255,6 @@ class W_StringObject(W_Root):
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
-
-    def _compare(self, w_object, operation_name):
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        if self.strategy is w_object.strategy:
-            return W_BoolObject(getattr(self.strategy, operation_name)(self, w_object))
-        return W_BoolObject(
-            getattr(operator, METHOD_TO_OPERATOR[operation_name])(self.str_w(), w_object.str_w())
-        )
 
     def _handle_int(self, strict = False):
         self.force_concatenate()
@@ -319,7 +314,7 @@ class W_StringObject(W_Root):
         if e_symbol:
             return W_IntObject(int(float(value)) * minus)
 
-        return W_IntObject(int(value[:]) * minus)
+        return W_IntObject(int(value) * minus)
 
     def _handle_hexadecimal(self, value, begin, end, value_len, strict = False):
         while end < value_len:
