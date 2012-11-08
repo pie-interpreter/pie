@@ -18,13 +18,13 @@ def get_new_strategy(strategy):
 class BaseStringStrategy(object):
     concat = False
 
-    def copy(self, obj):
-        return string.W_StringObject.newcopiedstr(obj)
+    def copy(self, w_string):
+        return string.W_StringObject.newcopiedstr(w_string)
 
-    def get_string_source(self, obj):
-        return obj
+    def get_string_source(self, w_string):
+        return w_string
 
-    def force_concatenate(self, obj):
+    def force_concatenate(self, w_string):
         pass
 
 class ConstantStringStrategy(BaseStringStrategy):
@@ -34,11 +34,11 @@ class ConstantStringStrategy(BaseStringStrategy):
 
     concrete = True
 
-    def append(self, string, value):
+    def append(self, w_string, value):
         raise Exception("You cannot change constant string")
 
-    def conststr_w(self, storage):
-        return self.unerase(storage)
+    def conststr_w(self, w_string):
+        return self.unerase(w_string.storage)
 
     def copy(self, obj):
         return string.W_StringObject(self.unerase(obj.storage))
@@ -46,49 +46,45 @@ class ConstantStringStrategy(BaseStringStrategy):
     def equal(self, w_obj, w_other):
         return self.unerase(w_obj.storage) == self.unerase(w_other.storage)
 
-    def force_copy(self, sourcestorage, destobj):
-        destobj.storage = self.erase(self.unerase(sourcestorage)[:])
+    def force_copy(self, w_source, w_dest_obj):
+        w_dest_obj.storage = self.erase(self.unerase(w_source.storage)[:])
 
-    def getchar(self, storage):
-        s = self.unerase(storage)
-        if not len(s):
-            return '\x00'
-        return s[0]
+    def getitem(self, w_string, item):
+        return self.unerase(w_string.storage)[item]
 
-    def getitem(self, storage, item):
-        return self.unerase(storage)[item]
+    def is_true(self, w_string):
+        return bool(self.unerase(w_string.storage))
 
-    def is_true(self, storage):
-        return bool(self.unerase(storage))
+    def len(self, w_string):
+        return len(self.unerase(w_string.storage))
 
-    def len(self, storage):
-        return len(self.unerase(storage))
+    def less_than(self, w_left, w_right):
+        return self.unerase(w_left.storage) < self.unerase(w_right.storage)
 
-    def less_than(self, w_obj, w_other):
-        return self.unerase(w_obj.storage) < self.unerase(w_other.storage)
-
-    def make_mutable(self, strobj):
+    def make_mutable(self, w_string):
         new_strategy = get_new_strategy(MutableStringStrategy)
-        strobj.strategy = new_strategy
-        strobj.storage = new_strategy.erase([c for c in self.unerase(strobj.storage)])
+        w_string.strategy = new_strategy
+        w_string.storage = new_strategy.erase(
+            [c for c in self.unerase(w_string.storage)]
+        )
 
-    def more_than(self, w_obj, w_other):
-        return self.unerase(w_obj.storage) > self.unerase(w_other.storage)
+    def more_than(self, w_left, w_right):
+        return self.unerase(w_left.storage) > self.unerase(w_right.storage)
 
-    def not_equal(self, w_obj, w_other):
-        return self.unerase(w_obj.storage) != self.unerase(w_other.storage)
+    def not_equal(self, w_left, w_right):
+        return self.unerase(w_left.storage) != self.unerase(w_right.storage)
 
-    def repr(self, storage):
-        return 'C(%s)' % self.unerase(storage)
+    def repr(self, w_string):
+        return 'ConstantString(%s)' % self.unerase(w_string.storage)
 
-    def setitem(self, storage, item, value):
+    def setitem(self, w_string, item, value):
         raise Exception("You cannot change constant string")
 
-    def str_w(self, storage):
-        return self.unerase(storage)
+    def str_w(self, w_string):
+        return self.unerase(w_string.storage)
 
-    def write_into(self, storage, target, start):
-        s = self.unerase(storage)
+    def write_into(self, w_string, target, start):
+        s = self.unerase(w_string.storage)
         i = 0
         for c in s:
             target[start + i] = c
@@ -106,29 +102,23 @@ class MutableStringStrategy(BaseStringStrategy):
         raw_string.append(value)
         string.storage = self.erase(raw_string)
 
-    def conststr_w(self, storage):
-        return ''.join(self.unerase(storage))
+    def conststr_w(self, w_string):
+        return ''.join(self.unerase(w_string.storage))
 
     def equal(self, w_obj, w_other):
         return self.unerase(w_obj.storage) == self.unerase(w_other.storage)
 
-    def force_copy(self, sourcestorage, destobj):
-        destobj.storage = self.erase(self.unerase(sourcestorage)[:])
+    def force_copy(self, w_source, w_dest_obj):
+        w_dest_obj.storage = self.erase(self.unerase(w_source.storage)[:])
 
-    def getchar(self, storage):
-        s = self.unerase(storage)
-        if not len(s):
-            return '\x00'
-        return s[0]
+    def getitem(self, w_string, item):
+        return self.unerase(w_string.storage)[item]
 
-    def getitem(self, storage, item):
-        return self.unerase(storage)[item]
+    def is_true(self, w_string):
+        return bool(self.unerase(w_string.storage))
 
-    def is_true(self, storage):
-        return bool(self.unerase(storage))
-
-    def len(self, storage):
-        return len(self.unerase(storage))
+    def len(self, w_string):
+        return len(self.unerase(w_string.storage))
 
     def less_than(self, w_left, w_right):
         length = w_left.strlen()
@@ -151,20 +141,20 @@ class MutableStringStrategy(BaseStringStrategy):
             return True
         return False
 
-    def make_mutable(self, strobj):
+    def make_mutable(self, w_string):
         pass
 
-    def repr(self, storage):
-        return 'M(%s)' % ''.join(self.unerase(storage))
+    def repr(self, w_string):
+        return 'MutableString(%s)' % ''.join(self.unerase(w_string.storage))
 
-    def setitem(self, storage, item, val):
-        self.unerase(storage)[item] = val
+    def setitem(self, w_string, item, val):
+        self.unerase(w_string.storage)[item] = val
 
-    def str_w(self, storage):
-        return "".join(self.unerase(storage))
+    def str_w(self, w_string):
+        return "".join(self.unerase(w_string.storage))
 
-    def write_into(self, storage, target, start):
-        s = self.unerase(storage)
+    def write_into(self, w_string, target, start):
+        s = self.unerase(w_string.storage)
         for i, c in enumerate(s):
             target[start + i] = c
 
@@ -185,36 +175,32 @@ class StringCopyStrategy(BaseStringStrategy):
     def force_concatenate(self, obj):
         self.unerase(obj.storage).force_concatenate()
 
-    def force(self, obj):
-        w_orig = self.unerase(obj.storage)
+    def force(self, w_string):
+        w_orig = self.unerase(w_string.storage)
         w_orig.force()
-        obj.strategy = w_orig.strategy
-        w_orig.strategy.force_copy(w_orig.storage, obj)
+        w_string.strategy = w_orig.strategy
+        w_orig.strategy.force_copy(w_orig, w_string)
 
     def get_string_source(self, obj):
         return self.unerase(obj.storage)
 
-    def getitem(self, storage, index):
-        w_parent = self.unerase(storage)
-        return w_parent.strategy.getitem(w_parent.storage, index)
+    def getitem(self, w_string, index):
+        w_parent = self.unerase(w_string.storage)
+        return w_parent.strategy.getitem(w_parent, index)
 
-    def getchar(self, storage):
-        w_parent = self.unerase(storage)
-        return w_parent.strategy.getchar(w_parent.storage)
+    def is_true(self, w_string):
+        parent = self.unerase(w_string.storage)
+        return parent.strategy.is_true(parent)
 
-    def is_true(self, storage):
-        parent = self.unerase(storage)
-        return parent.strategy.is_true(parent.storage)
-
-    def len(self, storage):
-        w_parent = self.unerase(storage)
+    def len(self, w_string):
+        w_parent = self.unerase(w_string.storage)
         return w_parent.strlen()
 
-    def repr(self, storage):
-        return 'SC(%r)' % self.unerase(storage)
+    def repr(self, w_string):
+        return 'CopiedString(%r)' % self.unerase(w_string.storage)
 
-    def write_into(self, storage, target, start):
-        parent = self.unerase(storage)
+    def write_into(self, w_string, target, start):
+        parent = self.unerase(w_string.storage)
         parent.write_into(target, start)
 
 class StringConcatStrategy(BaseStringStrategy):
@@ -231,31 +217,31 @@ class StringConcatStrategy(BaseStringStrategy):
         #target.extend(['\x00'] * self.len(storage))
         #self.write_into(storage, target, lgt)
 
-    def force(self, obj):
-        s = ['\x00'] * self.len(obj.storage)
-        self.write_into(obj.storage, s, 0)
+    def force(self, w_string):
+        new_storage = ['\x00'] * self.len(w_string)
+        self.write_into(w_string, new_storage, 0)
         strategy = get_new_strategy(MutableStringStrategy)
-        obj.storage = strategy.erase(s)
-        obj.strategy = strategy
+        w_string.storage = strategy.erase(new_storage)
+        w_string.strategy = strategy
 
     def force_concatenate(self, obj):
         self.force(obj)
 
-    def is_true(self, storage):
+    def is_true(self, w_string):
         # XXX recursion? figure out a way to flatten those easier
-        left, right = self.unerase(storage)
-        return (left.strategy.is_true(left.storage) or
-                right.strategy.is_true(right.storage))
+        left, right = self.unerase(w_string.storage)
+        return (left.strategy.is_true(left) or
+                right.strategy.is_true(right))
 
-    def len(self, storage):
-        l_one, l_two, lgt = self.unerase(storage)
+    def len(self, w_string):
+        l_one, l_two, lgt = self.unerase(w_string.storage)
         return lgt
 
-    def repr(self, storage):
-        return 'CON(%r)' % (self.unerase(storage),)
+    def repr(self, w_string):
+        return 'ConcatenatedString(%r)' % (self.unerase(w_string.storage),)
 
-    def write_into(self, storage, target, start):
-        l_one, l_two, lgt = self.unerase(storage)
+    def write_into(self, w_string, target, start):
+        l_one, l_two, lgt = self.unerase(w_string.storage)
         l_one.write_into(target, start)
         l_two.write_into(target, start + l_one.strlen())
         #so_far = [(0, l_one), (l_one.strlen(), l_two)]

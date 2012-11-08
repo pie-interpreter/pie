@@ -35,7 +35,7 @@ class W_StringObject(W_Root):
         self.copies = None
 
     def __repr__(self):
-        return self.strategy.repr(self.storage)
+        return self.strategy.repr(self)
 
     @staticmethod
     def newstr(strval):
@@ -74,7 +74,7 @@ class W_StringObject(W_Root):
             self.copies.append(other)
 
     def write_into(self, s, start):
-        self.strategy.write_into(self.storage, s, start)
+        self.strategy.write_into(self, s, start)
 
     def force(self):
         if self.strategy.concrete:
@@ -98,25 +98,14 @@ class W_StringObject(W_Root):
 
     def conststr_w(self):
         self.force()
-        return self.strategy.conststr_w(self.storage)
-
-#    def getitem(self, space, w_arg):
-#        return space.newstrconst(str(self.strategy.getitem(self.storage,
-#            space.int_w(w_arg))))
-
-    def setitem(self, space, w_arg, w_value):
-        self.force_mutable()
-        self.strategy.setitem(self.storage,
-                              space.int_w(w_arg),
-                              space.getchar(w_value)
-        )
+        return self.strategy.conststr_w(self)
 
     def str_w(self):
         self.force()
-        return self.strategy.str_w(self.storage)
+        return self.strategy.str_w(self)
 
     def strlen(self):
-        return self.strategy.len(self.storage)
+        return self.strategy.len(self)
 
     def copy(self):
         res = self.strategy.copy(self)
@@ -127,7 +116,7 @@ class W_StringObject(W_Root):
         return self
 
     def is_true(self):
-        return self.strategy.is_true(self.storage)
+        return self.strategy.is_true(self)
 
     def as_int(self):
         return self._handle_int(False)
@@ -158,21 +147,21 @@ class W_StringObject(W_Root):
         index = self.strlen() - 1
         symbol = ''
         while index >= 0:
-            item = self.strategy.getitem(self.storage, index)
+            item = self.strategy.getitem(self, index)
             symbol_index = ord(item[0])
             if SYMBOL_A <= symbol_index <= SYMBOL_z or SYMBOL_0 <= symbol_index <= SYMBOL_9:
                 if symbol_index == SYMBOL_9:
                     symbol = '0'
-                    self.strategy.setitem(self.storage, index, symbol)
+                    self.strategy.setitem(self, index, symbol)
                 elif symbol_index == SYMBOL_Z:
                     symbol = 'A'
-                    self.strategy.setitem(self.storage, index, symbol)
+                    self.strategy.setitem(self, index, symbol)
                 elif symbol_index == SYMBOL_z:
                     symbol = 'a'
-                    self.strategy.setitem(self.storage, index, symbol)
+                    self.strategy.setitem(self, index, symbol)
                 else:
                     symbol_index += 1
-                    self.strategy.setitem(self.storage, index, chr(symbol_index))
+                    self.strategy.setitem(self, index, chr(symbol_index))
                     return self
             else:
                 return self
