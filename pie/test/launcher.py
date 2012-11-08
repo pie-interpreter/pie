@@ -20,6 +20,7 @@ class TestPHPLanguageCoverage(unittest.TestCase):
 
     def setUp(self):
         self.current_position = self.output_file.tell()
+        self.context.function_trace_stack = []
 
     def redirect_output(self):
         os.dup2(self.output_file.fileno(), sys.stdout.fileno())

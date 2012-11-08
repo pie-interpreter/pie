@@ -84,7 +84,7 @@ class Interpreter(object):
 
     def ECHO(self, value):
         stack_value = self.frame.stack.pop()
-        os.write(1, stack_value.as_string().str_w())
+        os.write(1, stack_value.as_string().conststr_w())
 
     def PRINT(self, value):
         stack_value = self.frame.stack.pop()
@@ -143,16 +143,44 @@ class Interpreter(object):
         raise InterpreterError, "Not implemented"
 
     def PRE_INCREMENT(self, value):
-        raise InterpreterError, "Not implemented"
+        var_name = self.frame.stack.pop().str_w()
+        try:
+            value = self.frame.variables[var_name]
+        except KeyError:
+            value = self._handle_undefined(var_name)
+        new_value = value.inc()
+        self.frame.variables[var_name] = new_value
+        self.frame.stack.append(new_value)
 
     def PRE_DECREMENT(self, value):
-        raise InterpreterError, "Not implemented"
+        var_name = self.frame.stack.pop().str_w()
+        try:
+            value = self.frame.variables[var_name]
+        except KeyError:
+            value = self._handle_undefined(var_name)
+        new_value = value.dec()
+        self.frame.variables[var_name] = new_value
+        self.frame.stack.append(new_value)
 
     def POST_INCREMENT(self, value):
-        raise InterpreterError, "Not implemented"
+        var_name = self.frame.stack.pop().str_w()
+        try:
+            value = self.frame.variables[var_name]
+        except KeyError:
+            value = self._handle_undefined(var_name)
+        old_value = value.copy()
+        self.frame.variables[var_name] = value.inc()
+        self.frame.stack.append(old_value)
 
     def POST_DECREMENT(self, value):
-        raise InterpreterError, "Not implemented"
+        var_name = self.frame.stack.pop().str_w()
+        try:
+            value = self.frame.variables[var_name]
+        except KeyError:
+            value = self._handle_undefined(var_name)
+        old_value = value.copy()
+        self.frame.variables[var_name] = value.dec()
+        self.frame.stack.append(old_value)
 
     def DIVIDE(self, value):
         raise InterpreterError, "Not implemented"
@@ -166,8 +194,17 @@ class Interpreter(object):
     def INPLACE_SUBSTRACT(self, value):
         raise InterpreterError, "Not implemented"
 
-    def INPLACE_CONCAT(self, value):
-        raise InterpreterError, "Not implemented"
+    def INPLACE_CONCAT(self, var_index):
+        var_name = self.frame.stack.pop().str_w()
+        concat_value = self.frame.stack.pop()
+        try:
+            value = self.frame.variables[var_name]
+        except KeyError:
+            value = self._handle_undefined(var_name)
+            # operation itself
+        value = value.as_string().concatenate(concat_value.as_string())
+        self.frame.variables[var_name] = value
+        self.frame.stack.append(value)
 
     def INPLACE_MULTIPLY(self, value):
         raise InterpreterError, "Not implemented"
@@ -178,18 +215,19 @@ class Interpreter(object):
     def INPLACE_MOD(self, value):
         raise InterpreterError, "Not implemented"
 
-    def LOAD_VAR(self, value):
-        raise InterpreterError, "Not implemented"
+    def LOAD_VAR(self, var_index):
+        var_name = self.bytecode.names[var_index]
+        self.frame.stack.append(space.str(var_name))
 
     def STORE_VAR(self, value):
         raise InterpreterError, "Not implemented"
 
     def LOAD_CONST(self, value):
-        self.frame.stack.append(self.bytecode.consts[value])
+        self.frame.stack.append(self.bytecode.consts[value].copy())
 
-    def LOAD_NAME(self, function_index):
-        function_name = self.bytecode.names[function_index]
-        self.frame.stack.append(space.str(function_name))
+    def LOAD_NAME(self, index):
+        name = self.bytecode.names[index]
+        self.frame.stack.append(space.str(name))
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -213,10 +251,10 @@ class Interpreter(object):
         except KeyError:
             message = "Call to undefined function %s()" % function_name
             raise PHPError(message,
-                           PHPError.FATAL,
-                           self.bytecode.filename,
-                           self._get_line(),
-                           self.context.function_trace_stack)
+                            PHPError.FATAL,
+                            self.bytecode.filename,
+                            self._get_line(),
+                            self.context.function_trace_stack)
 
         function_frame = Frame()
         # put function arguments to frame
@@ -225,12 +263,7 @@ class Interpreter(object):
             if not self.frame.stack:
                 message = "Missing argument %s for %s(), called" \
                     % (arg_position, function_name)
-                error = PHPError(message,
-                                 PHPError.WARNING,
-                                 self.bytecode.filename,
-                                 self._get_line(),
-                                 self.context.function_trace_stack)
-                print error
+                self._warning(message)
             else:
                 function_frame.variables[argument] = self.frame.stack.pop()
             arg_position += 1
@@ -265,29 +298,53 @@ class Interpreter(object):
     def UNSET(self, names_count):
         raise InterpreterError("Not implemented")
 
+    def CONCAT(self, value):
+        right = self.frame.stack.pop()
+        left = self.frame.stack.pop()
+        self.frame.stack.append(space.concat(left, right))
+
     def _handle_undefined(self, name):
         message = "Undefined variable: %s" % name
-        error = PHPError(message,
-                         PHPError.NOTICE,
-                         self.bytecode.filename,
-                         self._get_line(),
-                         self.context.function_trace_stack)
-        print error
-        return space.str("")
+        self._notice(message)
+        return space.str('')
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]
+
+    def _error(self, message, type, display = True):
+        error = PHPError(message,
+                         type,
+                         self.bytecode.filename,
+                         self._get_line(),
+                         self.context.function_trace_stack)
+        if display:
+            print error
+
+        return error
+
+    def _warning(self, message, display = True):
+        self._error(message, PHPError.WARNING, display)
+
+    def _fatal(self, message, display = True):
+        self._error(message, PHPError.FATAL, display)
+
+    def _notice(self, message, display = True):
+        self._error(message, PHPError.NOTICE, display)
 
 def _new_binary_op(name, space_name):
     def func(self, value):
         right = self.frame.stack.pop()
         left = self.frame.stack.pop()
-        result = getattr(space, space_name)(left, right)
+        try:
+            result = getattr(space, space_name)(left, right)
+        except DivisionByZero:
+            self._warning('Division by zero')
+            result = space.bool(False)
         self.frame.stack.append(result)
     func.func_name = name
     return func
 
-for _name in ['ADD', 'SUBSTRACT', 'CONCAT', 'MULTIPLY', 'MOD', 'LESS_THAN',
+for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'LESS_THAN',
               'MORE_THAN', 'LESS_THAN_OR_EQUAL' ,'MORE_THAN_OR_EQUAL', 'EQUAL',
               'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
     setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))

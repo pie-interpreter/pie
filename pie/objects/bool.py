@@ -15,13 +15,19 @@ class W_BoolObject(W_Root):
         return W_IntObject(int(self.value))
 
     def as_string(self):
-        from pie.objects.conststring import W_ConstStringObject
+        from pie.objects.string import W_StringObject
         if self.value:
-            return W_ConstStringObject('1')
-        return W_ConstStringObject('')
+            return W_StringObject('1')
+        return W_StringObject('')
 
     def as_bool(self):
         return self
+
+    def copy(self):
+        return W_BoolObject(self.value)
+
+    def hard_copy(self):
+        return self.copy()
 
     def is_true(self):
         return self.value
@@ -37,6 +43,12 @@ class W_BoolObject(W_Root):
 
     def mod(self, number):
         raise NotImplemented
+
+    def inc(self):
+        return self
+
+    def dec(self):
+        return self
 
     def less_than(self, object):
         assert isinstance(object, W_BoolObject)

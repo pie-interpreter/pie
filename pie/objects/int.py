@@ -1,3 +1,4 @@
+from pie.error import DivisionByZero
 from pie.objects.base import W_Root
 
 class W_IntObject(W_Root):
@@ -16,12 +17,18 @@ class W_IntObject(W_Root):
         return self
 
     def as_string(self):
-        from pie.objects.conststring import W_ConstStringObject
-        return W_ConstStringObject(str(self.value))
+        from pie.objects.string import W_StringObject
+        return W_StringObject(str(self.value))
 
     def as_bool(self):
         from pie.objects.bool import W_BoolObject
         return W_BoolObject(bool(self.value))
+
+    def copy(self):
+        return W_IntObject(self.value)
+
+    def hard_copy(self):
+        return self.copy()
 
     def is_true(self):
         return self.value > 0
@@ -35,7 +42,15 @@ class W_IntObject(W_Root):
     def multiply(self, number):
         return W_IntObject(self.value * number.value)
 
+    def inc(self):
+        return W_IntObject(self.value + 1)
+
+    def dec(self):
+        return W_IntObject(self.value - 1)
+
     def mod(self, number):
+        if not number.value:
+            raise DivisionByZero
         divider = number.value
         if self.value < 0 and divider:
             divider *= -1
