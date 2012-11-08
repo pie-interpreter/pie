@@ -4,7 +4,7 @@ $a = "hellofkdjalkfdjs";
 $b = "hellofkdfalkfdjs";
 $c = 1;
 while ($i < 10000000) {
-    if ($a < $b) {
+    if ($a . "1" < $b . "1") {
         $c = 1;
     }
     ++$i;

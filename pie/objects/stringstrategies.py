@@ -8,6 +8,9 @@ cache = {}
 
 @specialize.memo()
 def get_new_strategy(strategy):
+    """
+    Helps to cache strategies' objects
+    """
     try:
         return cache[strategy]
     except KeyError:
@@ -16,18 +19,25 @@ def get_new_strategy(strategy):
         return new_strategy
 
 class BaseStringStrategy(object):
+    """
+    This is an abstract strategy. No string object could be an instance of it
+    """
     concat = False
 
     def copy(self, w_string):
         return string.W_StringObject.newcopiedstr(w_string)
 
-    def get_string_source(self, w_string):
-        return w_string
-
     def force_concatenate(self, w_string):
         pass
 
 class ConstantStringStrategy(BaseStringStrategy):
+    """
+    Basic strategy. By default all strings has it.
+
+    You can't change a string with this strategy.
+
+    String internal representation -- PYTHON's string
+    """
     erase, unerase = new_erasing_pair("constant")
     erase = staticmethod(erase)
     unerase = staticmethod(unerase)
@@ -58,21 +68,12 @@ class ConstantStringStrategy(BaseStringStrategy):
     def len(self, w_string):
         return len(self.unerase(w_string.storage))
 
-    def less_than(self, w_left, w_right):
-        return self.unerase(w_left.storage) < self.unerase(w_right.storage)
-
     def make_mutable(self, w_string):
         new_strategy = get_new_strategy(MutableStringStrategy)
         w_string.strategy = new_strategy
         w_string.storage = new_strategy.erase(
             [c for c in self.unerase(w_string.storage)]
         )
-
-    def more_than(self, w_left, w_right):
-        return self.unerase(w_left.storage) > self.unerase(w_right.storage)
-
-    def not_equal(self, w_left, w_right):
-        return self.unerase(w_left.storage) != self.unerase(w_right.storage)
 
     def repr(self, w_string):
         return 'ConstantString(%s)' % self.unerase(w_string.storage)
@@ -91,6 +92,12 @@ class ConstantStringStrategy(BaseStringStrategy):
             i += 1
 
 class MutableStringStrategy(BaseStringStrategy):
+    """
+    A string got this strategy, if 'make_mutable' is called. It usually happens
+    on some string operations.
+
+    String internal representation -- PYTHON's list
+    """
     erase, unerase = new_erasing_pair("mutable")
     erase = staticmethod(erase)
     unerase = staticmethod(unerase)
@@ -120,27 +127,6 @@ class MutableStringStrategy(BaseStringStrategy):
     def len(self, w_string):
         return len(self.unerase(w_string.storage))
 
-    def less_than(self, w_left, w_right):
-        length = w_left.strlen()
-        right_is_longer = True
-        if length > w_right.strlen():
-            length = w_right.strlen()
-            right_is_longer = False
-        raw_left = self.unerase(w_left.storage)
-        raw_right = self.unerase(w_right.storage)
-        for index in range(length - 1):
-            if raw_left[index] < raw_right[index]:
-                return True
-            elif raw_left[index] == raw_right[index]:
-                continue
-            else:
-                return False
-        if w_left.strlen() == w_right.strlen() and raw_left[length] < raw_right[length]:
-            return True
-        elif raw_left[length] == raw_right[length] and right_is_longer:
-            return True
-        return False
-
     def make_mutable(self, w_string):
         pass
 
@@ -159,6 +145,12 @@ class MutableStringStrategy(BaseStringStrategy):
             target[start + i] = c
 
 class StringCopyStrategy(BaseStringStrategy):
+    """
+    If string A is copied, string B with this strategy is created. We make just
+    a reference to original string without copying its content.
+
+    String internal representation -- None, reference to original string object
+    """
     erase, unerase = new_erasing_pair("copy")
     erase = staticmethod(erase)
     unerase = staticmethod(unerase)
@@ -181,9 +173,6 @@ class StringCopyStrategy(BaseStringStrategy):
         w_string.strategy = w_orig.strategy
         w_orig.strategy.force_copy(w_orig, w_string)
 
-    def get_string_source(self, obj):
-        return self.unerase(obj.storage)
-
     def getitem(self, w_string, index):
         w_parent = self.unerase(w_string.storage)
         return w_parent.strategy.getitem(w_parent, index)
@@ -204,6 +193,11 @@ class StringCopyStrategy(BaseStringStrategy):
         parent.write_into(target, start)
 
 class StringConcatStrategy(BaseStringStrategy):
+    """
+    On string concatenation, we create a resulted string with this strategy
+    is created. The string contains references to both concatenating but doesn't
+    do any real operation until last possible moment (when force() is called)
+    """
     erase, unerase = new_erasing_pair("concat")
     erase = staticmethod(erase)
     unerase = staticmethod(unerase)

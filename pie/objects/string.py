@@ -4,7 +4,6 @@ from pypy.rlib import jit
 from pie.objects.base import W_Root
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
-import operator
 
 HEXADECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                        'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f']
@@ -13,20 +12,18 @@ DECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 (SYMBOL_Z, SYMBOL_A, SYMBOL_a, SYMBOL_z, SYMBOL_0, SYMBOL_9) = (90, 65, 97, 122, 48, 57)
 
-METHOD_TO_OPERATOR = {
-    'equal': 'eq',
-    'not_equal': 'ne',
-    'less_than': 'lt',
-    'less_than_or_equal': 'le',
-    'more_than': 'gt',
-    'more_than_or_equal': 'ge'
-
-}
-
 class NotConvertibleToNumber(Exception):
     pass
 
 class W_StringObject(W_Root):
+    """
+    This class represents PHP strings.
+    It has 2 main attributes:
+      - storage  -- contains string data. Its internal representation depends
+                    on strategy.
+      - strategy -- defines object behaviour. For more info see stringstrategies.py
+    """
+    convertible_to_int = True
 
     def __init__(self, strval):
         strategy = get_new_strategy(ConstantStringStrategy)
@@ -84,13 +81,7 @@ class W_StringObject(W_Root):
     def force_concatenate(self):
         self.strategy.force_concatenate(self)
 
-    def _force_mutable_copies(self):
-        for copy in self.copies:
-            if copy:
-                copy.force()
-        self.copies = None
-
-    def force_mutable(self):
+    def make_mutable(self):
         self.force()
         if self.copies:
             self._force_mutable_copies()
@@ -122,6 +113,8 @@ class W_StringObject(W_Root):
         return self._handle_int(False)
 
     def as_int_strict(self):
+        if not self.convertible_to_int:
+            raise NotConvertibleToNumber
         return self._handle_int(True)
 
     def as_bool(self):
@@ -141,9 +134,8 @@ class W_StringObject(W_Root):
         try:
             return self.as_int_strict().inc()
         except NotConvertibleToNumber:
-            #TODO make a flag for convertible to string
             pass
-        self.force_mutable()
+        self.make_mutable()
         index = self.strlen() - 1
         symbol = ''
         while index >= 0:
@@ -170,9 +162,6 @@ class W_StringObject(W_Root):
             self.strategy.append(self, symbol)
 
         return self
-
-    def _ord(self, character):
-        return ord(character)
 
     def dec(self):
         if not self.is_true():
@@ -201,8 +190,6 @@ class W_StringObject(W_Root):
         assert isinstance(w_object, W_StringObject)
         self.force_concatenate()
         w_object.force_concatenate()
-        if self.strategy is w_object.strategy:
-            return W_BoolObject(self.strategy.less_than(self, w_object))
         return W_BoolObject(self.str_w() < w_object.str_w())
 
     def more_than(self, w_object):
@@ -211,8 +198,6 @@ class W_StringObject(W_Root):
         assert isinstance(w_object, W_StringObject)
         self.force_concatenate()
         w_object.force_concatenate()
-        if self.strategy is w_object.strategy:
-            return W_BoolObject(self.strategy.more_than(self, w_object))
         return W_BoolObject(self.str_w() > w_object.str_w())
 
     def not_equal(self, w_object):
@@ -223,27 +208,30 @@ class W_StringObject(W_Root):
         assert isinstance(w_object, W_StringObject)
         self.force_concatenate()
         w_object.force_concatenate()
-        if self.strategy is w_object.strategy:
-            return W_BoolObject(self.strategy.not_equal(self, w_object))
         return W_BoolObject(self.str_w() != w_object.str_w())
 
-    def less_than_or_equal(self, object):
-        assert isinstance(object, W_StringObject)
-        left_value = self.str_w()
-        right_value = object.str_w()
-        if left_value <= right_value:
+    def less_than_or_equal(self, w_object):
+        if self is w_object:
             return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() <= w_object.str_w())
 
-    def more_than_or_equal(self, object):
-        assert isinstance(object, W_StringObject)
-        left_value = self.str_w()
-        right_value = object.str_w()
-        if left_value >= right_value:
+
+    def more_than_or_equal(self, w_object):
+        if self is w_object:
             return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() >= w_object.str_w())
+
+    def _force_mutable_copies(self):
+        for copy in self.copies:
+            if copy:
+                copy.force()
+        self.copies = None
 
     def _handle_int(self, strict = False):
         self.force_concatenate()
@@ -280,6 +268,7 @@ class W_StringObject(W_Root):
                     e_symbol = True
                     end += 1
                     continue
+                self.convertible_to_int = False
                 if strict:
                     raise NotConvertibleToNumber
                 else:
@@ -308,6 +297,7 @@ class W_StringObject(W_Root):
     def _handle_hexadecimal(self, value, begin, end, value_len, strict = False):
         while end < value_len:
             if value[end] not in HEXADECIMAL_SYMBOLS:
+                self.convertible_to_int = False
                 if strict:
                     raise NotConvertibleToNumber
                 else:
