@@ -11,17 +11,20 @@ class W_BoolObject(W_Root):
     def __repr__(self):
         return "W_BoolObject(%s)" % self.value
 
+    def as_bool(self):
+        return self
+
     def as_int(self):
         return W_IntObject(int(self.value))
+
+    def as_number(self):
+        return self.as_int()
 
     def as_string(self):
         from pie.objects.string import W_StringObject
         if self.value:
             return W_StringObject('1')
         return W_StringObject('')
-
-    def as_bool(self):
-        return self
 
     def copy(self):
         return W_BoolObject(self.value)

@@ -103,7 +103,7 @@ def _add_test(filename, test_name):
             self.fail("ParseError\n\n" + e.nice_error_message(source.filename,
                                                               source.data))
 
-        if test.has_result:
+        if test.has_result and not test.compile_only:
             # rewind file pointer and read content
             self.output_file.seek(self.current_position)
 

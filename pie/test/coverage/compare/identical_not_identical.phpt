@@ -17,6 +17,8 @@ echo "=";
 echo 1 !== true; //true
 echo "=";
 echo 0 === false; //false
+echo "=";
+echo "1." + 1 !== 2; //true
 ?>
 --EXPECT--
-1==1=1=1=1==1=
+1==1=1=1=1==1==1

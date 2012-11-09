@@ -1,3 +1,4 @@
+from pie.objects.float import W_FloatObject
 from pie.objects.stringstrategies import *
 from pypy.rlib.objectmodel import instantiate
 from pypy.rlib import jit
@@ -23,7 +24,7 @@ class W_StringObject(W_Root):
                     on strategy.
       - strategy -- defines object behaviour. For more info see stringstrategies.py
     """
-    convertible_to_int = True
+    convertible_to_number = True
 
     def __init__(self, strval):
         strategy = get_new_strategy(ConstantStringStrategy)
@@ -103,36 +104,46 @@ class W_StringObject(W_Root):
         self.add_copy(res)
         return res
 
-    def as_string(self):
-        return self
-
     def is_true(self):
         return self.strategy.is_true(self)
 
-    def as_int(self):
-        return self._handle_int(False)
-
-    def as_int_strict(self):
-        if not self.convertible_to_int:
-            raise NotConvertibleToNumber
-        return self._handle_int(True)
-
     def as_bool(self):
-        if not self.is_true() or self.str_w()[0] == '0':
+        if not self.is_true() or self.strategy.getitem(self, 0) == '0':
             return W_BoolObject(False)
         return W_BoolObject(True)
 
+    def as_float(self):
+        return self._handle_number(False).as_float()
+
+    def as_int(self):
+        return self._handle_number(False).as_int()
+
+    def as_number_strict(self):
+        """
+        There's a special case in PHP when we try to convert
+        a string to number and if the string is not a pure number
+        (like 1e2, 1.43 or 555), we leave the string as a string object
+
+        The above rule is applied, for example, to string increment/decrement
+        """
+        if not self.convertible_to_number:
+            raise NotConvertibleToNumber
+        return self._handle_number(True)
+
     def as_number(self):
-        return self.as_int()
+        return self._handle_number(False)
+
+    def as_string(self):
+        return self
 
     def concatenate(self, string):
         return W_StringObject.newstrconcat(self, string)
 
     def inc(self):
         if not self.is_true():
-            return W_IntObject(1)
+            return W_StringObject('1')
         try:
-            return self.as_int_strict().inc()
+            return self.as_number_strict().inc()
         except NotConvertibleToNumber:
             pass
         self.make_mutable()
@@ -167,7 +178,7 @@ class W_StringObject(W_Root):
         if not self.is_true():
             return W_IntObject(-1)
         try:
-            return self.as_int_strict().dec()
+            return self.as_number_strict().dec()
         except NotConvertibleToNumber:
             # there's no decrement for normal non-convertible strings in PHP
             return self
@@ -233,25 +244,28 @@ class W_StringObject(W_Root):
                 copy.force()
         self.copies = None
 
-    def _handle_int(self, strict = False):
+    def _handle_number(self, strict = False):
+        """
+        Converts string to number
+        """
+        #TODO add setlocale() support
         self.force_concatenate()
         if not self.is_true():
             return W_IntObject(0)
-
         (begin, end) = (0, 0)
         value_len = self.strlen()
         string = self.str_w()
         # check for hexadecimal
-        if value_len > 2 and string[end] == '0' and \
+        if value_len > 2 and string[end] == '0' and\
            (string[end + 1] == 'x' or string[end + 1] == 'X'):
             end += 2
             return self._handle_hexadecimal(string, begin, end, value_len, strict)
         else:
             assert begin >= 0
             assert end >= 0
-            return self._handle_decimal(string, begin, end, value_len, strict)
+            return self._handle_float_or_decimal(string, begin, end, value_len, strict)
 
-    def _handle_decimal(self, value, begin, end, value_len, strict = False):
+    def _handle_float_or_decimal(self, value, begin, end, value_len, strict = False):
         #detect minus
         minus = 1
         if value[0] == '-':
@@ -260,15 +274,20 @@ class W_StringObject(W_Root):
             minus = -1
 
         e_symbol = False # for numbers '1e2'
+        dot_symbol = False
         number_after_e_symbol = False
         while end < value_len:
             if value[end] not in DECIMAL_SYMBOLS:
+                if not dot_symbol and value[end] == '.':
+                    dot_symbol = True
+                    end += 1
+                    continue
                 if not e_symbol and \
                    (value[end] == 'e' or value[end] == 'E'):
                     e_symbol = True
                     end += 1
                     continue
-                self.convertible_to_int = False
+                self.convertible_to_number = False
                 if strict:
                     raise NotConvertibleToNumber
                 else:
@@ -289,15 +308,15 @@ class W_StringObject(W_Root):
         assert begin >= 0
         assert end >= 0
         value = self.str_w()[begin:end]
-        if e_symbol:
-            return W_IntObject(int(float(value)) * minus)
-
+        if e_symbol or dot_symbol:
+            return W_FloatObject(float(value) * minus)
+        #TODO add PHP_INT_MAX check
         return W_IntObject(int(value) * minus)
 
     def _handle_hexadecimal(self, value, begin, end, value_len, strict = False):
         while end < value_len:
             if value[end] not in HEXADECIMAL_SYMBOLS:
-                self.convertible_to_int = False
+                self.convertible_to_number = False
                 if strict:
                     raise NotConvertibleToNumber
                 else:
@@ -306,5 +325,4 @@ class W_StringObject(W_Root):
 
         if not end:
             return W_IntObject(0)
-
         return W_IntObject(int(self.str_w()[begin:end], 0))

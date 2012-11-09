@@ -1,22 +1,26 @@
 --FILE--
 <?php
 echo (true == false); //false
-echo "==";
+echo "=";
 echo (true == true); //true
-echo "==";
+echo "=";
 echo (false == false); //true
-echo "==";
+echo "=";
 echo (true == true); //true
-echo "==";
+echo "=";
 echo (true == "Hello"); //true
-echo "==";
+echo "=";
 echo (true == 1); //true
-echo "==";
+echo "=";
 echo (true == 12); //true
-echo "==";
+echo "=";
 echo (false == ""); //true
-echo "==";
+echo "=";
 echo (false == 0); //true
+echo "=";
+echo (true == -1); //true
+echo "=";
+echo (false == "0"); //true
 ?>
 --EXPECT--
-==1==1==1==1==1==1==1==1
+=1=1=1=1=1=1=1=1=1=1
