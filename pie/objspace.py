@@ -1,3 +1,4 @@
+from pie.objects.null import W_NullObject
 from pie.objects.bool import W_BoolObject
 from pie.objects.float import W_FloatObject
 from pie.objects.string import W_StringObject, NotConvertibleToNumber
@@ -8,7 +9,7 @@ __author__ = 'sery0ga'
 
 class ObjSpace(object):
 
-    (w_int, w_float, w_str, w_bool, w_array, w_null, w_object, w_resource) = range(8)
+    (w_int, w_float, w_str, w_bool, w_null) = range(5)
 
     def int(self, value):
         return W_IntObject(value)
@@ -23,7 +24,7 @@ class ObjSpace(object):
         raise CompileError, "Not implemented"
 
     def null(self):
-        raise CompileError, "Not implemented"
+        return W_NullObject()
 
     def add(self, w_left, w_right):
         """
@@ -102,7 +103,31 @@ class ObjSpace(object):
             """
             return self.w_float
         elif left_type == self.w_int and w_right.type == self.w_float:
+            """
+            http://www.php.net/manual/en/language.types.type-juggling.php
+
+             If either operand is a float, then both operands are evaluated as floats,
+             and the result will be a float
+            """
             return self.w_float
+        elif left_type == self.w_null and w_right.type == self.w_str:
+            """
+            http://www.php.net/manual/en/language.operators.comparison.php
+
+            Table "Comparison with Various Types", line 1
+            Convert NULL to "", numerical or lexical comparison
+            """
+            return self.w_str
+        elif left_type == self.w_null and w_right.type != self.w_null:
+            """
+            http://www.php.net/manual/en/language.operators.comparison.php
+
+            Table "Comparison with Various Types", line 2
+            Convert to bool, FALSE < TRUE
+            """
+            return self.w_bool
+        elif left_type == self.w_bool:
+            return self.w_bool
         return w_left.type
 
     def get_common_arithmetic_type(self, w_left, w_right):
@@ -133,10 +158,13 @@ def _new_comparison_op(name):
         type = self.get_common_comparison_type(w_left, w_right)
         if type == self.w_str:
             try:
+                if w_left.type == self.w_null:
+                    return getattr(w_left.as_string(), name)(w_right)
                 left_number = w_left.as_number_strict()
                 right_number = w_right.as_number_strict()
                 if self._is_any_float(left_number.type, right_number.type):
                     return getattr(left_number.as_float(), name)(right_number.as_float())
+                assert isinstance(left_number, W_IntObject)
                 return getattr(left_number, name)(right_number)
             except NotConvertibleToNumber:
                 return getattr(w_left, name)(w_right)
@@ -146,6 +174,10 @@ def _new_comparison_op(name):
             return getattr(w_left.as_float(), name)(w_right.as_float())
         elif type == self.w_bool:
             return getattr(w_left.as_bool(), name)(w_right.as_bool())
+        elif type == self.w_null:
+            # this is possible only if both arguments are null
+            return getattr(w_left, name)(w_right)
+        raise NotImplementedError
     func.func_name = name
     return func
 
@@ -156,4 +188,5 @@ W_IntObject.type = ObjSpace.w_int
 W_StringObject.type = ObjSpace.w_str
 W_BoolObject.type = ObjSpace.w_bool
 W_FloatObject.type = ObjSpace.w_float
+W_NullObject.type = ObjSpace.w_null
 space = ObjSpace()

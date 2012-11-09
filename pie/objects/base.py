@@ -19,3 +19,6 @@ class W_Root(object):
 
     def conststr_w(self):
         raise InterpreterError("TypeError: casting to string of wrong type")
+
+    def is_null(self):
+        return False

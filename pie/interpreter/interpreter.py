@@ -293,16 +293,19 @@ class Interpreter(object):
             self.position = new_position
 
     def ISSET(self, names_count):
-        #TODO add NULL support
         #TODO add array support
         #TODO add __isset() support
         #TODO add PHP 5.4 support
+        stack = self.frame.stack
         for i in range(names_count):
-            var_name = self.frame.stack.pop().str_w()
+            var_name = stack.pop().str_w()
             if not var_name in self.frame.variables:
-                self.frame.stack.append(space.bool(False))
+                stack.append(space.bool(False))
                 return
-        self.frame.stack.append(space.bool(True))
+            if self.frame.variables[var_name].is_null():
+                stack.append(space.bool(False))
+                return
+        stack.append(space.bool(True))
 
     def UNSET(self, names_count):
         #TODO add reference support
@@ -321,7 +324,7 @@ class Interpreter(object):
     def _handle_undefined(self, name):
         message = "Undefined variable: %s" % name
         self._notice(message)
-        return space.str('')
+        return space.null()
 
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]

@@ -35,7 +35,7 @@ class BytecodeBuilder(object):
         self.string_consts_cache = {}
         self.bool_consts_cache = {}
         self.names_cache = {}
-        self.null_const_index = None
+        self.null_const_index = -1
 
         # lists to keep stack of loops
         self.break_positions = []
@@ -111,7 +111,7 @@ class BytecodeBuilder(object):
             return constants_count
 
     def register_null_const(self):
-        if self.null_const_index is None:
+        if self.null_const_index == -1:
             constants_count = len(self.consts)
             self.consts.append(space.null())
             self.null_const_index = constants_count

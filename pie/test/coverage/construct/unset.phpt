@@ -12,7 +12,6 @@ echo isset($a) . "=\n";
 echo isset($b) . "=\n";
 echo isset($c) . "=\n";
 echo isset($d) . "=";
-
 ?>
 --EXPECT--
 =

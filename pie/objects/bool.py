@@ -48,9 +48,19 @@ class W_BoolObject(W_Root):
         raise NotImplemented
 
     def inc(self):
+        """
+        http://www.php.net/manual/en/language.operators.increment.php
+
+         The increment/decrement operators do not affect boolean values
+        """
         return self
 
     def dec(self):
+        """
+        http://www.php.net/manual/en/language.operators.increment.php
+
+         The increment/decrement operators do not affect boolean values
+        """
         return self
 
     def less_than(self, object):
