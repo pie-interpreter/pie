@@ -116,7 +116,9 @@ class W_StringObject(W_Root):
         return self._handle_number(False).as_float()
 
     def as_int(self):
-        return self._handle_number(False).as_int()
+        value = self._handle_number(strict=False, int_only=True)
+        assert isinstance(value, W_IntObject)
+        return value
 
     def as_number_strict(self):
         """
@@ -244,7 +246,7 @@ class W_StringObject(W_Root):
                 copy.force()
         self.copies = None
 
-    def _handle_number(self, strict = False):
+    def _handle_number(self, strict = False, int_only = False):
         """
         Converts string to number
         """
@@ -263,6 +265,8 @@ class W_StringObject(W_Root):
         else:
             assert begin >= 0
             assert end >= 0
+            if int_only:
+                return self._handle_decimal(string, begin, end, value_len, strict)
             return self._handle_float_or_decimal(string, begin, end, value_len, strict)
 
     def _handle_float_or_decimal(self, value, begin, end, value_len, strict = False):
@@ -310,6 +314,34 @@ class W_StringObject(W_Root):
         value = self.str_w()[begin:end]
         if e_symbol or dot_symbol:
             return W_FloatObject(float(value) * minus)
+        #TODO add PHP_INT_MAX check
+        return W_IntObject(int(value) * minus)
+
+    def _handle_decimal(self, value, begin, end, value_len, strict = False):
+        #detect minus
+        minus = 1
+        if value[0] == '-':
+            begin += 1
+            end += 1
+            minus = -1
+
+        while end < value_len:
+            if value[end] not in DECIMAL_SYMBOLS:
+                self.convertible_to_number = False
+                if strict:
+                    raise NotConvertibleToNumber
+                else:
+                    break
+            end += 1
+
+        if minus and end == 0:
+            return W_IntObject(0)
+        elif minus == -1 and end == 1:
+            return W_IntObject(0)
+
+        assert begin >= 0
+        assert end >= 0
+        value = self.str_w()[begin:end]
         #TODO add PHP_INT_MAX check
         return W_IntObject(int(value) * minus)
 
