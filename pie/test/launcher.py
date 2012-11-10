@@ -28,7 +28,7 @@ class TestPHPLanguageCoverage(unittest.TestCase):
         os.dup2(self.stdout_no, sys.stdout.fileno())
 
 
-def fill_test_class_with_tests(test_to_run = [], with_php_source = False):
+def fill_test_class_with_tests(test_to_run=[], with_php_source=False):
     """
     Read all test files create a test method for each
     """
@@ -39,7 +39,7 @@ def fill_test_class_with_tests(test_to_run = [], with_php_source = False):
         _fill_test_class_with_tests_from_dir('/from_php_source/', test_to_run)
 
 
-def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix = ''):
+def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix=''):
     """
     Read directory that contains test files and create
     a test method for each test file

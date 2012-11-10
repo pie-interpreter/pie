@@ -68,7 +68,7 @@ FALSE: "false";
 NULL: "null";
 
 SINGLE_QUOTED_STRING: "'([^\\']|(\\.))*'";
-DOUBLE_QUOTED_STRING: "\"([^\\\"\{]|(\\.))*\"";
+DOUBLE_QUOTED_STRING: "\"([^\\\"]|(\\.))*\"";
 
 # operations in decreasing order of priorities:
 # ones, that executed first are first in the list

@@ -1,5 +1,3 @@
---SKIP--
---COMPILEONLY--
 --FILE--
 <?php
 $a = null;
