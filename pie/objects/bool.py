@@ -2,6 +2,7 @@ from pie.objects.base import W_Root
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
 
+
 class W_BoolObject(W_Root):
 
     _immutable_fields_ = ['value']

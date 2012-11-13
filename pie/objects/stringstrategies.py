@@ -63,7 +63,10 @@ class ConstantStringStrategy(BaseStringStrategy):
         return self.unerase(w_string.storage)[item]
 
     def is_true(self, w_string):
-        return bool(self.unerase(w_string.storage))
+        value = self.unerase(w_string.storage)
+        if not value or value == "0":
+            return False
+        return True
 
     def len(self, w_string):
         return len(self.unerase(w_string.storage))
@@ -122,7 +125,10 @@ class MutableStringStrategy(BaseStringStrategy):
         return self.unerase(w_string.storage)[item]
 
     def is_true(self, w_string):
-        return bool(self.unerase(w_string.storage))
+        value = self.unerase(w_string.storage)
+        if not value or value == ['0']:
+            return False
+        return True
 
     def len(self, w_string):
         return len(self.unerase(w_string.storage))

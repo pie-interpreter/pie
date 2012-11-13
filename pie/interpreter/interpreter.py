@@ -113,10 +113,19 @@ class Interpreter(object):
         raise InterpreterError, "Not implemented"
 
     def EMPTY_VAR(self, value):
-        raise InterpreterError, "Not implemented"
+        #TODO: array support
+        #TODO: object support
+        name = self.frame.stack.pop().str_w()
+        try:
+            w_value = self.frame.variables[name]
+        except KeyError:
+            w_value = self._handle_undefined(name)
+        w_result = space.is_empty(w_value)
+        self.frame.stack.append(w_result)
 
     def EMPTY_RESULT(self, value):
-        raise InterpreterError, "Not implemented"
+        w_value = self.frame.stack.pop()
+        self.frame.stack.append(space.is_empty(w_value))
 
     def NOT(self, value):
         raise InterpreterError, "Not implemented"

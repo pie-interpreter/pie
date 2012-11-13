@@ -38,7 +38,7 @@ class W_FloatObject(W_Root):
         return self.copy()
 
     def is_true(self):
-        return self.value > 0
+        return bool(self.value)
 
     def plus(self, number):
         return W_FloatObject(self.value + number.value)

@@ -88,6 +88,9 @@ class ObjSpace(object):
             return W_BoolObject(True)
         return w_left.not_equal(w_right)
 
+    def is_empty(self, w_object):
+        return W_BoolObject(not w_object.is_true())
+
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
         """
