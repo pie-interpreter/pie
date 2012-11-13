@@ -2,12 +2,13 @@ from pie.error import DivisionByZero
 from pie.objects.base import W_Root
 from pie.objects.int import W_IntObject
 
+
 class W_FloatObject(W_Root):
     _immutable_fields_ = ['value']
 
     def __init__(self, value):
         self.value = value
-        self.nan   = False
+        self.nan = False
 
     def __repr__(self):
         return "W_FloatObject(%s)" % self.value
@@ -26,7 +27,7 @@ class W_FloatObject(W_Root):
         return W_IntObject(int(self.value))
 
     def as_string(self):
-        #TODO make better float print support: not 11.0 but 11
+        #TODO: make better float print support: not 11.0 but 11
         from pie.objects.string import W_StringObject
         return W_StringObject(str(self.value))
 

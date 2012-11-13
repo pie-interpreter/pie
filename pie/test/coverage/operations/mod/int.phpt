@@ -1,7 +1,12 @@
 --FILE--
 <?php
-echo 5 % 5;
-echo 5 % 3;
+echo (5 % 3)."=\n";           // prints 2
+echo (5 % -3)."=\n";          // prints 2
+echo (-5 % 3)."=\n";          // prints -2
+echo (-5 % -3)."=";         // prints -2
 ?>
 --EXPECT--
-02
+2=
+2=
+-2=
+-2=

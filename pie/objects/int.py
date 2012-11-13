@@ -59,9 +59,9 @@ class W_IntObject(W_Root):
         if not number.value:
             raise DivisionByZero
         divider = number.value
-        if self.value < 0 and divider:
+        if self.value < 0 and divider > 0:
             divider *= -1
-        elif self.value and divider < 0:
+        elif self.value > 0 and divider < 0:
             divider *= -1
         return W_IntObject(self.value % divider)
 

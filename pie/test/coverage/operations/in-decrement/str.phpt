@@ -72,4 +72,4 @@ echo "=";
 echo --$a;
 ?>
 --EXPECT--
-Hellp=Hellp=Hellq=H=H=H=Z=AA=z=aa=1=2=-1=1=11=9=-1=-101=helma=aaaa=10=ф=z{a=A110=3.3=1.3
+Hellp=Hellp=Hellq=H=H=H=Z=AA=z=aa=1=2=-1=1=11=9=-1=-101.0=helma=aaaa=10=ф=z{a=A110=3.3=1.3

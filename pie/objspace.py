@@ -30,6 +30,7 @@ class ObjSpace(object):
         """
         In PHP '+' is supported only for numbers and arrays
         """
+        #TODO: add array support
         left_number = w_left.as_number()
         right_number = w_right.as_number()
         type = self.get_common_arithmetic_type(left_number, right_number)
@@ -70,12 +71,9 @@ class ObjSpace(object):
 
     def mod(self, w_left, w_right):
         """
-        In PHP '%' is supported only for numbers
+        In PHP '%' is supported only for integers
         """
-        type = self.get_common_arithmetic_type(w_left, w_right)
-        if type == self.w_int:
-            return w_left.as_int().mod(w_right.as_int())
-        raise NotImplementedError
+        return w_left.as_int().mod(w_right.as_int())
 
     def concat(self, w_left, w_right):
         return w_left.copy().as_string().concatenate(w_right.as_string())

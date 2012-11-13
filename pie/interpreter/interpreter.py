@@ -194,10 +194,31 @@ class Interpreter(object):
         raise InterpreterError, "Not implemented"
 
     def INPLACE_ADD(self, value):
-        raise InterpreterError, "Not implemented"
+        # TODO: add array support
+        name = self.frame.stack.pop().str_w()
+        w_right = self.frame.stack.pop()
+        try:
+            w_value = self.frame.variables[name]
+        except KeyError:
+            w_value = self._handle_undefined(name)
+        # Here we do not care about inplace operation for number
+        # as they are immutable
+        w_result = space.add(w_value, w_right)
+        self.frame.variables[name] = w_result
+        self.frame.stack.append(w_result)
 
     def INPLACE_SUBSTRACT(self, value):
-        raise InterpreterError, "Not implemented"
+        name = self.frame.stack.pop().str_w()
+        w_right = self.frame.stack.pop()
+        try:
+            w_value = self.frame.variables[name]
+        except KeyError:
+            w_value = self._handle_undefined(name)
+        # Here we do not care about inplace operation for number
+        # as they are immutable
+        w_result = space.substract(w_value, w_right)
+        self.frame.variables[name] = w_result
+        self.frame.stack.append(w_result)
 
     def INPLACE_CONCAT(self, var_index):
         var_name = self.frame.stack.pop().str_w()
@@ -206,19 +227,43 @@ class Interpreter(object):
             w_value = self.frame.variables[var_name]
         except KeyError:
             w_value = self._handle_undefined(var_name)
-            # operation itself
+        # operation itself
         w_value = w_value.as_string().concatenate(w_concat_value.as_string())
         self.frame.variables[var_name] = w_value
         self.frame.stack.append(w_value)
 
     def INPLACE_MULTIPLY(self, value):
-        raise InterpreterError, "Not implemented"
+        name = self.frame.stack.pop().str_w()
+        w_right = self.frame.stack.pop()
+        try:
+            w_value = self.frame.variables[name]
+        except KeyError:
+            w_value = self._handle_undefined(name)
+        # Here we do not care about inplace operation for number
+        # as they are immutable
+        w_result = space.multiply(w_value, w_right)
+        self.frame.variables[name] = w_result
+        self.frame.stack.append(w_result)
 
     def INPLACE_DIVIDE(self, value):
         raise InterpreterError, "Not implemented"
 
     def INPLACE_MOD(self, value):
-        raise InterpreterError, "Not implemented"
+        name = self.frame.stack.pop().str_w()
+        w_right = self.frame.stack.pop()
+        try:
+            w_value = self.frame.variables[name]
+        except KeyError:
+            w_value = self._handle_undefined(name)
+        # Here we do not care about inplace operation for number
+        # as they are immutable
+        try:
+            w_result = space.mod(w_value, w_right)
+        except DivisionByZero:
+            self._warning('Division by zero')
+            w_result = space.null()
+        self.frame.variables[name] = w_result
+        self.frame.stack.append(w_result)
 
     def LOAD_VAR(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -244,7 +289,7 @@ class Interpreter(object):
 
     def STORE_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
-        w_value = self.frame.stack[-1] # we need to leave value on the stack
+        w_value = self.frame.stack[-1]  # we need to leave value on the stack
         self.frame.variables[var_name] = w_value
 
     def CALL_FUNCTION(self, arguments_number):
