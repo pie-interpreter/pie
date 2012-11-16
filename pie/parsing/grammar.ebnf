@@ -17,9 +17,11 @@ T_BOOL_CAST: "\([ \t]*((bool)|(boolean))[ \t]*\)";
 T_BOOLEAN_AND: "&&";
 T_BOOLEAN_OR: "\|\|";
 T_BREAK: "break";
+T_CASE: "case";
 T_CLOSE_TAG: "\?>";
 T_CONTINUE: "continue";
 T_DEC: "--";
+T_DEFAULT: "default";
 T_DO: "do";
 T_DOUBLE_CAST: "\([ \t]*((float)|(double)|(real))[ \t]*\)";
 T_ECHO: "echo";
@@ -28,6 +30,7 @@ T_ELSE: "else";
 T_EMPTY: "empty";
 T_ENDFOR: "endfor";
 T_ENDIF: "endif";
+T_ENDSWITCH: "endswitch";
 T_ENDWHILE: "endwhile";
 T_FOR: "for";
 T_FUNCTION: "function";
@@ -48,6 +51,7 @@ T_RETURN: "return";
 T_REQUIRE: "require";
 T_REQUIRE_ONCE: "require_once";
 T_STRING_CAST: "\([ \t]*(string)[ \t]*\)";
+T_SWITCH: "switch";
 T_UNSET: "unset";
 T_UNSET_CAST: "\([ \t]*(unset)[ \t]*\)";
 T_WHILE: "while";
@@ -100,8 +104,9 @@ IDENTIFIER: "[a-z_][a-z0-9_]*";
 #   statements like class or function declarations, the rest are control
 #   structures like for, switch, while
 
-file: >contents<;
-contents: >content_block< >contents< | [EOF];
+file: >contents<
+    | EOF;
+contents: >content_block< >contents< | >content_block< [EOF];
 content_block: T_INLINE_HTML
              | >code<;
 code: [T_OPEN_TAG] [T_CLOSE_TAG]
@@ -113,6 +118,7 @@ top_level_statements_block: >tol_level_statement< >top_level_statements_block<
 
 tol_level_statement: >notfinished_statement< [";"]
                    | >top_level_finished_statement<
+                   | ["{"] >statements_block< ["}"]
                    | [";"];
 
 
@@ -123,6 +129,7 @@ statements_block: >statement< >statements_block<
 statement: >notfinished_statement< [";"]
          | >finished_statement<
          | [T_CLOSE_TAG] T_INLINE_HTML [T_OPEN_TAG]
+         | ["{"] >statements_block< ["}"]
          | [";"];
 
 
@@ -309,7 +316,8 @@ function_argument_default_value: constant_expression;
 finished_statement: if
                   | while
                   | dowhile
-                  | for;
+                  | for
+                  | switch;
 
 if: T_IF >if_condition< >control_structure_body< >else_inner<?
   | T_IF >if_condition< [":"] statements_block? >else_inner_alt<
@@ -334,6 +342,21 @@ for: T_FOR ["("] for_init? [";"] for_condition? [";"] for_expression? [")"] >con
 for_init: >comma_seperated_expressions<;
 for_condition:  >comma_seperated_expressions<;
 for_expression:  >comma_seperated_expressions<;
+
+switch: T_SWITCH ["("] expression [")"] ["{"] >switch_case_list< ["}"]
+      | T_SWITCH ["("] expression [")"] [":"] >switch_case_list< [T_ENDSWITCH]
+      | T_SWITCH ["("] expression [")"] ["{"] ["}"]
+      | T_SWITCH ["("] expression [")"] [":"] [T_ENDSWITCH];
+switch_case_list: switch_case >switch_case_list<
+                | switch_default >switch_case_list<
+                | switch_case
+                | switch_default;
+
+switch_case: T_CASE expression [":"] statements_block?
+           | T_CASE expression [";"] statements_block?;
+
+switch_default: T_DEFAULT [":"] statements_block?
+              | T_DEFAULT [";"] statements_block?;
 
 control_structure_body: ["{"] statements_block? ["}"]
                       | >statement<;

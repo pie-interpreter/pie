@@ -358,6 +358,36 @@ class For(AstNode):
                self.body.repr())
 
 
+class Switch(AstNode):
+
+    def __init__(self, expression, cases_list):
+        self.expression = expression
+        self.cases_list = cases_list
+
+    def repr(self):
+        return "Switch((%s) %s)" % (self.expression.repr(),
+                                    self.get_list_repr(self.cases_list))
+
+
+class SwitchCase(AstNode):
+
+    def __init__(self, expression, body):
+        self.expression = expression
+        self.body = body
+
+    def repr(self):
+        return "SwitchCase(%s: %s)" % (self.expression.repr(), self.body.repr())
+
+
+class SwitchDefault(AstNode):
+
+    def __init__(self, body):
+        self.body = body
+
+    def repr(self):
+        return "SwitchDefault(%s)" % (self.body.repr())
+
+
 class ConstantInt(AstNodeWithResult):
 
     def __init__(self, value):
