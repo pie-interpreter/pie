@@ -451,6 +451,47 @@ class __extend__(For):
         builder.patch_break_positions(builder.get_current_position())
 
 
+class __extend__(Switch):
+
+    def compile_node(self, builder):
+        builder.register_loop()  # even though it's not a loop :)
+
+        self.expression.compile(builder)
+
+        # building conditions first
+        positions = []
+        default_position_index = -1
+        for case in self.cases_list:
+            if isinstance(case, SwitchDefault):
+                default_position_index = len(positions)
+                positions.append(-1)
+                continue
+
+            builder.emit('DUPLICATE_TOP')
+            case.expression.compile(builder)
+            builder.emit('EQUAL')
+
+            positions.append(builder.emit('JUMP_IF_TRUE', 0) + 1)
+
+        last_position = builder.emit('JUMP', 0) + 1
+        if default_position_index >= 0:
+            positions[default_position_index] = last_position
+
+        index = 0
+        for case in self.cases_list:
+            builder.update_to_current_position(positions[index])
+            case.body.compile(builder)
+            index += 1
+
+        builder.emit('POP_STACK')
+
+        if default_position_index < 0:
+            builder.update_to_current_position(last_position)
+
+        builder.patch_continue_positions(builder.get_current_position())
+        builder.patch_break_positions(builder.get_current_position())
+
+
 class __extend__(ConstantIntBin):
 
     def compile_node(self, builder):

@@ -27,6 +27,9 @@ class AstBuilder(RPythonVisitor):
 
     def visit_file(self, node):
         """ Visit root node of the parse tree """
+        if len(node.children) == 1 and node.children[0].symbol == 'EOF':
+            return EmptyStatement()
+
         return self.visit_statements_block(node)
 
     def visit_statements_block(self, node):
@@ -311,6 +314,38 @@ class AstBuilder(RPythonVisitor):
                    condition_statements,
                    expression_statements,
                    body)
+
+    def visit_switch(self, node):
+        children_count = len(node.children)
+        assert children_count >= 2
+
+        expression = self.transform(node.children[1])
+        cases_list = []
+        for index in range(2, children_count):
+            cases_list.append(self.transform(node.children[index]))
+
+        return Switch(expression, cases_list)
+
+    def visit_switch_case(self, node):
+        children_count = len(node.children)
+        assert children_count in [2, 3]
+        expression = self.transform(node.children[1])
+        if children_count == 3:
+            body = self.transform(node.children[2])
+        else:
+            body = EmptyStatement()
+
+        return SwitchCase(expression, body)
+
+    def visit_switch_default(self, node):
+        children_count = len(node.children)
+        assert children_count in [1, 2]
+        if children_count == 2:
+            body = self.transform(node.children[1])
+        else:
+            body = EmptyStatement()
+
+        return SwitchDefault(body)
 
     def visit_INT_BIN(self, node):
         return ConstantIntBin(node.token.source)

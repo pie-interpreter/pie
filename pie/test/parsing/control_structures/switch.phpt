@@ -1,4 +1,4 @@
---TEST--
+--FILE--
 <?php
 
 $a = 2;
@@ -203,6 +203,38 @@ switch ($a) {
 }
 echo "\n";
 
+$a = 3;
+$b = 0;
+switch ($a) {
+    case ++$b;
+        echo "wrong";
+        break;
+    case ++$b;
+        echo "wrong";
+        break;
+    case ++$b;
+        echo $b;
+        break;
+}
+echo "\n";
+
+$a = 2;
+switch ($a) {
+    case 1: {
+        echo "1";
+        break;
+    }
+    case 2: {
+        echo "2";
+        break;
+    }
+    case 3: {
+        echo "3";
+        break;
+    }
+}
+switch ($a) {
+}
 ?>
 --EXPECT--
 2
@@ -219,3 +251,5 @@ echo "\n";
 2
 2
 3
+3
+2

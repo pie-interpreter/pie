@@ -18,7 +18,7 @@ class PieLexer(Lexer):
         self.rex = regex.PieLexingOrExpression(token_regexs, names)
         automaton = self.rex.make_automaton()
         self.automaton = automaton.make_deterministic(names)
-        self.automaton.optimize() # XXX not sure whether this is a good idea
+        self.automaton.optimize()  # XXX not sure whether this is a good idea
         for ign in self.IGNORED_TOKES:
             assert ign in names
         self.ignore = dict.fromkeys(self.IGNORED_TOKES)
@@ -30,7 +30,7 @@ class PieLexer(Lexer):
         tokens = []
         for token in pre_parsed_tokens:
             if token.name == PiePreTokenizer.PHP_CODE_TOKEN:
-                try :
+                try:
                     grammar_tokens = self.tokenize_with_grammar(token)
                 except LexerError as e:
                     raise pie.error.LexerError(e, text)
@@ -78,8 +78,8 @@ class PiePreTokenizer(object):
         self.text = text
         self.text_lowered = self.text.lower()
 
-        self.is_html = True # text is treated as html in the begining
-        self.last_start= 0
+        self.is_html = True  # text is treated as html in the begining
+        self.last_start = 0
         self.line = 0
         self.column = 0
 
@@ -168,4 +168,3 @@ class PiePreTokenizer(object):
             self.column += len(text)
         else:
             self.column = len(text) - text.rfind("\n") - 1
-
