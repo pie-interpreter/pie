@@ -532,6 +532,16 @@ class __extend__(ConstantIntHex):
         builder.emit('LOAD_CONST', index)
 
 
+class __extend__(ConstantFloat):
+
+    def compile_node(self, builder):
+        value = float(self.value)
+        if self.sign == '-':
+            value = -value
+        index = builder.register_float_const(value)
+        builder.emit('LOAD_CONST', index)
+
+
 class __extend__(ConstantBool):
 
     def compile_node(self, builder):

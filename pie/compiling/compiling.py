@@ -32,6 +32,7 @@ class BytecodeBuilder(object):
 
         # caching lists
         self.int_consts_cache = {}
+        self.float_consts_cache = {}
         self.string_consts_cache = {}
         self.bool_consts_cache = {}
         self.names_cache = {}
@@ -90,6 +91,15 @@ class BytecodeBuilder(object):
             constants_count = len(self.consts)
             self.consts.append(space.int(value))
             self.int_consts_cache[value] = constants_count
+            return constants_count
+
+    def register_float_const(self, value):
+        try:
+            return self.float_consts_cache[value]
+        except KeyError:
+            constants_count = len(self.consts)
+            self.consts.append(space.float(value))
+            self.float_consts_cache[value] = constants_count
             return constants_count
 
     def register_bool_const(self, value):

@@ -195,16 +195,6 @@ class AstBuilder(RPythonVisitor):
     def visit_variable_identifier(self, node):
         return Variable(self.get_single_child(node))
 
-    def visit_constant_int_expression(self, node):
-        assert len(node.children) == 2
-        sign = node.children[0].token.source
-
-        int_constant = self.transform(node.children[1])
-        assert isinstance(int_constant, ConstantInt)
-        int_constant.sign = sign
-
-        return int_constant
-
     def visit_function_call(self, node):
         children_count = len(node.children)
         assert children_count in [1, 2]
@@ -347,6 +337,26 @@ class AstBuilder(RPythonVisitor):
 
         return SwitchDefault(body)
 
+    def visit_int_type(self, node):
+        assert len(node.children) == 2
+        sign = node.children[0].token.source
+
+        int_constant = self.transform(node.children[1])
+        assert isinstance(int_constant, ConstantInt)
+        int_constant.sign = sign
+
+        return int_constant
+
+    def visit_float_type(self, node):
+        assert len(node.children) == 2
+        sign = node.children[0].token.source
+
+        float_constant = self.transform(node.children[1])
+        assert isinstance(float_constant, ConstantFloat)
+        float_constant.sign = sign
+
+        return float_constant
+
     def visit_INT_BIN(self, node):
         return ConstantIntBin(node.token.source)
 
@@ -358,6 +368,9 @@ class AstBuilder(RPythonVisitor):
 
     def visit_INT_HEX(self, node):
         return ConstantIntHex(node.token.source)
+
+    def visit_FLOAT(self, node):
+        return ConstantFloat(node.token.source)
 
     def visit_SINGLE_QUOTED_STRING(self, node):
         end = len(node.token.source) - 1

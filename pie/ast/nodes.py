@@ -398,25 +398,35 @@ class ConstantInt(AstNodeWithResult):
 class ConstantIntBin(ConstantInt):
 
     def repr(self):
-        return "ConstantIntBin(%s)" % self.value
+        return "ConstantIntBin(%s%s)" % (self.sign, self.value)
 
 
 class ConstantIntOct(ConstantInt):
 
     def repr(self):
-        return "ConstantIntOct(%s)" % self.value
+        return "ConstantIntOct(%s%s)" % (self.sign, self.value)
 
 
 class ConstantIntDec(ConstantInt):
 
     def repr(self):
-        return "ConstantIntDec(%s)" % self.value
+        return "ConstantIntDec(%s%s)" % (self.sign, self.value)
 
 
 class ConstantIntHex(ConstantInt):
 
     def repr(self):
-        return "ConstantIntHex(%s)" % self.value
+        return "ConstantIntHex(%s%s)" % (self.sign, self.value)
+
+
+class ConstantFloat(AstNodeWithResult):
+
+    def __init__(self, value):
+        self.value = value
+        self.sign = '+'
+
+    def repr(self):
+        return "ConstantFloat(%s%s)" % (self.sign, self.value)
 
 
 class ConstantString(AstNodeWithResult):

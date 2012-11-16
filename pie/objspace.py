@@ -3,9 +3,9 @@ from pie.objects.bool import W_BoolObject
 from pie.objects.float import W_FloatObject
 from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
-from distutils.errors import CompileError
 
 __author__ = 'sery0ga'
+
 
 class ObjSpace(object):
 
@@ -21,7 +21,7 @@ class ObjSpace(object):
         return W_BoolObject(value)
 
     def float(self, value):
-        raise CompileError, "Not implemented"
+        return W_FloatObject(value)
 
     def null(self):
         return W_NullObject()
@@ -153,6 +153,7 @@ class ObjSpace(object):
         if left_type == self.w_str or right_type == self.w_str:
             return True
         return False
+
 
 def _new_comparison_op(name):
     def func(self, w_left, w_right):
