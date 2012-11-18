@@ -2,10 +2,10 @@
 
 from pie.ast import ast
 from pie.compiling.bytecode import Bytecode
-from pie.compiling.nodes import *
 from pie.error import CompilerError
 from pie.opcodes import get_opcode_index
 from pie.objspace import space
+import pie.compiling.nodes
 
 
 def compile_source(source):

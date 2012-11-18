@@ -16,7 +16,9 @@ def interpret(source):
     context = Context()
     context.initialize_function_trace_stack(source.filename)
 
-    return interpret_bytecode(bytecode, context, Frame())
+    retval = interpret_bytecode(bytecode, context, Frame())
+
+    return retval
 
 
 def interpret_bytecode(bytecode, context, frame):
@@ -101,16 +103,16 @@ class Interpreter(object):
         self.frame.stack.append(self.frame.stack[-1])
 
     def INCLUDE(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def INCLUDE_ONCE(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def REQUIRE(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def REQUIRE_ONCE(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def EMPTY_VAR(self, value):
         #TODO: array support
@@ -128,10 +130,10 @@ class Interpreter(object):
         self.frame.stack.append(space.is_empty(w_value))
 
     def NOT(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def CAST_TO_ARRAY(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()
@@ -146,14 +148,14 @@ class Interpreter(object):
         self.frame.stack.append(w_object.as_int())
 
     def CAST_TO_OBJECT(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def CAST_TO_STRING(self, value):
         w_object = self.frame.stack.pop()
         self.frame.stack.append(w_object.as_string())
 
     def CAST_TO_UNSET(self, value):
-        self.frame.stack.pop() # Don't need to keep value
+        self.frame.stack.pop()  # Don't need to keep value
         self.frame.stack.append(space.null())
 
     def PRE_INCREMENT(self, value):
@@ -197,10 +199,10 @@ class Interpreter(object):
         self.frame.stack.append(w_old_value)
 
     def DIVIDE(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def XOR(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def INPLACE_ADD(self, value):
         # TODO: add array support
@@ -255,7 +257,7 @@ class Interpreter(object):
         self.frame.stack.append(w_result)
 
     def INPLACE_DIVIDE(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def INPLACE_MOD(self, value):
         name = self.frame.stack.pop().str_w()
@@ -279,7 +281,7 @@ class Interpreter(object):
         self.frame.stack.append(space.str(var_name))
 
     def STORE_VAR(self, value):
-        raise InterpreterError, "Not implemented"
+        raise InterpreterError("Not implemented")
 
     def LOAD_CONST(self, value):
         self.frame.stack.append(self.bytecode.consts[value].copy())
@@ -388,7 +390,7 @@ class Interpreter(object):
     def _get_line(self):
         return self.bytecode.opcode_lines[self.opcode_position]
 
-    def _error(self, message, type, display = True):
+    def _error(self, message, type, display=True):
         error = PHPError(message,
                          type,
                          self.bytecode.filename,
@@ -399,14 +401,15 @@ class Interpreter(object):
 
         return error
 
-    def _warning(self, message, display = True):
+    def _warning(self, message, display=True):
         self._error(message, PHPError.WARNING, display)
 
-    def _fatal(self, message, display = True):
+    def _fatal(self, message, display=True):
         self._error(message, PHPError.FATAL, display)
 
-    def _notice(self, message, display = True):
+    def _notice(self, message, display=True):
         self._error(message, PHPError.NOTICE, display)
+
 
 def _new_binary_op(name, space_name):
     def func(self, value):
@@ -422,9 +425,10 @@ def _new_binary_op(name, space_name):
     return func
 
 for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'LESS_THAN',
-              'MORE_THAN', 'LESS_THAN_OR_EQUAL' ,'MORE_THAN_OR_EQUAL', 'EQUAL',
+              'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
               'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
     setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))
+
 
 def _define_opcodes():
     for index in OPCODE:

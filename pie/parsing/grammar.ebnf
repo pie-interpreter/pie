@@ -62,7 +62,7 @@ T_WHILE: "while";
 
 # primitive types
 INT_BIN: "0b[01]+";
-INT_OCT: "0([0-9])+"; # 8 and 9 are allowed to be stripped later
+INT_OCT: "0([0-7])+";
 INT_DEC: "0|([1-9][0-9]*)";
 INT_HEX: "0x([0-9a-f]+)";
 

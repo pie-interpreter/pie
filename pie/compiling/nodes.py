@@ -1,42 +1,42 @@
 " Module, defining how each node of ast is compiled "
 
-from pie.ast.nodes import *
+import pie.ast.nodes as nodes
 from pie.compiling import util
 
 
-class __extend__(AstNode):
+class __extend__(nodes.AstNode):
 
     def compile(self, builder):
         builder.line = self.line
         self.compile_node(builder)
 
 
-class __extend__(EmptyStatement):
+class __extend__(nodes.EmptyStatement):
 
     def compile_node(self, builder):
         # it is really empty
         pass
 
 
-class __extend__(StatementsList):
+class __extend__(nodes.StatementsList):
 
     def compile_node(self, builder):
         for statement in self.list:
             statement.compile(builder)
             # for statements, that have results, we need to remove it from the
             # stack, because it won't be used anyway
-            if isinstance(statement, AstNodeWithResult):
+            if isinstance(statement, nodes.AstNodeWithResult):
                 builder.emit('POP_STACK')
 
 
-class __extend__(Print):
+class __extend__(nodes.Print):
 
     def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('PRINT')
 
 
-class __extend__(Echo):
+class __extend__(nodes.Echo):
 
     def compile_node(self, builder):
         # echoing expressions one by one
@@ -45,38 +45,38 @@ class __extend__(Echo):
             builder.emit('ECHO')
 
 
-class __extend__(Include):
+class __extend__(nodes.Include):
 
     def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('INCLUDE')
 
 
-class __extend__(IncludeOnce):
+class __extend__(nodes.IncludeOnce):
 
     def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('INCLUDE_ONCE')
 
 
-class __extend__(Require):
+class __extend__(nodes.Require):
 
     def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('REQUIRE')
 
 
-class __extend__(RequireOnce):
+class __extend__(nodes.RequireOnce):
 
     def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('REQUIRE_ONCE')
 
 
-class __extend__(Return):
+class __extend__(nodes.Return):
 
     def compile_node(self, builder):
-        if isinstance(self.expression, EmptyStatement):
+        if isinstance(self.expression, nodes.EmptyStatement):
             index = builder.register_null_const()
             builder.emit('LOAD_CONST', index)
         else:
@@ -85,21 +85,21 @@ class __extend__(Return):
         builder.emit('RETURN')
 
 
-class __extend__(Break):
+class __extend__(nodes.Break):
 
     def compile_node(self, builder):
         jump_position = builder.emit('JUMP', 0) + 1
         builder.add_break_position_to_patch(self.level, jump_position)
 
 
-class __extend__(Continue):
+class __extend__(nodes.Continue):
 
     def compile_node(self, builder):
         jump_position = builder.emit('JUMP', 0) + 1
         builder.add_continue_position_to_patch(self.level, jump_position)
 
 
-class __extend__(Isset):
+class __extend__(nodes.Isset):
 
     def compile_node(self, builder):
         for statement in self.list:
@@ -109,7 +109,7 @@ class __extend__(Isset):
         builder.emit('ISSET', len(self.list))
 
 
-class __extend__(Unset):
+class __extend__(nodes.Unset):
 
     def compile_node(self, builder):
         for statement in self.list:
@@ -119,10 +119,10 @@ class __extend__(Unset):
         builder.emit('UNSET', len(self.list))
 
 
-class __extend__(Empty):
+class __extend__(nodes.Empty):
 
     def compile_node(self, builder):
-        if isinstance(self.expression, Variable):
+        if isinstance(self.expression, nodes.Variable):
             index = builder.register_name(_get_variable_name(self.expression))
             builder.emit('LOAD_NAME', index)
             builder.emit('EMPTY_VAR')
@@ -131,7 +131,7 @@ class __extend__(Empty):
             builder.emit('EMPTY_RESULT')
 
 
-class __extend__(BinaryOperator):
+class __extend__(nodes.BinaryOperator):
 
     def compile_node(self, builder):
         self.left.compile(builder)
@@ -161,7 +161,7 @@ class __extend__(BinaryOperator):
         return operations[self.operation]
 
 
-class __extend__(Xor):
+class __extend__(nodes.Xor):
 
     def compile_node(self, builder):
         self.left.compile(builder)
@@ -169,7 +169,7 @@ class __extend__(Xor):
         builder.emit('XOR')
 
 
-class __extend__(Or):
+class __extend__(nodes.Or):
 
     def compile_node(self, builder):
         self.left.compile(builder)
@@ -180,7 +180,7 @@ class __extend__(Or):
         builder.emit('CAST_TO_BOOL')
 
 
-class __extend__(And):
+class __extend__(nodes.And):
 
     def compile_node(self, builder):
         self.left.compile(builder)
@@ -191,7 +191,7 @@ class __extend__(And):
         builder.emit('CAST_TO_BOOL')
 
 
-class __extend__(Assignment):
+class __extend__(nodes.Assignment):
 
     def compile_node(self, builder):
         # compiling value first, so result would be on the stack for us
@@ -219,10 +219,10 @@ class __extend__(Assignment):
         return operations[self.operator]
 
 
-class __extend__(TernaryOperator):
+class __extend__(nodes.TernaryOperator):
 
     def compile_node(self, builder):
-        leftempty = isinstance(self.left, EmptyStatement)
+        leftempty = isinstance(self.left, nodes.EmptyStatement)
 
         self.condition.compile(builder)
 
@@ -242,14 +242,14 @@ class __extend__(TernaryOperator):
             builder.update_to_current_position(jump_position)
 
 
-class __extend__(Not):
+class __extend__(nodes.Not):
 
     def compile_node(self, builder):
         self.value.compile(builder)
         builder.emit('NOT')
 
 
-class __extend__(IncrementDecrement):
+class __extend__(nodes.IncrementDecrement):
 
     def compile_node(self, builder):
         # registering var name in builder
@@ -273,7 +273,7 @@ class __extend__(IncrementDecrement):
         return operations[self.type][self.operator]
 
 
-class __extend__(Cast):
+class __extend__(nodes.Cast):
 
     def compile_node(self, builder):
         self.value.compile(builder)
@@ -293,21 +293,21 @@ class __extend__(Cast):
         return operations[self.symbol]
 
 
-class __extend__(Variable):
+class __extend__(nodes.Variable):
 
     def compile_node(self, builder):
         index = builder.register_name(_get_variable_name(self))
         builder.emit('LOAD_VAR_FAST', index)
 
 
-class __extend__(FunctionCall):
+class __extend__(nodes.FunctionCall):
 
     def compile_node(self, builder):
         for i in range(0, len(self.parameters)):
             self.parameters[-1 * i].compile(builder)
 
         name = self.name
-        if isinstance(name, Identifier):
+        if isinstance(name, nodes.Identifier):
             index = builder.register_name(name.value)
             builder.emit("LOAD_NAME", index)
         else:
@@ -316,7 +316,7 @@ class __extend__(FunctionCall):
         builder.emit("CALL_FUNCTION", len(self.parameters))
 
 
-class __extend__(FunctionDeclaration):
+class __extend__(nodes.FunctionDeclaration):
 
     def compile_node(self, builder):
         # creating context to compile function's body
@@ -329,23 +329,23 @@ class __extend__(FunctionDeclaration):
         arguments = []
         for argument in self.arguments:
             identifier = argument.name
-            assert isinstance(identifier, Identifier)
+            assert isinstance(identifier, nodes.Identifier)
             arguments.append(identifier.value)
 
         # registering function in current builder, so it will be added to
         # bytecode
         identifier = self.name
-        assert isinstance(identifier, Identifier)
+        assert isinstance(identifier, nodes.Identifier)
         builder.register_function(identifier.value, arguments, bytecode)
 
 
-class __extend__(If):
+class __extend__(nodes.If):
 
     def compile_node(self, builder):
         self.condition.compile(builder)
         # in case body or else branch is empty, we don't need some jumps
-        bodyempty = isinstance(self.body, EmptyStatement)
-        elseempty = isinstance(self.else_branch, EmptyStatement)
+        bodyempty = isinstance(self.body, nodes.EmptyStatement)
+        elseempty = isinstance(self.else_branch, nodes.EmptyStatement)
 
         if bodyempty and elseempty:
             builder.emit('POP_STACK')
@@ -370,7 +370,7 @@ class __extend__(If):
         builder.update_to_current_position(jump_position)
 
 
-class __extend__(While):
+class __extend__(nodes.While):
 
     def compile_node(self, builder):
         builder.register_loop()
@@ -379,7 +379,7 @@ class __extend__(While):
         start_position = builder.get_current_position()
         # now we can compile expression, that will leave it's result on stack
         self.expression.compile(builder)
-        if isinstance(self.body, EmptyStatement):
+        if isinstance(self.body, nodes.EmptyStatement):
             builder.emit('JUMP_IF_TRUE', start_position)
             return
 
@@ -395,7 +395,7 @@ class __extend__(While):
         builder.patch_break_positions(builder.get_current_position())
 
 
-class __extend__(DoWhile):
+class __extend__(nodes.DoWhile):
 
     def compile_node(self, builder):
         builder.register_loop()
@@ -410,7 +410,7 @@ class __extend__(DoWhile):
         builder.patch_break_positions(builder.get_current_position())
 
 
-class __extend__(For):
+class __extend__(nodes.For):
 
     def compile_node(self, builder):
         builder.register_loop()
@@ -451,7 +451,7 @@ class __extend__(For):
         builder.patch_break_positions(builder.get_current_position())
 
 
-class __extend__(Switch):
+class __extend__(nodes.Switch):
 
     def compile_node(self, builder):
         builder.register_loop()  # even though it's not a loop :)
@@ -462,7 +462,7 @@ class __extend__(Switch):
         positions = []
         default_position_index = -1
         for case in self.cases_list:
-            if isinstance(case, SwitchDefault):
+            if isinstance(case, nodes.SwitchDefault):
                 default_position_index = len(positions)
                 positions.append(-1)
                 continue
@@ -492,7 +492,7 @@ class __extend__(Switch):
         builder.patch_break_positions(builder.get_current_position())
 
 
-class __extend__(ConstantIntBin):
+class __extend__(nodes.ConstantIntBin):
 
     def compile_node(self, builder):
         value = int(self.value[2:], 2)
@@ -502,17 +502,17 @@ class __extend__(ConstantIntBin):
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantIntOct):
+class __extend__(nodes.ConstantIntOct):
 
     def compile_node(self, builder):
-        value = int(util.validate_oct(self.value), 8)
+        value = int(self.value, 8)
         if self.sign == '-':
             value = -value
         index = builder.register_int_const(value)
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantIntDec):
+class __extend__(nodes.ConstantIntDec):
 
     def compile_node(self, builder):
         value = int(self.value)
@@ -522,7 +522,7 @@ class __extend__(ConstantIntDec):
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantIntHex):
+class __extend__(nodes.ConstantIntHex):
 
     def compile_node(self, builder):
         value = int(self.value[2:], 16)
@@ -532,7 +532,7 @@ class __extend__(ConstantIntHex):
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantFloat):
+class __extend__(nodes.ConstantFloat):
 
     def compile_node(self, builder):
         value = float(self.value)
@@ -542,28 +542,28 @@ class __extend__(ConstantFloat):
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantBool):
+class __extend__(nodes.ConstantBool):
 
     def compile_node(self, builder):
         index = builder.register_bool_const(self.value)
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantNull):
+class __extend__(nodes.ConstantNull):
 
     def compile_node(self, builder):
         index = builder.register_null_const()
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantString):
+class __extend__(nodes.ConstantString):
 
     def compile_node(self, builder):
         index = builder.register_string_const(self.value)
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantSingleQuotedString):
+class __extend__(nodes.ConstantSingleQuotedString):
 
     def compile_node(self, builder):
         value = util.process_single_quoted_string(self.value)
@@ -571,7 +571,7 @@ class __extend__(ConstantSingleQuotedString):
         builder.emit('LOAD_CONST', index)
 
 
-class __extend__(ConstantDoubleQuotedString):
+class __extend__(nodes.ConstantDoubleQuotedString):
 
     def compile_node(self, builder):
         value = util.process_double_quoted_string(self.value)
@@ -580,8 +580,8 @@ class __extend__(ConstantDoubleQuotedString):
 
 
 def _get_variable_name(var):
-    assert isinstance(var, Variable)
+    assert isinstance(var, nodes.Variable)
     identifier = var.name
-    assert isinstance(identifier, Identifier)
+    assert isinstance(identifier, nodes.Identifier)
 
     return identifier.value
