@@ -87,7 +87,8 @@ MULTITIVE_OPERATOR: "\*|/|%";
 ADDITIVE_OPERATOR: "[-+]";
 COMPARE_OPERATOR: "(<=)|(>=)|<|>";
 EQUALITY_OPERATOR: "(===)|(!==)|(==)|(!=)|(<>)";
-ASSIGN_OPERATOR: "(\+=)|(-=)|(\*=)|(/=)|(\.=)|(%=)|(=)";
+ASSIGN_OPERATOR: "=";
+INPLACE_ASSIGN_OPERATOR: "(\+=)|(-=)|(\*=)|(/=)|(\.=)|(%=)";
 LOGICAL_NOT_OPERATOR: "!";
 
 # misc
@@ -228,8 +229,12 @@ logical_and_expression: assign_expression [T_LOGICAL_AND] >logical_and_expressio
 logical_and_expression_inner: assign_expression [T_LOGICAL_AND] >logical_and_expression_inner<
                             | assign_expression;
 
-assign_expression: variable_expression ASSIGN_OPERATOR assign_expression
+assign_expression: <reference_assignment>
+                 | variable_expression ASSIGN_OPERATOR assign_expression
+                 | variable_expression INPLACE_ASSIGN_OPERATOR assign_expression
                  | <ternary_expression>;
+
+reference_assignment: variable_expression [ASSIGN_OPERATOR] ["&"] variable_expression;
 
 ternary_expression: boolean_or_expression ["?"] expression? [":"] expression
                   | <boolean_or_expression>;
@@ -322,13 +327,14 @@ top_level_finished_statement: function_declaration
                             | >finished_statement<;
 
 
-function_declaration: T_FUNCTION IDENTIFIER >function_arguments< ["{"] statements_block? ["}"];
+function_declaration: T_FUNCTION "&"? IDENTIFIER >function_arguments< ["{"] statements_block? ["}"];
 function_arguments: ["("] function_arguments_list? [")"];
 function_arguments_list: >function_argument< [","] >function_arguments_list<
                        | >function_argument<;
 function_argument: function_argument_with_default_value
+                 | "&" variable_identifier
                  | variable_identifier;
-function_argument_with_default_value: variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
+function_argument_with_default_value: "&"? variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
 function_argument_default_value: constant_expression;
 
 

@@ -129,6 +129,9 @@ class Interpreter(object):
         w_value = self.frame.stack.pop()
         self.frame.stack.append(space.is_empty(w_value))
 
+    def MAKE_REFERENCE(self, value):
+        raise InterpreterError("Not implemented")
+
     def NOT(self, value):
         raise InterpreterError("Not implemented")
 

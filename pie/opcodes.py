@@ -20,6 +20,7 @@ OPCODE = {
     8: 'REQUIRE_ONCE',
     9: 'EMPTY_VAR',  # check if var with name from the stack is empty
     10: 'EMPTY_RESULT',  # check if value on the stack is empty
+    11: 'MAKE_REFERENCE',  # make a reference for variable on stack
 
     # unary operations
     # operate on variable, retrieved by name from stack

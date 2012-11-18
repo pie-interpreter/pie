@@ -224,6 +224,16 @@ class Assignment(AstNodeWithResult):
                                          self.value.repr())
 
 
+class ReferenceAssignment(AstNodeWithResult):
+
+    def __init__(self, target, source):
+        self.target = target
+        self.source = source
+
+    def repr(self):
+        return "ReferenceAssignment(%s =& %s)" & (self.target, self.source)
+
+
 class TernaryOperator(AstNodeWithResult):
 
     def __init__(self, condition, left, right):
