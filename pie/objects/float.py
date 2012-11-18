@@ -27,9 +27,15 @@ class W_FloatObject(W_Root):
         return W_IntObject(int(self.value))
 
     def as_string(self):
-        #TODO: make better float print support: not 11.0 but 11
+        # simple check to remove trailing 0 in float values
+        intvalue = int(self.value)
+        if intvalue == self.value:
+            value = intvalue
+        else:
+            value = self.value
         from pie.objects.string import W_StringObject
-        return W_StringObject(str(self.value))
+
+        return W_StringObject(str(value))
 
     def copy(self):
         return W_FloatObject(self.value)

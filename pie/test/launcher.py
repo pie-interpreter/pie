@@ -33,8 +33,7 @@ def fill_test_class_with_tests(test_to_run=[], with_php_source=False):
     Read all test files create a test method for each
     """
 
-    _fill_test_class_with_tests_from_dir('/coverage/', test_to_run, 'coverage_')
-    _fill_test_class_with_tests_from_dir('/parsing/', test_to_run, 'parsing_')
+    _fill_test_class_with_tests_from_dir('/coverage/', test_to_run)
     if with_php_source:
         _fill_test_class_with_tests_from_dir('/from_php_source/', test_to_run)
 

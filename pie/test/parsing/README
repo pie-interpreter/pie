@@ -1,4 +1,0 @@
-Grammar tests are not supposed to check the correctness of output
-but to check that given php file is parsed and compiled correctly.
-
-These tests can partially overlap coverage tests.
