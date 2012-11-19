@@ -1,8 +1,11 @@
 from pie.compiling import compiling
-from pie.error import InterpreterError, PHPError, DivisionByZero
+from pie.error import InterpreterError, DivisionByZeroError, UndefinedVariable, \
+    DivisionByZero, UndefinedFunction, MissingArgument
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
+from pie.interpreter.include import IncludeStatement
 from pie.objspace import space
+import sourcecode
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
@@ -11,33 +14,15 @@ import os
 __author__ = 'sery0ga'
 
 
-def interpret(source):
-    bytecode = compiling.compile_source(source)
-    context = Context()
-    context.initialize_function_trace_stack(source.filename)
-
-    retval = interpret_bytecode(bytecode, context, Frame())
-
-    return retval
-
-
-def interpret_bytecode(bytecode, context, frame):
-    interpreter = Interpreter(bytecode, context, frame)
-    return interpreter.interpret()
-
-
 class Interpreter(object):
 
     RETURN_FLAG = -1
 
     def __init__(self, bytecode, context, frame):
         self.bytecode = bytecode
-        self.context = context
         self.frame = frame
-
+        self.context = context
         self.position = 0
-        self.opcode_position = 0
-        self.context.initialize_functions(self.bytecode)
 
     def interpret(self):
         code = self.bytecode.code
@@ -47,7 +32,7 @@ class Interpreter(object):
                 if self.position >= bytecode_length:
                     break
 
-                self.opcode_position = self.position
+                self.context.trace.update_position(self.position)
 
                 next_instr = ord(code[self.position])
                 self.position += 1
@@ -103,16 +88,28 @@ class Interpreter(object):
         self.frame.stack.append(self.frame.stack[-1])
 
     def INCLUDE(self, value):
-        raise InterpreterError("Not implemented")
+        w_filename = self.frame.stack.pop().str_w()
+        statement = IncludeStatement(self.context, self.frame)
+        w_result = statement.include(w_filename)
+        self.frame.stack.append(w_result)
 
     def INCLUDE_ONCE(self, value):
-        raise InterpreterError("Not implemented")
+        w_filename = self.frame.stack.pop().str_w()
+        statement = IncludeStatement(self.context, self.frame)
+        w_result = statement.include_once(w_filename)
+        self.frame.stack.append(w_result)
 
     def REQUIRE(self, value):
-        raise InterpreterError("Not implemented")
+        w_filename = self.frame.stack.pop().str_w()
+        statement = IncludeStatement(self.context, self.frame)
+        w_result = statement.require(w_filename)
+        self.frame.stack.append(w_result)
 
     def REQUIRE_ONCE(self, value):
-        raise InterpreterError("Not implemented")
+        w_filename = self.frame.stack.pop().str_w()
+        statement = IncludeStatement(self.context, self.frame)
+        w_result = statement.require_once(w_filename)
+        self.frame.stack.append(w_result)
 
     def EMPTY_VAR(self, value):
         #TODO: array support
@@ -273,8 +270,9 @@ class Interpreter(object):
         # as they are immutable
         try:
             w_result = space.mod(w_value, w_right)
-        except DivisionByZero:
-            self._warning('Division by zero')
+        except DivisionByZeroError:
+            error = DivisionByZero(self.context)
+            error.handle()
             w_result = space.null()
         self.frame.variables[name] = w_result
         self.frame.stack.append(w_result)
@@ -313,33 +311,26 @@ class Interpreter(object):
         try:
             function = self.context.functions[function_name]
         except KeyError:
-            message = "Call to undefined function %s()" % function_name
-            raise PHPError(message,
-                            PHPError.FATAL,
-                            self.bytecode.filename,
-                            self._get_line(),
-                            self.context.function_trace_stack)
+            error = UndefinedFunction(self.context, function_name)
+            error.handle()
+            raise error
 
         function_frame = Frame()
         # put function arguments to frame
         arg_position = 1
         for argument in function.arguments:
             if not self.frame.stack:
-                message = "Missing argument %s for %s(), called" \
-                    % (arg_position, function_name)
-                self._warning(message)
+                error = MissingArgument(self.context, arg_position, function_name, function)
+                error.handle()
             else:
                 function_frame.variables[argument] = self.frame.stack.pop()
             arg_position += 1
 
         # update trace stack and call function
-        self.context.function_trace_stack.append(
-            (function_name, self._get_line(), function.bytecode.filename)
-        )
-        w_return_value = interpret_bytecode(function.bytecode,
-                                          self.context,
-                                          function_frame)
-        self.context.function_trace_stack.pop()
+        self.context.trace.append(function_name, function.bytecode)
+        w_return_value = sourcecode.interpret_function(function.bytecode,
+            self.context, function_frame)
+        self.context.trace.pop()
 
         self.frame.stack.append(w_return_value)
 
@@ -357,9 +348,9 @@ class Interpreter(object):
             self.position = new_position
 
     def ISSET(self, names_count):
-        #TODO add array support
-        #TODO add __isset() support
-        #TODO add PHP 5.4 support
+        #TODO: add array support
+        #TODO: add __isset() support
+        #TODO: add PHP 5.4 support
         stack = self.frame.stack
         for i in range(names_count):
             var_name = stack.pop().str_w()
@@ -372,9 +363,9 @@ class Interpreter(object):
         stack.append(space.bool(True))
 
     def UNSET(self, names_count):
-        #TODO add reference support
-        #TODO add global variable support
-        #TODO add static variable support
+        #TODO: add reference support
+        #TODO: add global variable support
+        #TODO: add static variable support
         for i in range(names_count):
             var_name = self.frame.stack.pop().str_w()
             if var_name in self.frame.variables:
@@ -386,32 +377,9 @@ class Interpreter(object):
         self.frame.stack.append(space.concat(w_left, w_right))
 
     def _handle_undefined(self, name):
-        message = "Undefined variable: %s" % name
-        self._notice(message)
+        error = UndefinedVariable(self.context, name)
+        error.handle()
         return space.null()
-
-    def _get_line(self):
-        return self.bytecode.opcode_lines[self.opcode_position]
-
-    def _error(self, message, type, display=True):
-        error = PHPError(message,
-                         type,
-                         self.bytecode.filename,
-                         self._get_line(),
-                         self.context.function_trace_stack)
-        if display:
-            print error
-
-        return error
-
-    def _warning(self, message, display=True):
-        self._error(message, PHPError.WARNING, display)
-
-    def _fatal(self, message, display=True):
-        self._error(message, PHPError.FATAL, display)
-
-    def _notice(self, message, display=True):
-        self._error(message, PHPError.NOTICE, display)
 
 
 def _new_binary_op(name, space_name):
@@ -420,12 +388,13 @@ def _new_binary_op(name, space_name):
         w_left = self.frame.stack.pop()
         try:
             w_result = getattr(space, space_name)(w_left, w_right)
-        except DivisionByZero:
-            self._warning('Division by zero')
+        except DivisionByZeroError:
+            DivisionByZero(self.context).handle
             w_result = space.bool(False)
         self.frame.stack.append(w_result)
     func.func_name = name
     return func
+
 
 for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'LESS_THAN',
               'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',

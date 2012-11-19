@@ -1,4 +1,4 @@
-import pie.interpreter.main
+import pie.launcher.launcher
 import sys
 
 
@@ -7,7 +7,7 @@ def entry_point(argv):
         print 'No input file provided'
         return 1
 
-    return pie.interpreter.main.run(argv[1])
+    return pie.launcher.launcher.run(argv[1])
 
 
 if __name__ == '__main__':

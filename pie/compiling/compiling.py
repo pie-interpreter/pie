@@ -137,12 +137,12 @@ class BytecodeBuilder(object):
             self.names_cache[name] = names_count
             return names_count
 
-    def register_function(self, name, arguments, bytecode):
+    def register_function(self, name, arguments, bytecode, line):
         name = name.lower()
         if name in self.functions:
             raise CompilerError("Function %s already declared" % name)
 
-        self.functions[name] = Function(arguments, bytecode)
+        self.functions[name] = Function(arguments, bytecode, line)
 
     def get_current_position(self):
         " Get position, at which next opcode will be placed "
@@ -190,6 +190,7 @@ class BytecodeBuilder(object):
 
 class Function(object):
 
-    def __init__(self, arguments, bytecode):
+    def __init__(self, arguments, bytecode, line_declared):
         self.arguments = arguments
         self.bytecode = bytecode
+        self.line_declared = line_declared

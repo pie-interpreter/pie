@@ -1,4 +1,4 @@
-from pie.error import DivisionByZero
+from pie.error import DivisionByZeroError
 from pie.objects.base import W_Root
 from pie.objects.int import W_IntObject
 
@@ -63,7 +63,7 @@ class W_FloatObject(W_Root):
 
     def mod(self, number):
         if not number.value:
-            raise DivisionByZero
+            raise DivisionByZeroError
         divider = number.value
         if self.value < 0 and divider:
             divider *= -1

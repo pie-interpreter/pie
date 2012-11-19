@@ -1,22 +1,23 @@
 from sys import argv
 
+__author__ = 'sery0ga'
 
 class Test(object):
 
     def __init__(self):
         self.doc = ''
-        self.data = ''
+        self.source = ''
         self.has_result = False
-        self.result = ''
+        self.result = []
         self.is_true = True
         self.skip = False
         self.skip_reason = ''
         self.compile_only = False
+        self.check_parts_of_result = False
 
     def __str__(self):
         return "Doc:\n%s\nFILE:\n%s\nRESULT:\n%s" \
-            % (self.doc, self.data, self.result)
-
+            % (self.doc, self.source, self.result)
 
 class Parser(object):
 
@@ -44,11 +45,13 @@ class Parser(object):
                 # TODO
                 mode = self.SKIPIF
                 continue
-            elif line == "--EXPECTF--" or line == "--EXPECT--":
+            elif line == "--EXPECTF--" or line == "--EXPECT--" or line == "--EXPECT_ERROR--":
                 mode = self.RESULT
                 test.has_result = True
                 if line == "--EXPECTF--":
                     test.is_true = False
+                elif line == "--EXPECT_ERROR--":
+                    test.check_parts_of_result = True
                 continue
             elif line == "--COMPILEONLY--":
                 test.compile_only = True
@@ -59,15 +62,12 @@ class Parser(object):
                 else:
                     test.doc = line
             elif current_mode == self.RESULT:
-                if test.result:
-                    test.result += "\n" + line
-                else:
-                    test.result = line
+                test.result.append(line)
             elif current_mode == self.FILE:
-                if test.data:
-                    test.data += "\n" + line
+                if test.source:
+                    test.source += "\n" + line
                 else:
-                    test.data = line
+                    test.source = line
             elif current_mode == self.SKIP:
                 if test.skip_reason:
                     test.skip_reason += "\n" + line

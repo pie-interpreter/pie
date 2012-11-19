@@ -1,14 +1,27 @@
+import sys
+
 __author__ = 'sery0ga'
 
-class PHPError(Exception):
+
+class PieError(Exception):
+    pass
+
+
+class InterpreterError(PieError):
+    pass
+
+class DivisionByZeroError(InterpreterError):
+    pass
+
+class PHPError(InterpreterError):
     (FATAL, WARNING, NOTICE) = ["Fatal", "Warning", "Notice"]
 
-    def __init__(self, message, level, file, line, trace_stack = []):
+    def __init__(self, context, message, level, show_trace=True):
         self.message = message
         self.level = level
-        self.file = file
-        self.line = line
-        self.trace_stack = trace_stack
+        self.context = context
+        self.show_trace = show_trace
+        self.prefix = ''
 
     def __repr__(self):
         return self.print_message()
@@ -19,28 +32,113 @@ class PHPError(Exception):
     def print_message(self):
         import os.path
 
-        message = "PHP %s error: %s in %s on line %s\n" \
-            % (self.level, self.message, os.path.abspath(self.file), self.line)
-        if self.trace_stack:
-            message = ''.join([message, "PHP Stack trace:\n"])
-            depth = 1
-            for (function_name, line_number, filename) in self.trace_stack:
-                trace_message = "PHP   %s. %s() %s:%s\n" \
-                    % (depth, function_name, os.path.abspath(filename), line_number)
-                message = ''.join([message, trace_message])
-                depth += 1
+        execution_block = self.context.trace.current_execution_block
+        message = "PHP %s:  %s in %s on line %s %s"\
+            % (self.level, self.message,
+                os.path.abspath(execution_block.get_filename()), execution_block.get_line(),
+                self.prefix)
+        if self.show_trace:
+            message = ''.join([message, self.context.trace.to_string()])
         return message
+    def handle(self):
+        if self.context.config.display_error(self):
+            if self.context.config.display_to_stderr:
+                sys.stderr.write(self.print_message() + "\n")
+            else:
+                print self.print_message()
+
+
+class PHPFatal(PHPError):
+    def __init__(self, context, message, show_trace=True, prefix=''):
+        PHPError.__init__(self, context, message, PHPError.FATAL, show_trace)
+        self.prefix = prefix
+
 
 class PHPWarning(PHPError):
+    def __init__(self, context, message, show_trace=True, prefix=''):
+        PHPError.__init__(self, context, message, PHPError.WARNING, show_trace)
+        self.prefix = prefix
 
-    def __init__(self, message, file, line, trace_stack = []):
-        PHPError.__init__(self, message, PHPError.WARNING, file, line, trace_stack)
 
-class InterpreterError(Exception):
-    pass
+class PHPNotice(PHPError):
+    def __init__(self, context, message, show_trace=True, prefix=''):
+        PHPError.__init__(self, context, message, PHPError.NOTICE, show_trace)
+        self.prefix = prefix
 
-class DivisionByZero(InterpreterError):
-    pass
+
+class UndefinedFunction(PHPFatal):
+    def __init__(self, context, function_name):
+        message = "Call to undefined function %s()" % function_name
+
+        PHPFatal.__init__(self, context, message)
+
+
+class RedeclaredFunction(PHPFatal):
+    def __init__(self, context, function_name, function_object):
+        import os.path
+        message = "Cannot redeclare %s() (previously declared in %s:%s)" % \
+            (function_name, os.path.abspath(function_object.bytecode.filename),
+                function_object.line_declared)
+
+        PHPFatal.__init__(self, context, message, False)
+
+
+class NoRequiredFile(PHPFatal):
+    def __init__(self, context, include_function, included_file):
+        message = "%s(%s): failed to open stream: "\
+                  "No such file or directory" % (include_function, included_file)
+
+        PHPFatal.__init__(self, context, message, False)
+
+
+class NoRequiredFileInIncludePath(PHPFatal):
+    def __init__(self, context, include_function, included_file, include_path):
+        message = "%s(): Failed opening required '%s' for inclusion " \
+            "(include_path='%s')" % (include_function, included_file, include_path)
+
+        PHPFatal.__init__(self, context, message, False)
+
+
+class DivisionByZero(PHPWarning):
+    def __init__(self, context):
+        message = "Division by zero"
+
+        PHPWarning.__init__(self, context, message)
+
+
+class MissingArgument(PHPWarning):
+    def __init__(self, context, arg_position, function_name, function_object):
+        import os.path
+        message = "Missing argument %s for %s(), called" \
+            % (arg_position, function_name)
+        prefix = "and defined in %s on line %s" % \
+            (os.path.abspath(function_object.bytecode.filename), function_object.line_declared)
+
+        PHPWarning.__init__(self, context, message, False, prefix)
+
+
+class NoFile(PHPWarning):
+    def __init__(self, context, include_function, included_file):
+        message = "%s(%s): failed to open stream: "\
+                  "No such file or directory" % (include_function, included_file)
+
+        PHPWarning.__init__(self, context, message, False)
+
+
+class NoFileInIncludePath(PHPWarning):
+    def __init__(self, context, include_function, included_file, include_path):
+        message = "%s(): Failed opening '%s' for inclusion " \
+            "(include_path='%s')" % (include_function, included_file, include_path)
+
+        PHPWarning.__init__(self, context, message, False)
+
+
+class UndefinedVariable(PHPNotice):
+    def __init__(self, context, name):
+        message = "Undefined variable: %s" % name
+
+        PHPNotice.__init__(self, context, message, False)
+
 
 class CompilerError(Exception):
     pass

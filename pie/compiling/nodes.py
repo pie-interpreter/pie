@@ -350,7 +350,7 @@ class __extend__(nodes.FunctionDeclaration):
         # bytecode
         identifier = self.name
         assert isinstance(identifier, nodes.Identifier)
-        builder.register_function(identifier.value, arguments, bytecode)
+        builder.register_function(identifier.value, arguments, bytecode, self.line)
 
 
 class __extend__(nodes.If):

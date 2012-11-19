@@ -1,9 +1,14 @@
 from pie.compiling import compiling
-from pie.error import PHPError, InterpreterError, LexerError
-from pie.interpreter import interpreter
-from pie.interpreter.main import InterpretedSource
+from pie.error import PieError, LexerError
+import pie.interpreter.interpreter
+import pie.interpreter.sourcecode
+from pie.interpreter.frame import Frame
+from pie.interpreter.sourcecode import SourceCode
+from pie.launcher.config import config
+from pie.interpreter.context import Context
 from pie.test.parser import Parser
 from pypy.rlib.parsing.parsing import ParseError
+
 import os
 import sys
 import tempfile
@@ -25,8 +30,30 @@ class TestPHPLanguageCoverage(unittest.TestCase):
         os.dup2(self.output_file.fileno(), sys.stdout.fileno())
 
     def restore_output(self):
+        sys.stdout.flush()
         os.dup2(self.stdout_no, sys.stdout.fileno())
 
+    def _check_test_result(self, test, actual_result):
+        if test.check_parts_of_result:
+            self.assertEqual(len(actual_result), len(test.result))
+            list_equals = True
+            part_not_found = ''
+            for (actual, expected) in zip(actual_result, test.result):
+                expected_parts = expected.split('%')
+                equal = True
+                for part in expected_parts:
+                    if part not in actual:
+                        part_not_found = "Part >>%s<< not found in %s" % (part, actual)
+                        equal = False
+                        break
+                if not equal:
+                    list_equals = False
+                    break
+            self.assertTrue(list_equals, part_not_found)
+        elif test.is_true:
+            self.assertListEqual(actual_result, test.result)
+        else:
+            self.assertListNotEqual(actual_result, test.result)
 
 def fill_test_class_with_tests(test_to_run=[], with_php_source=False):
     """
@@ -59,6 +86,9 @@ def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix=''):
                                                  test_to_run,
                                                  prefix + entry + '_')
             continue
+        # skip files with extension which is different to 'phpt'
+        if entry_structure[1] != 'phpt':
+            continue
         filename = entry_structure[0]
         test_name = 'test_' + prefix + filename
         if test_to_run and test_name not in test_to_run:
@@ -70,6 +100,7 @@ def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix=''):
 def _add_test(filename, test_name):
 
     def test(self):
+        config.set_calling_file(filename)
         test = self.parser.parse(filename)
 
         if test.skip:
@@ -79,21 +110,19 @@ def _add_test(filename, test_name):
                 self.skipTest("Mark as skipped")
             return
 
-        source = InterpretedSource(test.data, filename)
+        source = SourceCode(filename, test.source)
         self.redirect_output()
 
         try:
-            if test.compile_only:
-                compiling.compile_source(source)
-            else:
-                interpreter.interpret(source)
+            bytecode = compiling.compile_source(source)
+            if not test.compile_only:
+                context = Context(config)
+                context.trace.append("{main}", bytecode)
+                context.initialize_functions(bytecode)
+                pie.interpreter.sourcecode.interpret_bytecode(bytecode, context, Frame())
             self.restore_output()
-        except PHPError as e:
+        except PieError as e:
             self.restore_output()
-            self.fail("PHPError\n\n" + e.print_message())
-        except InterpreterError as e:
-            self.restore_output()
-            self.fail("InterpreterError\n\n" + e.__str__())
         except LexerError as e:
             self.restore_output()
             self.fail("LexerError\n\n" + e.nice_error_message(source.filename))
@@ -106,11 +135,8 @@ def _add_test(filename, test_name):
             # rewind file pointer and read content
             self.output_file.seek(self.current_position)
 
-            actual_result = self.output_file.read()
-            if test.is_true:
-                self.assertEqual(actual_result, test.result)
-            else:
-                self.assertNotEqual(actual_result, test.result)
+            actual_result = str.splitlines(self.output_file.read())
+            self._check_test_result(test, actual_result)
 
     test.__name__ = test_name
     setattr(TestPHPLanguageCoverage, test_name, test)

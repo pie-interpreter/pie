@@ -4,6 +4,7 @@ from pie.test.launcher import *
 
 __author__ = 'sery0ga'
 
+
 def print_help():
     print """
 Runner for PHP coverage tests"

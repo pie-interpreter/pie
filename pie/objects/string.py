@@ -6,10 +6,9 @@ from pie.objects.base import W_Root
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
 
-HEXADECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                       'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f']
+HEXADECIMAL_SYMBOLS = list("0123456789ABCDEFabcdef")
 
-DECIMAL_SYMBOLS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+DECIMAL_SYMBOLS = list("0123456789")
 
 (SYMBOL_Z, SYMBOL_A, SYMBOL_a, SYMBOL_z, SYMBOL_0, SYMBOL_9) = (90, 65, 97, 122, 48, 57)
 
