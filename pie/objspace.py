@@ -67,7 +67,13 @@ class ObjSpace(object):
         """
         In PHP '*' is supported only for numbers
         """
-        raise NotImplementedError
+        left_number = w_left.as_number()
+        right_number = w_right.as_number()
+        type = self.get_common_arithmetic_type(left_number, right_number)
+        if type == self.w_int:
+            return left_number.as_int().divide(right_number.as_int())
+        else:
+            return left_number.as_float().divide(right_number.as_float())
 
     def mod(self, w_left, w_right):
         """

@@ -26,6 +26,9 @@ class W_FloatObject(W_Root):
     def as_int(self):
         return W_IntObject(int(self.value))
 
+    def as_number(self):
+        return self
+
     def as_string(self):
         # simple check to remove trailing 0 in float values
         intvalue = int(self.value)
@@ -54,6 +57,11 @@ class W_FloatObject(W_Root):
 
     def multiply(self, number):
         return W_FloatObject(self.value * number.value)
+
+    def divide(self, number):
+        if not number.value:
+            raise DivisionByZeroError
+        return W_FloatObject(self.value / number.value)
 
     def inc(self):
         return W_FloatObject(self.value + 1)

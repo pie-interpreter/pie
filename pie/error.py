@@ -103,7 +103,7 @@ class DivisionByZero(PHPWarning):
     def __init__(self, context):
         message = "Division by zero"
 
-        PHPWarning.__init__(self, context, message)
+        PHPWarning.__init__(self, context, message, False)
 
 
 class MissingArgument(PHPWarning):

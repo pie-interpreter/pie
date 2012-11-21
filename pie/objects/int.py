@@ -49,6 +49,15 @@ class W_IntObject(W_Root):
     def multiply(self, number):
         return W_IntObject(self.value * number.value)
 
+    def divide(self, number):
+        if not number.value:
+            raise DivisionByZeroError
+        # if the numbers are evenly divisible, we should return int
+        if not self.value % number.value:
+            return W_IntObject(self.value / number.value)
+        from pie.objects.float import W_FloatObject
+        return W_FloatObject(float(self.value) / number.value)
+
     def inc(self):
         return W_IntObject(self.value + 1)
 

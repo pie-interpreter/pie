@@ -198,9 +198,6 @@ class Interpreter(object):
         self.frame.variables[var_name] = w_value.dec()
         self.frame.stack.append(w_old_value)
 
-    def DIVIDE(self, value):
-        raise InterpreterError("Not implemented")
-
     def XOR(self, value):
         raise InterpreterError("Not implemented")
 
@@ -389,14 +386,14 @@ def _new_binary_op(name, space_name):
         try:
             w_result = getattr(space, space_name)(w_left, w_right)
         except DivisionByZeroError:
-            DivisionByZero(self.context).handle
+            DivisionByZero(self.context).handle()
             w_result = space.bool(False)
         self.frame.stack.append(w_result)
     func.func_name = name
     return func
 
 
-for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'LESS_THAN',
+for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE', 'LESS_THAN',
               'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
               'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
     setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))
