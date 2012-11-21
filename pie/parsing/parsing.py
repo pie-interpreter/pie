@@ -7,7 +7,7 @@ import py
 
 def parse(source):
     """ Parse php code """
-    parse_tree = parse_php(source.data)
+    parse_tree = parse_php(source.content)
     parse_tree = transformer.transform(parse_tree)
 
     return parse_tree

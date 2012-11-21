@@ -39,8 +39,7 @@ class ExecutionBlock:
     def to_string(self, depth=0):
         import os.path
         message = "PHP   %s. %s() %s:%s\n"\
-            % (depth, self.function_name, self.get_filename(), self.get_line())
-            # % (depth, self.function_name, os.path.abspath(self.get_filename()), self.get_line())
+            % (depth, self.function_name, os.path.abspath(self.get_filename()), self.get_line())
 
         return message
 
@@ -59,7 +58,8 @@ class Trace:
         self.current_execution_block = ExecutionBlock(function_name, bytecode)
 
     def pop(self):
-        self.current_execution_block = self.stack.pop()
+        if len(self.stack):
+            self.current_execution_block = self.stack.pop()
 
     def to_string(self):
         message = ''

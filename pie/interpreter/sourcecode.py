@@ -10,37 +10,42 @@ __author__ = 'sery0ga'
 
 class SourceCode(object):
 
-    def __init__(self, name, data=''):
-        self.filename = name
-        self.data = data
+    def __init__(self, filename, function_called_from=''):
+        self.filename = filename
+        self.content = ''
+        self.bytecode = None
+        self.function_code_called_from = function_called_from
 
     def open(self):
         " Create source object from filename "
         input_file = open_file_as_stream(self.filename)
-        self.data = input_file.readall()
+        self.content = input_file.readall()
 
     def compile(self):
         try:
-            bytecode = compiling.compile_source(self)
+            self.raw_compile()
         except LexerError as e:
             print e.nice_error_message(self.filename)
             raise PieError()
         except ParseError as e:
-            print e.nice_error_message(self.filename, self.data)
+            print e.nice_error_message(self.filename, self.content)
             raise PieError()
-        return bytecode
+
+    def raw_compile(self):
+        self.bytecode = compiling.compile_source(self)
+
+    def interpret(self, context, frame):
+        context.trace.append(self.function_code_called_from, self.bytecode)
+        context.initialize_functions(self.bytecode)
+        interpreter_object = interpreter.Interpreter(self.bytecode, context, frame)
+        context.trace.pop()
+        try:
+            return interpreter_object.interpret()
+        except InterpreterError:
+            raise PieError()
 
 
 def interpret_function(bytecode, context, frame=None):
-    if frame is None:
-        frame = Frame()
-    interpreter_object = interpreter.Interpreter(bytecode, context, frame)
-    try:
-        return interpreter_object.interpret()
-    except InterpreterError:
-        raise PieError()
-
-def interpret_bytecode(bytecode, context, frame=None):
     if frame is None:
         frame = Frame()
     interpreter_object = interpreter.Interpreter(bytecode, context, frame)

@@ -201,33 +201,6 @@ class Interpreter(object):
     def XOR(self, value):
         raise InterpreterError("Not implemented")
 
-    def INPLACE_ADD(self, value):
-        # TODO: add array support
-        name = self.frame.stack.pop().str_w()
-        w_right = self.frame.stack.pop()
-        try:
-            w_value = self.frame.variables[name]
-        except KeyError:
-            w_value = self._handle_undefined(name)
-        # Here we do not care about inplace operation for number
-        # as they are immutable
-        w_result = space.add(w_value, w_right)
-        self.frame.variables[name] = w_result
-        self.frame.stack.append(w_result)
-
-    def INPLACE_SUBSTRACT(self, value):
-        name = self.frame.stack.pop().str_w()
-        w_right = self.frame.stack.pop()
-        try:
-            w_value = self.frame.variables[name]
-        except KeyError:
-            w_value = self._handle_undefined(name)
-        # Here we do not care about inplace operation for number
-        # as they are immutable
-        w_result = space.substract(w_value, w_right)
-        self.frame.variables[name] = w_result
-        self.frame.stack.append(w_result)
-
     def INPLACE_CONCAT(self, var_index):
         var_name = self.frame.stack.pop().str_w()
         w_concat_value = self.frame.stack.pop()
@@ -239,40 +212,6 @@ class Interpreter(object):
         w_value = w_value.as_string().concatenate(w_concat_value.as_string())
         self.frame.variables[var_name] = w_value
         self.frame.stack.append(w_value)
-
-    def INPLACE_MULTIPLY(self, value):
-        name = self.frame.stack.pop().str_w()
-        w_right = self.frame.stack.pop()
-        try:
-            w_value = self.frame.variables[name]
-        except KeyError:
-            w_value = self._handle_undefined(name)
-        # Here we do not care about inplace operation for number
-        # as they are immutable
-        w_result = space.multiply(w_value, w_right)
-        self.frame.variables[name] = w_result
-        self.frame.stack.append(w_result)
-
-    def INPLACE_DIVIDE(self, value):
-        raise InterpreterError("Not implemented")
-
-    def INPLACE_MOD(self, value):
-        name = self.frame.stack.pop().str_w()
-        w_right = self.frame.stack.pop()
-        try:
-            w_value = self.frame.variables[name]
-        except KeyError:
-            w_value = self._handle_undefined(name)
-        # Here we do not care about inplace operation for number
-        # as they are immutable
-        try:
-            w_result = space.mod(w_value, w_right)
-        except DivisionByZeroError:
-            error = DivisionByZero(self.context)
-            error.handle()
-            w_result = space.null()
-        self.frame.variables[name] = w_result
-        self.frame.stack.append(w_result)
 
     def LOAD_VAR(self, var_index):
         var_name = self.bytecode.names[var_index]
@@ -393,11 +332,34 @@ def _new_binary_op(name, space_name):
     return func
 
 
+def _new_inplace_op(name, space_name):
+    def func(self, value):
+        name = self.frame.stack.pop().str_w()
+        w_right = self.frame.stack.pop()
+        try:
+            w_value = self.frame.variables[name]
+        except KeyError:
+            w_value = self._handle_undefined(name)
+        # Here we do not care about inplace operation for number
+        # as they are immutable
+        try:
+            w_result =getattr(space, space_name)(w_value, w_right)
+        except DivisionByZeroError:
+            DivisionByZero(self.context).handle()
+            w_result = space.null()
+        self.frame.variables[name] = w_result
+        self.frame.stack.append(w_result)
+    func.func_name = name
+    return func
+
 for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE', 'LESS_THAN',
               'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
               'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
     setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))
 
+for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE']:
+    operation_name = 'INPLACE_' + _name
+    setattr(Interpreter, operation_name, _new_inplace_op(operation_name, _name.lower()))
 
 def _define_opcodes():
     for index in OPCODE:

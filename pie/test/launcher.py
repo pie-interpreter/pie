@@ -1,7 +1,4 @@
-from pie.compiling import compiling
 from pie.error import PieError, LexerError
-import pie.interpreter.interpreter
-import pie.interpreter.sourcecode
 from pie.interpreter.frame import Frame
 from pie.interpreter.sourcecode import SourceCode
 from pie.launcher.config import config
@@ -110,16 +107,15 @@ def _add_test(filename, test_name):
                 self.skipTest("Mark as skipped")
             return
 
-        source = SourceCode(filename, test.source)
+        source = SourceCode(filename, "{main}")
+        source.content = test.source
         self.redirect_output()
 
         try:
-            bytecode = compiling.compile_source(source)
+            source.raw_compile()
             if not test.compile_only:
                 context = Context(config)
-                context.trace.append("{main}", bytecode)
-                context.initialize_functions(bytecode)
-                pie.interpreter.sourcecode.interpret_bytecode(bytecode, context, Frame())
+                source.interpret(context, Frame())
             self.restore_output()
         except PieError as e:
             self.restore_output()
@@ -129,7 +125,7 @@ def _add_test(filename, test_name):
         except ParseError as e:
             self.restore_output()
             self.fail("ParseError\n\n" + e.nice_error_message(source.filename,
-                                                              source.data))
+                                                              source.content))
 
         if test.has_result and not test.compile_only:
             # rewind file pointer and read content
