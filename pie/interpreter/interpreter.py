@@ -1,7 +1,5 @@
-from pie.compiling import compiling
 from pie.error import InterpreterError, DivisionByZeroError, UndefinedVariable, \
     DivisionByZero, UndefinedFunction, MissingArgument
-from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
 from pie.interpreter.include import IncludeStatement
 from pie.objspace import space
