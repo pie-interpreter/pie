@@ -2,7 +2,7 @@ from pie.objects.float import W_FloatObject
 from pie.objects.stringstrategies import *
 from pypy.rlib.objectmodel import instantiate
 from pypy.rlib import jit
-from pie.objects.base import W_Root
+from pie.objects.root import W_Root
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
 

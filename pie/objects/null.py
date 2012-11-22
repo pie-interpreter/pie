@@ -1,4 +1,4 @@
-from pie.objects.base import W_Root
+from pie.objects.root import W_Root
 from pie.objects.int import W_IntObject
 
 __author__ = 'sery0ga'
@@ -19,7 +19,6 @@ class W_NullObject(W_Root):
         return W_BoolObject(False)
 
     def as_int(self):
-        from pie.objects.int import W_IntObject
         return W_IntObject(0)
 
     def as_float(self):

@@ -6,8 +6,6 @@ class W_Root(object):
     """ The base class for everything that can be represented as a first-class
     object at applevel
     """
-    _attrs_ = ()
-
     def deref(self):
         return self # anything but a reference
 

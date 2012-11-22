@@ -1,4 +1,4 @@
-from pie.objects.base import W_Root
+from pie.objects.root import W_Root
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
 
@@ -33,9 +33,6 @@ class W_BoolObject(W_Root):
 
     def copy(self):
         return W_BoolObject(self.value)
-
-    def hard_copy(self):
-        return self.copy()
 
     def is_true(self):
         return self.value

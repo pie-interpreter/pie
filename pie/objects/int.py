@@ -1,5 +1,5 @@
 from pie.error import DivisionByZeroError
-from pie.objects.base import W_Root
+from pie.objects.root import W_Root
 
 class W_IntObject(W_Root):
     _immutable_fields_ = ['value']
@@ -33,9 +33,6 @@ class W_IntObject(W_Root):
 
     def copy(self):
         return W_IntObject(self.value)
-
-    def hard_copy(self):
-        return self.copy()
 
     def is_true(self):
         return bool(self.value)
