@@ -1,7 +1,7 @@
 from pie.error import InterpreterError, DivisionByZeroError, UndefinedVariable, \
     DivisionByZero, UndefinedFunction, MissingArgument
 from pie.interpreter.frame import Frame
-from pie.interpreter.include import IncludeStatement
+import pie.interpreter.include as include
 from pie.objspace import space
 import sourcecode
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
@@ -87,26 +87,26 @@ class Interpreter(object):
 
     def INCLUDE(self, value):
         w_filename = self.frame.stack.pop().str_w()
-        statement = IncludeStatement(self.context, self.frame)
+        statement = include.IncludeStatement(self.context, self.frame)
         w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def INCLUDE_ONCE(self, value):
         w_filename = self.frame.stack.pop().str_w()
-        statement = IncludeStatement(self.context, self.frame)
-        w_result = statement.include_once(w_filename)
+        statement = include.IncludeOnceStatement(self.context, self.frame)
+        w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def REQUIRE(self, value):
         w_filename = self.frame.stack.pop().str_w()
-        statement = IncludeStatement(self.context, self.frame)
-        w_result = statement.require(w_filename)
+        statement = include.RequireStatement(self.context, self.frame)
+        w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def REQUIRE_ONCE(self, value):
         w_filename = self.frame.stack.pop().str_w()
-        statement = IncludeStatement(self.context, self.frame)
-        w_result = statement.require_once(w_filename)
+        statement = include.RequireOnceStatement(self.context, self.frame)
+        w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def EMPTY_VAR(self, value):

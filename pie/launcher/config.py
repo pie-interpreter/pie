@@ -1,5 +1,4 @@
 from pie.utils.ini import raw_parse_ini_file
-from pie.utils.path import split_path
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.objectmodel import instantiate
 import string
@@ -22,8 +21,6 @@ class PHPConfiguration(object):
         self.display_errors = True
         self.display_to_stderr = False
         self.include_path = ['.', '/usr/share/php']
-        self.calling_script_path = ''
-        self.calling_script = ''
         self._initialize(self._read_config_file())
 
     def display_error(self, error):
@@ -38,16 +35,11 @@ class PHPConfiguration(object):
         #TODO add windows support (';')
         self.include_path = string.split(path, ':')
 
-    def set_calling_file(self, calling_file):
-        self.calling_script_path, self.calling_script = split_path(calling_file)
-
     def copy(self):
         copy = instantiate(PHPConfiguration)
         copy.display_errors = self.display_errors
         copy.display_to_stderr = self.display_to_stderr
         copy.include_path = self.include_path[:]
-        copy.calling_script_path = self.calling_script_path[:]
-        copy.calling_script = self.calling_script[:]
 
         return copy
 

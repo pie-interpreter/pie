@@ -97,7 +97,6 @@ def _fill_test_class_with_tests_from_dir(directory, test_to_run, prefix=''):
 def _add_test(filename, test_name):
 
     def test(self):
-        config.set_calling_file(filename)
         test = self.parser.parse(filename)
 
         if test.skip:
@@ -107,14 +106,14 @@ def _add_test(filename, test_name):
                 self.skipTest("Mark as skipped")
             return
 
-        source = SourceCode(filename, "{main}")
+        source = SourceCode(filename)
         source.content = test.source
         self.redirect_output()
 
         try:
             source.raw_compile()
             if not test.compile_only:
-                context = Context(config)
+                context = Context(filename, config)
                 source.interpret(context, Frame())
             self.restore_output()
         except PieError as e:

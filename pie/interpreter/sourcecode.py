@@ -10,11 +10,10 @@ __author__ = 'sery0ga'
 
 class SourceCode(object):
 
-    def __init__(self, filename, function_called_from=''):
+    def __init__(self, filename):
         self.filename = filename
         self.content = ''
         self.bytecode = None
-        self.function_code_called_from = function_called_from
 
     def open(self):
         " Create source object from filename "
@@ -34,14 +33,17 @@ class SourceCode(object):
     def raw_compile(self):
         self.bytecode = compiling.compile_source(self)
 
-    def interpret(self, context, frame):
-        context.trace.append(self.function_code_called_from, self.bytecode)
+    def interpret(self, context, frame, function_code_called_from=''):
+        context.trace.append(function_code_called_from, self.bytecode)
         context.initialize_functions(self.bytecode)
         interpreter_object = interpreter.Interpreter(self.bytecode, context, frame)
-        context.trace.pop()
         try:
-            return interpreter_object.interpret()
+            return_value = interpreter_object.interpret()
+            #TODO: as debug_trace function appear, a test for this path should appear too
+            context.trace.pop()
+            return return_value
         except InterpreterError:
+            context.trace.pop()
             raise PieError()
 
 

@@ -1,15 +1,17 @@
 from pie.error import RedeclaredFunction
+from pie.utils.path import split_path
 
 __author__ = 'sery0ga'
 
 
 class Context:
 
-    def __init__(self, config):
+    def __init__(self, calling_file, config):
         self.functions = {}
         self.trace = Trace()
         self.config = config.copy()
         self.include_cache = {}
+        self.calling_script_path, self.calling_script = split_path(calling_file)
 
     def initialize_functions(self, bytecode):
         for name, object in bytecode.functions.iteritems():
@@ -55,10 +57,12 @@ class Trace:
     def append(self, function_name, bytecode):
         if self.current_execution_block:
             self.stack.append(self.current_execution_block)
+        else:
+            function_name = "{main}"
         self.current_execution_block = ExecutionBlock(function_name, bytecode)
 
     def pop(self):
-        if len(self.stack):
+        if self.stack:
             self.current_execution_block = self.stack.pop()
 
     def to_string(self):
