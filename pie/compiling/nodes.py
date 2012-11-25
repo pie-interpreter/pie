@@ -223,8 +223,6 @@ class __extend__(nodes.ReferenceAssignment):
 
     def compile_node(self, builder):
         self.source.compile(builder)
-        # we need to leave value of source expression to use as a result
-        builder.emit('DUPLICATE_TOP')
 
         index = builder.register_name(_get_variable_name(self.target))
         builder.emit('LOAD_NAME', index)
