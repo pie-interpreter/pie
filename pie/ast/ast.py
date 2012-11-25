@@ -141,10 +141,10 @@ class AstBuilder(RPythonVisitor):
     def visit_reference_assignment(self, node):
         assert len(node.children) == 2
 
-        target_variable = self.transform(node.children[0])
-        source_variable = self.transform(node.children[1])
+        target = self.transform(node.children[0])
+        source = self.transform(node.children[1])
 
-        return ReferenceAssignment(target_variable, source_variable)
+        return ReferenceAssignment(target, source)
 
     def visit_ternary_expression(self, node):
         children_count = len(node.children)

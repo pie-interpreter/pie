@@ -222,15 +222,13 @@ class __extend__(nodes.Assignment):
 class __extend__(nodes.ReferenceAssignment):
 
     def compile_node(self, builder):
-        target_index = builder.register_name(_get_variable_name(self.target))
-        source_index = builder.register_name(_get_variable_name(self.source))
+        self.source.compile(builder)
+        # we need to leave value of source expression to use as a result
+        builder.emit('DUPLICATE_TOP')
 
-        builder.emit('LOAD_NAME', target_index)
-        builder.emit('LOAD_NAME', source_index)
+        index = builder.register_name(_get_variable_name(self.target))
+        builder.emit('LOAD_NAME', index)
         builder.emit('MAKE_REFERENCE')
-
-        # we need to leave value of source variable to use as a result
-        builder.emit('LOAD_VAR_FAST', source_index)
 
 
 class __extend__(nodes.TernaryOperator):

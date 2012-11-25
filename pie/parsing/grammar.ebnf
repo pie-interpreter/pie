@@ -234,7 +234,8 @@ assign_expression: <reference_assignment>
                  | variable_expression INPLACE_ASSIGN_OPERATOR assign_expression
                  | <ternary_expression>;
 
-reference_assignment: variable_expression [ASSIGN_OPERATOR] ["&"] variable_expression;
+reference_assignment: variable_expression [ASSIGN_OPERATOR] ["&"] variable_expression
+                    | variable_expression [ASSIGN_OPERATOR] ["&"] function_call;
 
 ternary_expression: boolean_or_expression ["?"] expression? [":"] expression
                   | <boolean_or_expression>;
