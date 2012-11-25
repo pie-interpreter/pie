@@ -23,7 +23,14 @@ echo empty($a) . "=\n";
 $a = true;
 echo empty($a) . "=\n";
 $a = false;
-echo empty($a) . "=";
+echo empty($a) . "=\n";
+// check for non-existing variable
+echo empty($b) . "=\n";
+// check for reference
+$b = &$a;
+echo empty($b) . "=\n";
+$a = 1;
+echo empty($b) . "=";
 ?>
 --EXPECT--
 =
@@ -38,3 +45,6 @@ echo empty($a) . "=";
 1=
 =
 1=
+1=
+1=
+=

@@ -27,6 +27,12 @@ echo "=";
 echo (null !== ""); //true
 echo "=";
 echo (null !== false); //true
+$a = 6;
+$b = & $a;
+echo "=";
+echo ("6" !== $b);
+echo "=";
+echo ($b === 6);
 ?>
 --EXPECT--
-1==1=1=1=1==1==1=1=1=1=1
+1==1=1=1=1==1==1=1=1=1=1=1=1
