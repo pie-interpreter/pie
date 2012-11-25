@@ -47,9 +47,6 @@ class BytecodeBuilder(object):
         self.line = 0
         self.opcode_lines = {}
 
-    def set_line(self, line):
-        self.line = line
-
     def emit(self, opcode_name, arg=-1):
         current_position = self.get_current_position()
 
@@ -179,13 +176,13 @@ class BytecodeBuilder(object):
         if len(self.break_positions) < level:
             raise CompilerError("Cannot break %s levels" % level)
 
-        self.break_positions[-1 * level].append(position)
+        self.break_positions[-level].append(position)
 
     def add_continue_position_to_patch(self, level, position):
         if len(self.continue_positions) < level:
             raise CompilerError("Cannot continue %s levels" % level)
 
-        self.continue_positions[-1 * level].append(position)
+        self.continue_positions[-level].append(position)
 
 
 class Function(object):

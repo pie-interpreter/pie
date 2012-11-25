@@ -10,8 +10,10 @@ class PieError(Exception):
 class InterpreterError(PieError):
     pass
 
+
 class DivisionByZeroError(InterpreterError):
     pass
+
 
 class PHPError(InterpreterError):
     (FATAL, WARNING, NOTICE) = ["Fatal", "Warning", "Notice"]
@@ -33,13 +35,17 @@ class PHPError(InterpreterError):
         import os.path
 
         execution_block = self.context.trace.current_execution_block
-        message = "PHP %s:  %s in %s on line %s %s"\
+        message = "PHP %s:  %s in %s on line %s %s" \
             % (self.level, self.message,
-                os.path.abspath(execution_block.get_filename()), execution_block.get_line(),
+                os.path.abspath(execution_block.get_filename()),
+                execution_block.get_line(),
                 self.prefix)
+
         if self.show_trace:
             message = ''.join([message, self.context.trace.to_string()])
+
         return message
+
     def handle(self):
         if self.context.config.display_error(self):
             if self.context.config.display_to_stderr:

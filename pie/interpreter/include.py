@@ -11,6 +11,7 @@ __author__ = 'sery0ga'
 
 cache = {}
 
+
 @specialize.memo()
 def _get_strategy(strategy):
     """
@@ -23,10 +24,14 @@ def _get_strategy(strategy):
         cache[strategy] = new_strategy
         return new_strategy
 
+
 class FileNotFound(Exception):
     pass
+
+
 class FileReadFailure(Exception):
     pass
+
 
 class BaseErrorStrategy(object):
     __metaclass__ = ABCMeta
@@ -35,12 +40,14 @@ class BaseErrorStrategy(object):
     def handle_error(self, context, function_name, filename):
         return False
 
+
 class IncludeErrorStrategy(BaseErrorStrategy):
 
     def handle_error(self, context, function_name, filename):
         error = NoFile(context, function_name, filename)
         error.handle()
         return False
+
 
 class IncludeWithPathErrorStrategy(IncludeErrorStrategy):
 
@@ -51,12 +58,14 @@ class IncludeWithPathErrorStrategy(IncludeErrorStrategy):
         error.handle()
         return False
 
+
 class RequireErrorStrategy(BaseErrorStrategy):
 
     def handle_error(self, context, function_name, filename):
         error = NoRequiredFile(context, function_name, filename)
         error.handle()
         raise error
+
 
 class RequireWithPathErrorStrategy(RequireErrorStrategy):
 

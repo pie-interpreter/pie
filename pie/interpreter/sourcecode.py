@@ -1,6 +1,7 @@
 from pie.compiling import compiling
 from pie.interpreter.frame import Frame
 from pie.error import LexerError, PieError, InterpreterError
+from pie.objspace import space
 import interpreter
 from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
@@ -38,10 +39,16 @@ class SourceCode(object):
         context.initialize_functions(self.bytecode)
         interpreter_object = interpreter.Interpreter(self.bytecode, context, frame)
         try:
-            return_value = interpreter_object.interpret()
-            #TODO: as debug_trace function appear, a test for this path should appear too
+            interpreter_object.interpret()
             context.trace.pop()
-            return return_value
+            # TODO: as debug_trace function appear, a test for
+            # this path should appear too
+
+            if frame.stack:
+                return frame.stack.pop()
+            else:
+                return space.null()
+
         except InterpreterError:
             context.trace.pop()
             raise PieError()
@@ -50,6 +57,7 @@ class SourceCode(object):
 def interpret_function(bytecode, context, frame=None):
     if frame is None:
         frame = Frame()
+
     interpreter_object = interpreter.Interpreter(bytecode, context, frame)
     try:
         return interpreter_object.interpret()

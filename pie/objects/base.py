@@ -2,6 +2,7 @@ __author__ = 'sery0ga'
 
 from pie.error import InterpreterError
 
+
 class W_Root(object):
     """ The base class for everything that can be represented as a first-class
     object at applevel
@@ -9,7 +10,7 @@ class W_Root(object):
     _attrs_ = ()
 
     def deref(self):
-        return self # anything but a reference
+        return self  # anything but a reference
 
     def int_w(self):
         raise InterpreterError("TypeError: casting to int of wrong type")

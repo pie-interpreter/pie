@@ -1,7 +1,6 @@
 from pie.error import PieError, LexerError
 from pie.interpreter.frame import Frame
 from pie.interpreter.sourcecode import SourceCode
-from pie.launcher.config import config
 from pie.interpreter.context import Context
 from pie.test.parser import Parser
 from pypy.rlib.parsing.parsing import ParseError
@@ -51,6 +50,7 @@ class TestPHPLanguageCoverage(unittest.TestCase):
             self.assertListEqual(actual_result, test.result)
         else:
             self.assertListNotEqual(actual_result, test.result)
+
 
 def fill_test_class_with_tests(test_to_run=[], with_php_source=False):
     """
@@ -113,7 +113,7 @@ def _add_test(filename, test_name):
         try:
             source.raw_compile()
             if not test.compile_only:
-                context = Context(filename, config)
+                context = Context(filename)
                 source.interpret(context, Frame())
             self.restore_output()
         except PieError as e:

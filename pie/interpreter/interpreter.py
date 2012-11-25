@@ -25,47 +25,39 @@ class Interpreter(object):
     def interpret(self):
         code = self.bytecode.code
         bytecode_length = len(self.bytecode.code)
-        try:
-            while True:
-                if self.position >= bytecode_length:
-                    break
 
-                self.context.trace.update_position(self.position)
+        while True:
+            if self.position >= bytecode_length:
+                break
 
-                next_instr = ord(code[self.position])
-                self.position += 1
+            self.context.trace.update_position(self.position)
 
-                if next_instr > OPCODE_INDEX_DIVIDER:
-                    arg = ord(code[self.position]) \
-                        + (ord(code[self.position + 1]) << 8)
-                    self.position += 2
+            next_instr = ord(code[self.position])
+            self.position += 1
+
+            if next_instr > OPCODE_INDEX_DIVIDER:
+                arg = ord(code[self.position]) \
+                    + (ord(code[self.position + 1]) << 8)
+                self.position += 2
+            else:
+                arg = 0  # don't make it negative
+
+            assert arg >= 0
+
+            if we_are_translated():
+                for index, name in unrolling_bc:
+                    if index == next_instr:
+                        getattr(self, name)(arg)
+                        break
                 else:
-                    arg = 0  # don't make it negative
+                    assert False
+            else:
+                opcode_name = get_opcode_name(next_instr)
+                getattr(self, opcode_name)(arg)
 
-                assert arg >= 0
-
-                if we_are_translated():
-                    for index, name in unrolling_bc:
-                        if index == next_instr:
-                            getattr(self, name)(arg)
-                            break
-                    else:
-                        assert False
-                else:
-                    opcode_name = get_opcode_name(next_instr)
-                    getattr(self, opcode_name)(arg)
-
-                # this is a return condition
-                if self.position == self.RETURN_FLAG:
-                    break
-
-        except InterpreterError:
-            raise
-
-        if self.frame.stack:
-            return self.frame.stack.pop()
-        else:
-            return space.int(0)
+            # this is a return condition
+            if self.position == self.RETURN_FLAG:
+                break
 
     def ECHO(self, value):
         w_value = self.frame.stack.pop()
@@ -117,6 +109,7 @@ class Interpreter(object):
             w_value = self.frame.variables[name]
         except KeyError:
             w_value = self._handle_undefined(name)
+
         w_result = space.is_empty(w_value)
         self.frame.stack.append(w_result)
 
