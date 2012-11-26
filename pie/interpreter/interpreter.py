@@ -256,12 +256,12 @@ class Interpreter(object):
 
     def JUMP_IF_FALSE(self, new_position):
         w_value = self.frame.stack.pop()
-        if not w_value.deref().is_true():
+        if not w_value.is_true():
             self.position = new_position
 
     def JUMP_IF_TRUE(self, new_position):
         w_value = self.frame.stack.pop()
-        if w_value.deref().is_true():
+        if w_value.is_true():
             self.position = new_position
 
     def ISSET(self, names_count):

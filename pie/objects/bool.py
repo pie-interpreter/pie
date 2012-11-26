@@ -1,9 +1,9 @@
-from pie.objects.root import W_Root
+from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
 
 
-class W_BoolObject(W_Root):
+class W_BoolObject(W_Type):
 
     _immutable_fields_ = ['value']
 
@@ -12,6 +12,13 @@ class W_BoolObject(W_Root):
 
     def __repr__(self):
         return "W_BoolObject(%s)" % self.value
+
+    def copy(self):
+        return W_BoolObject(self.value)
+
+    def is_true(self):
+        return self.value
+
 
     def as_bool(self):
         return self
@@ -31,39 +38,6 @@ class W_BoolObject(W_Root):
             return W_StringObject('1')
         return W_StringObject('')
 
-    def copy(self):
-        return W_BoolObject(self.value)
-
-    def is_true(self):
-        return self.value
-
-    def plus(self, number):
-        return W_IntObject(int(self.value + number.value))
-
-    def minus(self, number):
-        return W_IntObject(int(self.value - number.value))
-
-    def multiply(self, number):
-        return W_IntObject(int(self.value * number.value))
-
-    def mod(self, number):
-        raise NotImplemented
-
-    def inc(self):
-        """
-        http://www.php.net/manual/en/language.operators.increment.php
-
-         The increment/decrement operators do not affect boolean values
-        """
-        return self
-
-    def dec(self):
-        """
-        http://www.php.net/manual/en/language.operators.increment.php
-
-         The increment/decrement operators do not affect boolean values
-        """
-        return self
 
     def less_than(self, object):
         assert isinstance(object, W_BoolObject)
@@ -106,3 +80,19 @@ class W_BoolObject(W_Root):
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
+
+    def inc(self):
+        """
+        http://www.php.net/manual/en/language.operators.increment.php
+
+         The increment/decrement operators do not affect boolean values
+        """
+        return self
+
+    def dec(self):
+        """
+        http://www.php.net/manual/en/language.operators.increment.php
+
+         The increment/decrement operators do not affect boolean values
+        """
+        return self

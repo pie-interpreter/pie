@@ -1,4 +1,4 @@
-from pie.objects.root import W_Root
+from pie.objects.base import W_Root
 
 __author__ = 'sery0ga'
 
@@ -9,6 +9,9 @@ class W_Variable(W_Root):
 
     def deref(self):
         return self.value.deref()
+
+    def is_true(self):
+        return self.value.is_true()
 
     def set_value(self, value):
         if isinstance(self.value, W_Reference):
@@ -24,6 +27,9 @@ class W_Reference(W_Root):
 
     def deref(self):
         return self.value.deref()
+
+    def is_true(self):
+        return self.value.is_true()
 
     def set_value(self, value):
         self.value.set_value(value)
