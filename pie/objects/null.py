@@ -1,9 +1,10 @@
-from pie.objects.base import W_Root
+from pie.objects.base import W_Type
 from pie.objects.int import W_IntObject
+import pie.objects.bool as boolean
 
 __author__ = 'sery0ga'
 
-class W_NullObject(W_Root):
+class W_NullObject(W_Type):
 
     def copy(self):
         return self
@@ -11,15 +12,10 @@ class W_NullObject(W_Root):
     def is_true(self):
         return False
 
-    def is_null(self):
-        return True
-
     def as_bool(self):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(False)
+        return boolean.W_BoolObject(False)
 
     def as_int(self):
-        from pie.objects.int import W_IntObject
         return W_IntObject(0)
 
     def as_float(self):
@@ -36,6 +32,27 @@ class W_NullObject(W_Root):
         from pie.objects.string import W_StringObject
         return W_StringObject("")
 
+    def is_null(self):
+        return True
+
+    def less_than(self, object):
+        return boolean.W_BoolObject(False)
+
+    def more_than(self, object):
+        return boolean.W_BoolObject(False)
+
+    def equal(self, object):
+        return boolean.W_BoolObject(True)
+
+    def not_equal(self, object):
+        return boolean.W_BoolObject(False)
+
+    def less_than_or_equal(self, object):
+        return boolean.W_BoolObject(True)
+
+    def more_than_or_equal(self, object):
+        return boolean.W_BoolObject(True)
+
     def inc(self):
         """
         http://www.php.net/manual/en/language.operators.increment.php
@@ -51,27 +68,3 @@ class W_NullObject(W_Root):
          Decrementing NULL values has no effect too, but incrementing them results in 1.
         """
         return self
-
-    def less_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(False)
-
-    def more_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(False)
-
-    def equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(True)
-
-    def not_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(False)
-
-    def less_than_or_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(True)
-
-    def more_than_or_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(True)

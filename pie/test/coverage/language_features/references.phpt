@@ -1,14 +1,13 @@
---COMPILEONLY--
 --FILE--
 <?php
 $a = 10;
 $b = & $a;
-echo $b;
-echo "=";
+echo $b . "=\n";
 
 $b++;
-echo $a, $b;
-echo "=";
+echo $a  . "=\n";
+echo $b  . "=\n";
+
 /*
 function foo(&$b, $c) {
     $b++;
@@ -17,15 +16,16 @@ function foo(&$b, $c) {
 
 $c = 20;
 foo($b, $c);
-echo $b, $c;
-echo "=";
-
+echo $b . "=\n";
+echo $c  . "=\n";
 function &bar() {
     $a = 30;
     return $a;
 }
 $d = bar();
-echo $d;*/
+echo $d . "="; */
 ?>
 --EXPECT--
-10=1111=1220=30
+10=
+11=
+11=

@@ -1,4 +1,4 @@
-from pie.error import InterpreterError, DivisionByZeroError, UndefinedVariable, \
+from pie.error import InterpreterError, DivisionByZeroError, \
     DivisionByZero, UndefinedFunction, MissingArgument
 from pie.interpreter.frame import Frame
 import pie.interpreter.include as include
@@ -69,11 +69,11 @@ class Interpreter(object):
 
     def ECHO(self, value):
         w_value = self.frame.stack.pop()
-        os.write(1, w_value.as_string().conststr_w())
+        os.write(1, w_value.deref().as_string().conststr_w())
 
     def PRINT(self, value):
         w_value = self.frame.stack.pop()
-        os.write(1, w_value.as_string().str_w())
+        os.write(1, w_value.deref().as_string().str_w())
         self.frame.stack.append(space.int(1))
 
     def RETURN(self, value):
@@ -86,25 +86,25 @@ class Interpreter(object):
         self.frame.stack.append(self.frame.stack[-1])
 
     def INCLUDE(self, value):
-        w_filename = self.frame.stack.pop().str_w()
+        w_filename = self.frame.pop_name()
         statement = include.IncludeStatement(self.context, self.frame)
         w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def INCLUDE_ONCE(self, value):
-        w_filename = self.frame.stack.pop().str_w()
+        w_filename = self.frame.pop_name()
         statement = include.IncludeOnceStatement(self.context, self.frame)
         w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def REQUIRE(self, value):
-        w_filename = self.frame.stack.pop().str_w()
+        w_filename = self.frame.pop_name()
         statement = include.RequireStatement(self.context, self.frame)
         w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
 
     def REQUIRE_ONCE(self, value):
-        w_filename = self.frame.stack.pop().str_w()
+        w_filename = self.frame.pop_name()
         statement = include.RequireOnceStatement(self.context, self.frame)
         w_result = statement.include(w_filename)
         self.frame.stack.append(w_result)
@@ -112,12 +112,12 @@ class Interpreter(object):
     def EMPTY_VAR(self, value):
         #TODO: array support
         #TODO: object support
-        name = self.frame.stack.pop().str_w()
-        try:
-            w_value = self.frame.variables[name]
-        except KeyError:
-            w_value = self._handle_undefined(name)
-        w_result = space.is_empty(w_value)
+        name = self.frame.pop_name()
+        if name not in self.frame.variables:
+            w_result = space.bool(True)
+        else:
+            w_value = self.frame.get_variable(name, self.context)
+            w_result = space.is_empty(w_value)
         self.frame.stack.append(w_result)
 
     def EMPTY_RESULT(self, value):
@@ -125,7 +125,12 @@ class Interpreter(object):
         self.frame.stack.append(space.is_empty(w_value))
 
     def MAKE_REFERENCE(self, value):
-        raise InterpreterError("Not implemented")
+        var_name = self.frame.pop_name()
+        ref_name = self.frame.pop_name()
+        w_variable = self.frame.get_variable(var_name, self.context)
+        w_ref = space.ref(w_variable)
+        self.frame.set_variable(ref_name, w_ref)
+        self.frame.stack.append(w_ref)
 
     def NOT(self, value):
         raise InterpreterError("Not implemented")
@@ -157,58 +162,39 @@ class Interpreter(object):
         self.frame.stack.append(space.null())
 
     def PRE_INCREMENT(self, value):
-        var_name = self.frame.stack.pop().str_w()
-        try:
-            w_value = self.frame.variables[var_name]
-        except KeyError:
-            w_value = self._handle_undefined(var_name)
-        w_new_value = w_value.inc()
-        self.frame.variables[var_name] = w_new_value
+        w_value = self.frame.pop_and_get(self.context)
+        w_new_value = w_value.deref().inc()
+        w_value.set_value(w_new_value)
         self.frame.stack.append(w_new_value)
 
     def PRE_DECREMENT(self, value):
-        var_name = self.frame.stack.pop().str_w()
-        try:
-            w_value = self.frame.variables[var_name]
-        except KeyError:
-            w_value = self._handle_undefined(var_name)
-        w_new_value = w_value.dec()
-        self.frame.variables[var_name] = w_new_value
+        w_value = self.frame.pop_and_get(self.context)
+        w_new_value = w_value.deref().dec()
+        w_value.set_value(w_new_value)
         self.frame.stack.append(w_new_value)
 
     def POST_INCREMENT(self, value):
-        var_name = self.frame.stack.pop().str_w()
-        try:
-            w_value = self.frame.variables[var_name]
-        except KeyError:
-            w_value = self._handle_undefined(var_name)
-        w_old_value = w_value.copy()
-        self.frame.variables[var_name] = w_value.inc()
+        w_value = self.frame.pop_and_get(self.context)
+        w_old_value = w_value.deref().copy()
+        w_value.set_value(w_value.deref().inc())
         self.frame.stack.append(w_old_value)
 
     def POST_DECREMENT(self, value):
-        var_name = self.frame.stack.pop().str_w()
-        try:
-            w_value = self.frame.variables[var_name]
-        except KeyError:
-            w_value = self._handle_undefined(var_name)
-        w_old_value = w_value.copy()
-        self.frame.variables[var_name] = w_value.dec()
+        w_value = self.frame.pop_and_get(self.context)
+        w_old_value = w_value.deref().copy()
+        w_value.set_value(w_value.deref().dec())
         self.frame.stack.append(w_old_value)
 
     def XOR(self, value):
         raise InterpreterError("Not implemented")
 
     def INPLACE_CONCAT(self, var_index):
-        var_name = self.frame.stack.pop().str_w()
+        var_name = self.frame.pop_name()
         w_concat_value = self.frame.stack.pop()
-        try:
-            w_value = self.frame.variables[var_name]
-        except KeyError:
-            w_value = self._handle_undefined(var_name)
+        w_value = self.frame.get_variable(var_name, self.context)
         # operation itself
         w_value = w_value.as_string().concatenate(w_concat_value.as_string())
-        self.frame.variables[var_name] = w_value
+        self.frame.set_variable(var_name, w_value)
         self.frame.stack.append(w_value)
 
     def LOAD_VAR(self, var_index):
@@ -227,20 +213,17 @@ class Interpreter(object):
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
-        try:
-            w_value = self.frame.variables[var_name]
-        except KeyError:
-            w_value = self._handle_undefined(var_name)
+        w_value = self.frame.get_variable(var_name, self.context)
         self.frame.stack.append(w_value)
 
     def STORE_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
         w_value = self.frame.stack[-1]  # we need to leave value on the stack
-        self.frame.variables[var_name] = w_value
+        self.frame.set_variable(var_name, w_value)
 
     def CALL_FUNCTION(self, arguments_number):
         # load function name
-        function_name = self.frame.stack.pop().str_w()
+        function_name = self.frame.pop_name()
         # load function bytecode
         try:
             function = self.context.functions[function_name]
@@ -291,7 +274,7 @@ class Interpreter(object):
             if not var_name in self.frame.variables:
                 stack.append(space.bool(False))
                 return
-            if self.frame.variables[var_name].is_null():
+            if self.frame.variables[var_name].deref().is_null():
                 stack.append(space.bool(False))
                 return
         stack.append(space.bool(True))
@@ -301,7 +284,7 @@ class Interpreter(object):
         #TODO: add global variable support
         #TODO: add static variable support
         for i in range(names_count):
-            var_name = self.frame.stack.pop().str_w()
+            var_name = self.frame.pop_name()
             if var_name in self.frame.variables:
                 del self.frame.variables[var_name]
 
@@ -309,11 +292,6 @@ class Interpreter(object):
         w_right = self.frame.stack.pop()
         w_left = self.frame.stack.pop()
         self.frame.stack.append(space.concat(w_left, w_right))
-
-    def _handle_undefined(self, name):
-        error = UndefinedVariable(self.context, name)
-        error.handle()
-        return space.null()
 
 
 def _new_binary_op(name, space_name):
@@ -332,20 +310,14 @@ def _new_binary_op(name, space_name):
 
 def _new_inplace_op(name, space_name):
     def func(self, value):
-        name = self.frame.stack.pop().str_w()
+        w_value = self.frame.pop_and_get(self.context)
         w_right = self.frame.stack.pop()
         try:
-            w_value = self.frame.variables[name]
-        except KeyError:
-            w_value = self._handle_undefined(name)
-        # Here we do not care about inplace operation for number
-        # as they are immutable
-        try:
-            w_result =getattr(space, space_name)(w_value, w_right)
+            w_result = getattr(space, space_name)(w_value, w_right)
         except DivisionByZeroError:
             DivisionByZero(self.context).handle()
             w_result = space.null()
-        self.frame.variables[name] = w_result
+        w_value.set_value(w_result)
         self.frame.stack.append(w_result)
     func.func_name = name
     return func
