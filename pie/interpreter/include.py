@@ -182,7 +182,7 @@ class BaseIncludeStatement(object):
     def _interpret(self, source):
         w_return_value = source.interpret(self.context, self.frame, self._get_statement_name())
 
-        if w_return_value.is_null():
+        if w_return_value.deref().is_null():
             return W_BoolObject(True)
         return w_return_value
 

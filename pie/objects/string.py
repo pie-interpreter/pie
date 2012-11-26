@@ -1,10 +1,10 @@
-from pie.objects.float import W_FloatObject
 from pie.objects.stringstrategies import *
 from pypy.rlib.objectmodel import instantiate
 from pypy.rlib import jit
-from pie.objects.base import W_Root
+from pie.objects.base import W_Type
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
+from pie.objects.float import W_FloatObject
 
 HEXADECIMAL_SYMBOLS = list("0123456789ABCDEFabcdef")
 
@@ -15,7 +15,7 @@ DECIMAL_SYMBOLS = list("0123456789")
 class NotConvertibleToNumber(Exception):
     pass
 
-class W_StringObject(W_Root):
+class W_StringObject(W_Type):
     """
     This class represents PHP strings.
     It has 2 main attributes:
@@ -64,28 +64,13 @@ class W_StringObject(W_Root):
         other.add_copy(w_s)
         return w_s
 
-    def add_copy(self, other):
-        if self.copies is None:
-            self.copies = [other]
-        else:
-            self.copies.append(other)
+    def copy(self):
+        res = self.strategy.copy(self)
+        self.add_copy(res)
+        return res
 
-    def write_into(self, s, start):
-        self.strategy.write_into(self, s, start)
-
-    def force(self):
-        if self.strategy.concrete:
-            return
-        self.strategy.force(self)
-
-    def force_concatenate(self):
-        self.strategy.force_concatenate(self)
-
-    def make_mutable(self):
-        self.force()
-        if self.copies:
-            self._force_mutable_copies()
-        self.strategy.make_mutable(self)
+    def is_true(self):
+        return self.strategy.is_true(self)
 
     def conststr_w(self):
         self.force()
@@ -94,17 +79,6 @@ class W_StringObject(W_Root):
     def str_w(self):
         self.force()
         return self.strategy.str_w(self)
-
-    def strlen(self):
-        return self.strategy.len(self)
-
-    def copy(self):
-        res = self.strategy.copy(self)
-        self.add_copy(res)
-        return res
-
-    def is_true(self):
-        return self.strategy.is_true(self)
 
     def as_bool(self):
         if not self.is_true() or self.strategy.getitem(self, 0) == '0':
@@ -119,6 +93,9 @@ class W_StringObject(W_Root):
         assert isinstance(value, W_IntObject)
         return value
 
+    def as_number(self):
+        return self._handle_number(False)
+
     def as_number_strict(self):
         """
         There's a special case in PHP when we try to convert
@@ -131,14 +108,56 @@ class W_StringObject(W_Root):
             raise NotConvertibleToNumber
         return self._handle_number(True)
 
-    def as_number(self):
-        return self._handle_number(False)
-
     def as_string(self):
         return self
 
-    def concatenate(self, string):
-        return W_StringObject.newstrconcat(self, string)
+    def equal(self, w_object):
+        if self is w_object:
+            return W_BoolObject(True)
+        if self.strlen() != w_object.strlen():
+            return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        if self.strategy is w_object.strategy:
+            return W_BoolObject(self.strategy.equal(self, w_object))
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() == w_object.str_w())
+
+    def not_equal(self, w_object):
+        w_result = self.equal(w_object)
+        return W_BoolObject(not w_result.is_true())
+
+    def less_than(self, w_object):
+        if self is w_object:
+            return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() < w_object.str_w())
+
+    def more_than(self, w_object):
+        if self is w_object:
+            return W_BoolObject(False)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() > w_object.str_w())
+
+    def less_than_or_equal(self, w_object):
+        if self is w_object:
+            return W_BoolObject(True)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() <= w_object.str_w())
+
+    def more_than_or_equal(self, w_object):
+        if self is w_object:
+            return W_BoolObject(True)
+        assert isinstance(w_object, W_StringObject)
+        self.force_concatenate()
+        w_object.force_concatenate()
+        return W_BoolObject(self.str_w() >= w_object.str_w())
 
     def inc(self):
         if not self.is_true():
@@ -184,60 +203,34 @@ class W_StringObject(W_Root):
             # there's no decrement for normal non-convertible strings in PHP
             return self
 
-    def equal(self, w_object):
-        if self is w_object:
-            return W_BoolObject(True)
-        if self.strlen() != w_object.strlen():
-            return W_BoolObject(False)
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        if self.strategy is w_object.strategy:
-            return W_BoolObject(self.strategy.equal(self, w_object))
-        return W_BoolObject(self.str_w() == w_object.str_w())
+    def concatenate(self, string):
+        return W_StringObject.newstrconcat(self, string)
 
-    def less_than(self, w_object):
-        if self is w_object:
-            return W_BoolObject(False)
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        return W_BoolObject(self.str_w() < w_object.str_w())
+    def add_copy(self, other):
+        if self.copies is None:
+            self.copies = [other]
+        else:
+            self.copies.append(other)
 
-    def more_than(self, w_object):
-        if self is w_object:
-            return W_BoolObject(False)
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        return W_BoolObject(self.str_w() > w_object.str_w())
+    def force(self):
+        if self.strategy.concrete:
+            return
+        self.strategy.force(self)
 
-    def not_equal(self, w_object):
-        if self is w_object:
-            return W_BoolObject(False)
-        if self.strlen() != w_object.strlen():
-            return W_BoolObject(True)
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        return W_BoolObject(self.str_w() != w_object.str_w())
+    def force_concatenate(self):
+        self.strategy.force_concatenate(self)
 
-    def less_than_or_equal(self, w_object):
-        if self is w_object:
-            return W_BoolObject(True)
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        return W_BoolObject(self.str_w() <= w_object.str_w())
+    def make_mutable(self):
+        self.force()
+        if self.copies:
+            self._force_mutable_copies()
+        self.strategy.make_mutable(self)
 
+    def strlen(self):
+        return self.strategy.len(self)
 
-    def more_than_or_equal(self, w_object):
-        if self is w_object:
-            return W_BoolObject(True)
-        assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
-        return W_BoolObject(self.str_w() >= w_object.str_w())
+    def write_into(self, s, start):
+        self.strategy.write_into(self, s, start)
 
     def _force_mutable_copies(self):
         for copy in self.copies:
@@ -249,7 +242,7 @@ class W_StringObject(W_Root):
         """
         Converts string to number
         """
-        #TODO add setlocale() support
+        #TODO: add setlocale() support
         self.force_concatenate()
         if not self.is_true():
             return W_IntObject(0)
@@ -257,7 +250,7 @@ class W_StringObject(W_Root):
         value_len = self.strlen()
         string = self.str_w()
         # check for hexadecimal
-        if value_len > 2 and string[end] == '0' and\
+        if value_len > 2 and string[end] == '0' and \
            (string[end + 1] == 'x' or string[end + 1] == 'X'):
             end += 2
             return self._handle_hexadecimal(string, begin, end, value_len, strict)
