@@ -1,8 +1,10 @@
 " Module with objects, representing functions "
-from pie.error import InterpreterError, PieError
+from pie.error import InterpreterError, NonVariablePassedByReference, \
+    MissingArgument
 from pie.interpreter.interpreter import Interpreter
 from pie.objspace import space
 from pie.interpreter.frame import Frame
+from pie.objects.reference import W_Variable
 
 
 class AbstractFunction(object):
@@ -32,7 +34,7 @@ class UserFunction(AbstractFunction):
         self.line_declared = line_declared
 
     def call(self, context, stack_values):
-        frame = self._get_frame(context, stack_values)
+        frame = self._get_frame(stack_values)
 
         context.trace.append(self.name, self.bytecode)
         interpreter = Interpreter(self.bytecode, context, frame)
@@ -43,12 +45,29 @@ class UserFunction(AbstractFunction):
 
     def _get_frame(self, context, stack_values):
         frame = Frame()
-        for argument_name, argument_type, default in self.arguments:
-            if stack_values:
+        for index in enumerate(self.arguments):
+            argument_name, argument_type, default = self.arguments[index]
+            try:
+                value = stack_values[index]
                 if argument_type == self.REFERENCE:
-                    frame.variables[argument_name] = stack_values
-            else:
-                pass
+                    if not isinstance(value, W_Variable):
+                        error = NonVariablePassedByReference(context)
+                        error.handle()
+
+                        frame.variables[argument_name] = space.variable(space.null())
+                    else:
+                        frame.variables[argument_name] = value
+                else:
+                    frame.set_variable(argument_name, value.deref())
+
+            except IndexError:
+                if default is None:
+                    error = MissingArgument(context, index, self)
+                    error.handle()
+
+                    frame.variables[argument_name] = space.variable(space.null())
+                else:
+                    frame.variables[argument_name] = space.variable(default)
 
         return frame
 

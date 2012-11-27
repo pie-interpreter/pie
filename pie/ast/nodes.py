@@ -306,16 +306,63 @@ class FunctionCall(AstNodeWithResult):
 
 class FunctionDeclaration(AstNode):
 
-    def __init__(self, name, arguments, body):
+    def __init__(self, name, is_returning_reference, arguments, body):
         self.name = name
+        self.is_returning_reference = is_returning_reference
         self.arguments = arguments
         self.body = body
 
     def repr(self):
-        return "FunctionDeclaration(%s(%s){%s})" \
-            % (self.name,
-               self.get_list_repr(self.arguments),
-               self.body.repr())
+        if self.is_returning_reference:
+            reference_symbol = '&'
+        else:
+            reference_symbol = ''
+
+        return "FunctionDeclaration%s(%s(%s){%s})" \
+            % (reference_symbol,
+                self.name,
+                self.get_list_repr(self.arguments),
+                self.body.repr())
+
+
+class ArgumentVariable(AstNode):
+
+    def __init__(self, variable):
+        self.variable = variable
+
+    def repr(self):
+        return "ArgumentVariable(%s)" % self.variable
+
+
+class ArgumentReference(AstNode):
+
+    def __init__(self, variable):
+        self.variable = variable
+
+    def repr(self):
+        return "ArgumentReference(%s)" % self.variable
+
+
+class ArgumentVariableWithDefaultValue(AstNode):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "ArgumentVariableWithDefaultValue(%s, %s)" \
+            % (self.variable, self.value)
+
+
+class ArgumentReferenceWithDefaultValue(AstNode):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "ArgumentReferenceWithDefaultValue(%s, %s)" \
+            % (self.variable, self.value)
 
 
 class If(AstNode):

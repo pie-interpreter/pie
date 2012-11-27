@@ -332,11 +332,14 @@ function_declaration: T_FUNCTION "&"? IDENTIFIER >function_arguments< ["{"] stat
 function_arguments: ["("] function_arguments_list? [")"];
 function_arguments_list: >function_argument< [","] >function_arguments_list<
                        | >function_argument<;
-function_argument: function_argument_with_default_value
-                 | "&" variable_identifier
-                 | variable_identifier;
-function_argument_with_default_value: "&"? variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
-function_argument_default_value: constant_expression;
+function_argument: function_argument_reference_with_default_value
+                 | function_argument_variable_with_default_value
+                 | function_argument_reference
+                 | function_argument_variable;
+function_argument_reference_with_default_value: ["&"] variable_identifier [ASSIGN_OPERATOR] constant_expression;
+function_argument_variable_with_default_value: variable_identifier [ASSIGN_OPERATOR] constant_expression;
+function_argument_reference: ["&"] variable_identifier;
+function_argument_variable: variable_identifier;
 
 
 

@@ -113,14 +113,21 @@ class DivisionByZero(PHPWarning):
 
 
 class MissingArgument(PHPWarning):
-    def __init__(self, context, arg_position, function_name, function_object):
+    def __init__(self, context, arg_position, function):
         import os.path
         message = "Missing argument %s for %s(), called" \
-            % (arg_position, function_name)
+            % (arg_position, function.name)
         prefix = "and defined in %s on line %s" % \
-            (os.path.abspath(function_object.bytecode.filename), function_object.line_declared)
+            (os.path.abspath(function.bytecode.filename), function.line_declared)
 
         PHPWarning.__init__(self, context, message, False, prefix)
+
+
+class NonVariablePassedByReference(PHPFatal):
+    def __init__(self, context):
+        message = "Only variables can be passed by reference"
+
+        PHPFatal.__init__(self, context, message, False)
 
 
 class NoFile(PHPWarning):

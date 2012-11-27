@@ -1,4 +1,4 @@
-from pie.error import InterpreterError, DivisionByZeroError, UndefinedVariable, \
+from pie.error import InterpreterError, DivisionByZeroError, \
     DivisionByZero, UndefinedFunction, MissingArgument
 from pie.interpreter.frame import Frame
 import pie.interpreter.include as include
@@ -8,8 +8,6 @@ from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
 import os
-
-__author__ = 'sery0ga'
 
 
 class Interpreter(object):

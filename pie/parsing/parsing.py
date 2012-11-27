@@ -18,7 +18,7 @@ def get_parse_tools():
     try:
         regexs, rules, transformer_class = parse_ebnf(grammar)
     except ParseError as e:
-        print e.nice_error_message("grammar.ebnf", grammar)
+        print e.nice_error_message('grammar.ebnf', grammar)
         raise e
 
     names, regexs = zip(*regexs)

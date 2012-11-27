@@ -11,9 +11,6 @@ class Frame:
         self.variables = {}
         self.names = {}
 
-        # trace data
-        self.function_trace_stack = []
-
     def get_variable(self, name, context):
         try:
             return self.variables[name]
