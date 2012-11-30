@@ -22,6 +22,7 @@ class W_Variable(W_Root):
 class W_Reference(W_Root):
 
     def __init__(self, value):
+        #TODO: throw pie exception
         assert isinstance(value, W_Variable)
         self.value = value
 

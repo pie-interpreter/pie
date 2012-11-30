@@ -27,11 +27,15 @@ class ObjSpace(object):
     def null(self):
         return W_NullObject()
 
-    def ref(self, value):
-        return W_Reference(value)
+    def ref(self, w_variable):
+        if isinstance(w_variable, W_Reference):
+            return W_Reference(w_variable.value)
+        return W_Reference(w_variable)
 
-    def variable(self, value):
-        return W_Variable(value)
+    def variable(self, w_object):
+        if isinstance(w_object, W_Variable):
+            return W_Variable(w_object.value)
+        return W_Variable(w_object)
 
     def add(self, w_left, w_right):
         """
@@ -91,7 +95,7 @@ class ObjSpace(object):
     def concat(self, w_left, w_right):
         w_left = w_left.deref()
         w_right = w_right.deref()
-        return w_left.copy().as_string().concatenate(w_right.as_string())
+        return w_left.as_string().concatenate(w_right.as_string())
 
     def identical(self, w_left, w_right):
         if w_left.deref().type != w_right.deref().type:

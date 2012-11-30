@@ -1,5 +1,4 @@
 from pie.objects.stringstrategies import *
-from pypy.rlib.objectmodel import instantiate
 from pypy.rlib import jit
 from pie.objects.base import W_Type
 from pie.objects.bool import W_BoolObject
@@ -34,36 +33,6 @@ class W_StringObject(W_Type):
     def __repr__(self):
         return self.strategy.repr(self)
 
-    @staticmethod
-    def newstr(strval):
-        w_s = instantiate(W_StringObject)
-        strategy = get_new_strategy(MutableStringStrategy)
-        w_s.storage = strategy.erase(strval)
-        w_s.strategy = strategy
-        w_s.copies = None
-        return w_s
-
-    @staticmethod
-    def newcopiedstr(origobj):
-        w_s = instantiate(W_StringObject)
-        strategy = get_new_strategy(StringCopyStrategy)
-        w_s.copies = None
-        w_s.storage = strategy.erase(origobj)
-        w_s.strategy = strategy
-        return w_s
-
-    @staticmethod
-    def newstrconcat(origobj, other):
-        w_s = instantiate(W_StringObject)
-        strategy = get_new_strategy(StringConcatStrategy)
-        w_s.copies = None
-        w_s.storage = strategy.erase((origobj, other, origobj.strlen() +
-                                                      other.strlen()))
-        w_s.strategy = strategy
-        origobj.add_copy(w_s)
-        other.add_copy(w_s)
-        return w_s
-
     def copy(self):
         res = self.strategy.copy(self)
         self.add_copy(res)
@@ -72,12 +41,8 @@ class W_StringObject(W_Type):
     def is_true(self):
         return self.strategy.is_true(self)
 
-    def conststr_w(self):
-        self.force()
-        return self.strategy.conststr_w(self)
-
     def str_w(self):
-        self.force()
+        self.make_concrete()
         return self.strategy.str_w(self)
 
     def as_bool(self):
@@ -204,7 +169,7 @@ class W_StringObject(W_Type):
             return self
 
     def concatenate(self, string):
-        return W_StringObject.newstrconcat(self, string)
+        return StringFactory.newstrconcat(self, string)
 
     def add_copy(self, other):
         if self.copies is None:
@@ -212,16 +177,14 @@ class W_StringObject(W_Type):
         else:
             self.copies.append(other)
 
-    def force(self):
-        if self.strategy.concrete:
-            return
-        self.strategy.force(self)
+    def make_concrete(self):
+        self.strategy.make_concrete(self)
 
     def force_concatenate(self):
         self.strategy.force_concatenate(self)
 
     def make_mutable(self):
-        self.force()
+        self.make_concrete()
         if self.copies:
             self._force_mutable_copies()
         self.strategy.make_mutable(self)
@@ -235,7 +198,7 @@ class W_StringObject(W_Type):
     def _force_mutable_copies(self):
         for copy in self.copies:
             if copy:
-                copy.force()
+                copy.make_concrete()
         self.copies = None
 
     def _handle_number(self, strict = False, int_only = False):

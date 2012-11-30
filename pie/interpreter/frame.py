@@ -21,11 +21,11 @@ class Frame:
             error.handle()
             return space.null()
 
-    def set_variable(self, name, value):
+    def set_variable(self, name, w_value):
         if name in self.variables:
-            self.variables[name].set_value(value)
+            self.variables[name].set_value(w_value)
         else:
-            self.variables[name] = space.variable(value)
+            self.variables[name] = space.variable(w_value)
 
     def pop_name(self):
         return self.stack.pop().str_w()

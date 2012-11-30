@@ -69,7 +69,7 @@ class Interpreter(object):
 
     def ECHO(self, value):
         w_value = self.frame.stack.pop()
-        os.write(1, w_value.deref().as_string().conststr_w())
+        os.write(1, w_value.deref().as_string().str_w())
 
     def PRINT(self, value):
         w_value = self.frame.stack.pop()
@@ -125,12 +125,13 @@ class Interpreter(object):
         self.frame.stack.append(space.is_empty(w_value))
 
     def MAKE_REFERENCE(self, value):
-        var_name = self.frame.pop_name()
         ref_name = self.frame.pop_name()
-        w_variable = self.frame.get_variable(var_name, self.context)
-        w_ref = space.ref(w_variable)
-        self.frame.set_variable(ref_name, w_ref)
-        self.frame.stack.append(w_ref)
+        w_variable = self.frame.stack.pop()
+        #TODO: test w_variable for W_Variable
+        # w_ref = space.ref(w_variable)
+        # self.frame.set_variable(ref_name, w_variable)
+        self.frame.variables[ref_name] = w_variable
+        self.frame.stack.append(w_variable.deref())
 
     def NOT(self, value):
         raise InterpreterError("Not implemented")
