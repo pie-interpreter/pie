@@ -46,7 +46,8 @@ class W_StringObject(W_Type):
         return self.strategy.str_w(self)
 
     def as_bool(self):
-        if not self.is_true() or self.strategy.getitem(self, 0) == '0':
+        self.make_concrete()
+        if not self.is_true():
             return W_BoolObject(False)
         return W_BoolObject(True)
 
@@ -171,6 +172,11 @@ class W_StringObject(W_Type):
     def concatenate(self, string):
         return StringFactory.newstrconcat(self, string)
 
+    def strlen(self):
+        return self.strategy.len(self)
+
+
+
     def add_copy(self, other):
         if self.copies is None:
             self.copies = [other]
@@ -189,11 +195,6 @@ class W_StringObject(W_Type):
             self._force_mutable_copies()
         self.strategy.make_mutable(self)
 
-    def strlen(self):
-        return self.strategy.len(self)
-
-    def write_into(self, s, start):
-        self.strategy.write_into(self, s, start)
 
     def _force_mutable_copies(self):
         for copy in self.copies:

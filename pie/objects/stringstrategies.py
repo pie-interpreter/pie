@@ -39,19 +39,19 @@ class StringFactory(object):
     def newcopiedstr(origobj):
         w_s = instantiate(string.W_StringObject)
         strategy = get_new_strategy(StringCopyStrategy)
-        w_s.copies = None
         w_s.storage = strategy.erase(origobj)
         w_s.strategy = strategy
+        w_s.copies = None
         return w_s
 
     @staticmethod
     def newstrconcat(origobj, other):
         w_s = instantiate(string.W_StringObject)
         strategy = get_new_strategy(StringConcatStrategy)
-        w_s.copies = None
         w_s.storage = strategy.erase((origobj, other, origobj.strlen() +
                                                       other.strlen()))
         w_s.strategy = strategy
+        w_s.copies = None
         origobj.add_copy(w_s)
         other.add_copy(w_s)
         return w_s
@@ -80,6 +80,7 @@ class BaseConcreteStringStrategy(BaseStringStrategy):
 
     def make_mutable(self, w_string):
         raise InterpreterError("Not implemented")
+
 
 class ConstantStringStrategy(BaseConcreteStringStrategy):
     """
@@ -123,8 +124,8 @@ class ConstantStringStrategy(BaseConcreteStringStrategy):
         return self.unerase(w_obj.storage) == self.unerase(w_other.storage)
 
     def force_copy(self, w_source, w_dest_obj):
-        # w_dest_obj.storage = self.erase(self.unerase(w_source.storage)[:])
-        w_dest_obj.storage = self.erase(self.unerase(w_source.storage))
+        w_dest_obj.storage = self.erase(self.unerase(w_source.storage)[:])
+        # w_dest_obj.storage = self.erase(self.unerase(w_source.storage))
 
     def make_mutable(self, w_string):
         new_strategy = get_new_strategy(MutableStringStrategy)
@@ -233,7 +234,6 @@ class StringCopyStrategy(BaseStringStrategy):
 
 
     def append(self, string, value):
-        #TODO: fix it
         raise InterpreterError("You cannot modify copied string")
 
     def equal(self, w_left, w_right):
@@ -244,7 +244,7 @@ class StringCopyStrategy(BaseStringStrategy):
 
     def write_into(self, w_string, target, start):
         parent = self.unerase(w_string.storage)
-        parent.write_into(target, start)
+        parent.strategy.write_into(parent, target, start)
 
 class StringConcatStrategy(BaseStringStrategy):
     """
@@ -260,7 +260,7 @@ class StringConcatStrategy(BaseStringStrategy):
         return 'ConcatenatedString(%r)' % (self.unerase(w_string.storage),)
 
     def is_true(self, w_string):
-        # XXX recursion? figure out a way to flatten those easier
+        #TODO: recursion? figure out a way to flatten those easier
         left, right = self.unerase(w_string.storage)
         return (left.strategy.is_true(left) or
                 right.strategy.is_true(right))
@@ -288,6 +288,27 @@ class StringConcatStrategy(BaseStringStrategy):
         self.make_concrete(obj)
 
     def write_into(self, w_string, target, start):
-        l_one, l_two, lgt = self.unerase(w_string.storage)
-        l_one.write_into(target, start)
-        l_two.write_into(target, start + l_one.strlen())
+        current, left_visited, right_visited = (w_string, False, False)
+        stack = []
+        current_position = start
+        while(True):
+            left, right, lgt = self.unerase(current.storage)
+            if not left_visited:
+                if isinstance(left.strategy, StringConcatStrategy):
+                    stack.append((current, True, False))
+                    current = left
+                    continue
+                else:
+                    left.strategy.write_into(left, target, current_position)
+                    current_position += left.strlen()
+            if not right_visited:
+                if isinstance(right.strategy, StringConcatStrategy):
+                    stack.append((current, True, True))
+                    current = right
+                    continue
+                else:
+                    right.strategy.write_into(right, target, current_position)
+                    current_position += right.strlen()
+            if not stack:
+                break
+            current, left_visited, right_visited = stack.pop()

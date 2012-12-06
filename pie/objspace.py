@@ -3,7 +3,7 @@ from pie.objects.bool import W_BoolObject
 from pie.objects.float import W_FloatObject
 from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
-from pie.objects.reference import W_Reference, W_Variable
+from pie.objects.reference import W_Variable
 
 __author__ = 'sery0ga'
 
@@ -26,11 +26,6 @@ class ObjSpace(object):
 
     def null(self):
         return W_NullObject()
-
-    def ref(self, w_variable):
-        if isinstance(w_variable, W_Reference):
-            return W_Reference(w_variable.value)
-        return W_Reference(w_variable)
 
     def variable(self, w_object):
         if isinstance(w_object, W_Variable):
