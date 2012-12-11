@@ -1,13 +1,16 @@
+from pypy.rlib.objectmodel import we_are_translated
+from pypy.rlib.unroll import unrolling_iterable
+import os
+
 from pie.error import InterpreterError, DivisionByZeroError, \
     DivisionByZero, UndefinedFunction, MissingArgument
 from pie.interpreter.frame import Frame
 import pie.interpreter.include as include
 from pie.objspace import space
+from pie.objects.variable import W_Variable
 import sourcecode
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
-from pypy.rlib.objectmodel import we_are_translated
-from pypy.rlib.unroll import unrolling_iterable
-import os
+
 
 __author__ = 'sery0ga'
 
@@ -127,9 +130,8 @@ class Interpreter(object):
     def MAKE_REFERENCE(self, value):
         ref_name = self.frame.pop_name()
         w_variable = self.frame.stack.pop()
-        #TODO: test w_variable for W_Variable
-        # w_ref = space.ref(w_variable)
-        # self.frame.set_variable(ref_name, w_variable)
+        if not isinstance(w_variable, W_Variable):
+            raise InterpreterError("We can make reference only to variable")
         self.frame.variables[ref_name] = w_variable
         self.frame.stack.append(w_variable.deref())
 

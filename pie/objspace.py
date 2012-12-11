@@ -3,7 +3,7 @@ from pie.objects.bool import W_BoolObject
 from pie.objects.float import W_FloatObject
 from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
-from pie.objects.reference import W_Variable
+from pie.objects.variable import W_Variable
 
 __author__ = 'sery0ga'
 
@@ -95,12 +95,12 @@ class ObjSpace(object):
     def identical(self, w_left, w_right):
         if w_left.deref().type != w_right.deref().type:
             return W_BoolObject(False)
-        return w_left.deref().equal(w_right)
+        return w_left.deref().equal(w_right.deref())
 
     def not_identical(self, w_left, w_right):
         if w_left.deref().type != w_right.deref().type:
             return W_BoolObject(True)
-        return w_left.deref().not_equal(w_right)
+        return w_left.deref().not_equal(w_right.deref())
 
     def is_empty(self, w_object):
         return W_BoolObject(not w_object.deref().is_true())
