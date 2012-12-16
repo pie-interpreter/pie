@@ -3,7 +3,7 @@ from pie.error import NonVariablePassedByReference, MissingArgument
 from pie.interpreter.interpreter import Interpreter
 from pie.objspace import space
 from pie.interpreter.frame import Frame
-from pie.objects.reference import W_Variable
+from pie.objects.variable import W_Variable
 
 
 class AbstractFunction(object):

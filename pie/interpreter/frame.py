@@ -21,9 +21,9 @@ class Frame:
 
     def set_variable(self, name, w_value):
         if name in self.variables:
-            self.variables[name].set_value(w_value)
+            self.variables[name].set_value(w_value.deref())
         else:
-            self.variables[name] = space.variable(w_value)
+            self.variables[name] = space.variable(w_value.deref())
 
     def pop_name(self):
         return self.stack.pop().str_w()

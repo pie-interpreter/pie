@@ -17,7 +17,8 @@ class Context:
     def declare_function(self, function):
         name = function.name
         if name in self.functions:
-            if hasattr(self.functions[name], 'line_declared'):
+            from pie.interpreter.function import UserFunction
+            if isinstance(self.functions[name], UserFunction):
                 error = RedeclaredUserFunction(self, self.functions[name])
             else:
                 error = RedeclaredFunction(self, self.functions[name])

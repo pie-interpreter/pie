@@ -618,7 +618,7 @@ class __extend__(nodes.ConstantFloat):
         return str(self.const_value)
 
     def get_compiled_value(self):
-        return space.float(self.value)
+        return space.float(self.const_value)
 
     def calculate_const_value(self):
         self.const_value = float(self.value)
@@ -651,6 +651,9 @@ class __extend__(nodes.ConstantNull):
 class __extend__(nodes.ConstantString):
 
     type_name = 'string'
+
+    def calculate_const_value(self):
+        self.const_value = self.value
 
     def get_str_value(self):
         return self.const_value

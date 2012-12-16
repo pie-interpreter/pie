@@ -3,14 +3,11 @@ from pypy.rlib.unroll import unrolling_iterable
 import os
 
 from pie.error import InterpreterError, DivisionByZeroError, \
-    DivisionByZero, UndefinedFunction, MissingArgument
-from pie.interpreter.frame import Frame
+    DivisionByZero, UndefinedFunction
 import pie.interpreter.include as include
 from pie.objspace import space
 from pie.objects.variable import W_Variable
-import sourcecode
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
-
 
 
 class Interpreter(object):
@@ -198,7 +195,8 @@ class Interpreter(object):
 
     def LOAD_VAR(self, var_index):
         var_name = self.bytecode.names[var_index]
-        self.frame.stack.append(space.str(var_name))
+        w_value = self.frame.get_variable(var_name, self.context)
+        self.frame.stack.append(w_value)
 
     def STORE_VAR(self, value):
         raise InterpreterError("Not implemented")
