@@ -36,7 +36,6 @@ class SourceCode(object):
 
     def interpret(self, context, frame, function_code_called_from=''):
         context.trace.append(function_code_called_from, self.bytecode)
-        context.initialize_functions(self.bytecode)
         interpreter_object = interpreter.Interpreter(self.bytecode, context, frame)
         try:
             interpreter_object.interpret()

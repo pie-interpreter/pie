@@ -19,7 +19,6 @@ class W_IntObject(W_Number):
     def int_w(self):
         return self.value
 
-
     def as_bool(self):
         from pie.objects.bool import W_BoolObject
         return W_BoolObject(bool(self.value))

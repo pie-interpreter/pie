@@ -79,7 +79,7 @@ class ConstantStringStrategy(BaseStringStrategy):
         )
 
     def repr(self, w_string):
-        return 'ConstantString(%s)' % self.unerase(w_string.storage)
+        return 'W_ConstantString(%s)' % self.unerase(w_string.storage)
 
     def setitem(self, w_string, item, value):
         raise Exception("You cannot change constant string")
@@ -137,7 +137,7 @@ class MutableStringStrategy(BaseStringStrategy):
         pass
 
     def repr(self, w_string):
-        return 'MutableString(%s)' % ''.join(self.unerase(w_string.storage))
+        return 'W_MutableString(%s)' % ''.join(self.unerase(w_string.storage))
 
     def setitem(self, w_string, item, val):
         self.unerase(w_string.storage)[item] = val
@@ -192,7 +192,7 @@ class StringCopyStrategy(BaseStringStrategy):
         return w_parent.strlen()
 
     def repr(self, w_string):
-        return 'CopiedString(%r)' % self.unerase(w_string.storage)
+        return 'W_CopiedString(%r)' % self.unerase(w_string.storage)
 
     def write_into(self, w_string, target, start):
         parent = self.unerase(w_string.storage)
@@ -238,7 +238,7 @@ class StringConcatStrategy(BaseStringStrategy):
         return lgt
 
     def repr(self, w_string):
-        return 'ConcatenatedString(%r)' % (self.unerase(w_string.storage),)
+        return 'W_ConcatenatedString(%r)' % (self.unerase(w_string.storage),)
 
     def write_into(self, w_string, target, start):
         l_one, l_two, lgt = self.unerase(w_string.storage)

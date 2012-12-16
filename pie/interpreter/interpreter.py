@@ -21,6 +21,8 @@ class Interpreter(object):
         self.position = 0
 
     def interpret(self):
+        self.declare_functions()
+
         code = self.bytecode.code
         bytecode_length = len(self.bytecode.code)
 
@@ -56,6 +58,10 @@ class Interpreter(object):
             # this is a return condition
             if self.position == self.RETURN_FLAG:
                 break
+
+    def declare_functions(self):
+        for function in self.bytecode.declared_functions:
+            self.context.declare_function(function)
 
     def ECHO(self, value):
         w_value = self.frame.stack.pop()
@@ -211,33 +217,23 @@ class Interpreter(object):
         w_value = self.frame.stack[-1]  # we need to leave value on the stack
         self.frame.set_variable(var_name, w_value)
 
+    def DECLARE_FUNCTION(self, function_index):
+        function = self.bytecode.functions[function_index]
+        self.context.declare_function(function)
+
     def CALL_FUNCTION(self, arguments_number):
-        # load function name
         function_name = self.frame.pop_name()
-        # load function bytecode
-        try:
-            function = self.context.functions[function_name]
-        except KeyError:
+        if function_name not in self.context.functions:
             error = UndefinedFunction(self.context, function_name)
             error.handle()
             raise error
 
-        function_frame = Frame()
-        # put function arguments to frame
-        arg_position = 1
-        for argument in function.arguments:
-            if not self.frame.stack:
-                error = MissingArgument(self.context, arg_position, function_name, function)
-                error.handle()
-            else:
-                function_frame.variables[argument] = self.frame.stack.pop()
-            arg_position += 1
+        parameters = []
+        for index in range(arguments_number):
+            parameters.append(self.frame.stack.pop())
 
-        # update trace stack and call function
-        self.context.trace.append(function_name, function.bytecode)
-        w_return_value = sourcecode.interpret_function(function.bytecode,
-            self.context, function_frame)
-        self.context.trace.pop()
+        function = self.context.functions[function_name]
+        w_return_value = function.call(self.context, parameters)
 
         self.frame.stack.append(w_return_value)
 

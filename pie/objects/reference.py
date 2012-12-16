@@ -1,6 +1,5 @@
 from pie.objects.base import W_Root
 
-__author__ = 'sery0ga'
 
 class W_Variable(W_Root):
 
@@ -18,6 +17,7 @@ class W_Variable(W_Root):
             self.value.set_value(value)
         else:
             self.value = value
+
 
 class W_Reference(W_Root):
 

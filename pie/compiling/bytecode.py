@@ -1,8 +1,6 @@
-
-__author__ = 'sery0ga'
-
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name
 from pypy.rlib.objectmodel import compute_unique_id
+
 
 class Bytecode(object):
     """
@@ -11,10 +9,11 @@ class Bytecode(object):
     """
 
     def __init__(self):
+        self.code = ""
         self.names = []
         self.consts = []
-        self.functions = {}
-        self.code = ""
+        self.functions = []
+        self.declared_functions = []
 
         # trace data
         self.filename = ""
@@ -33,14 +32,23 @@ def disassemble(bytecode):
         + '> ' + bytecode.filename + '\n'
 
     if bytecode.consts:
-        result +=  '\n  Consts:\n'
+        result += '\n  Consts:\n'
         for const in enumerate(bytecode.consts):
-            result += '      %s: %s\n' % const
+            result += '      %4d: %s\n' % const
 
     if bytecode.names:
-        result +=  '\n  Names:\n'
+        result += '\n  Names:\n'
         for name in enumerate(bytecode.names):
-            result += '      %s: %s\n' % name
+            result += '      %4d: %s\n' % name
+
+    all_functions = list(bytecode.declared_functions).append(bytecode.functions)
+    if all_functions:
+        result += '\n  Functions:\n'
+        for number, function in enumerate(all_functions):
+            result += '      %4d: %s\n' % (
+                number,
+                function.__repr__().replace('\n', '\n            ')
+            )
 
     result += '\n  Code:\n'
     position = 0
@@ -71,12 +79,5 @@ def disassemble(bytecode):
             result += ' ' + str(arg)
 
         result += '\n'
-
-    if bytecode.functions:
-        result += '\nFunctions:\n'
-        for name in bytecode.functions:
-            function = bytecode.functions[name]
-            result += '%s(%s)\n' % (name, ", ".join(function.arguments))
-            result += function.bytecode.__repr__()
 
     return result

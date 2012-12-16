@@ -1,4 +1,4 @@
-from pie.error import RedeclaredFunction
+from pie.error import RedeclaredFunction, RedeclaredUserFunction
 from pie.utils.path import split_path
 from pie.launcher.config import config
 
@@ -14,15 +14,16 @@ class Context:
         self.include_cache = {}
         self.calling_script_path, self.calling_script = split_path(calling_file)
 
-    def initialize_functions(self, bytecode):
-        for name, object in bytecode.functions.iteritems():
-            try:
-                function = self.functions[name]
-                error = RedeclaredFunction(self, name, function)
-                error.handle()
-                raise error
-            except KeyError:
-                self.functions[name] = object
+    def declare_function(self, function):
+        name = function.name
+        if name in self.functions:
+            if hasattr(self.functions[name], 'line_declared'):
+                error = RedeclaredUserFunction(self, self.functions[name])
+            else:
+                error = RedeclaredFunction(self, self.functions[name])
+            error.handle()
+        else:
+            self.functions[function.name] = function
 
 
 class Trace:

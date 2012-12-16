@@ -79,13 +79,19 @@ class UndefinedFunction(PHPFatal):
         PHPFatal.__init__(self, context, message)
 
 
-class RedeclaredFunction(PHPFatal):
-    def __init__(self, context, function_name, function_object):
+class RedeclaredUserFunction(PHPFatal):
+    def __init__(self, context, function):
         import os.path
         message = "Cannot redeclare %s() (previously declared in %s:%s)" % \
-            (function_name, os.path.abspath(function_object.bytecode.filename),
-                function_object.line_declared)
+            (function.name, os.path.abspath(function.bytecode.filename),
+                function.line_declared)
 
+        PHPFatal.__init__(self, context, message, False)
+
+
+class RedeclaredFunction(PHPFatal):
+    def __init__(self, context, function):
+        message = "Cannot redeclare %s()" % function.name
         PHPFatal.__init__(self, context, message, False)
 
 

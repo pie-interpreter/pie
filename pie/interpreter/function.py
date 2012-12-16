@@ -1,6 +1,5 @@
 " Module with objects, representing functions "
-from pie.error import InterpreterError, NonVariablePassedByReference, \
-    MissingArgument
+from pie.error import NonVariablePassedByReference, MissingArgument
 from pie.interpreter.interpreter import Interpreter
 from pie.objspace import space
 from pie.interpreter.frame import Frame
@@ -10,14 +9,14 @@ from pie.objects.reference import W_Variable
 class AbstractFunction(object):
     "Interface for all functions"
 
-    def call(self, context, parent_frame, arguments_number):
-        raise InterpreterError("Not implemented")
+    def call(self, context, stack_values):
+        assert False, "Should not be reached"
 
 
 class BuiltinFunction(AbstractFunction):
     "Built-in function, implemented in python"
 
-    def call(self, context, parent_frame, arguments_number):
+    def call(self, context, stack_values):
         pass
 
 
@@ -34,7 +33,7 @@ class UserFunction(AbstractFunction):
         self.line_declared = line_declared
 
     def call(self, context, stack_values):
-        frame = self._get_frame(stack_values)
+        frame = self._get_frame(context, stack_values)
 
         context.trace.append(self.name, self.bytecode)
         interpreter = Interpreter(self.bytecode, context, frame)
@@ -44,11 +43,12 @@ class UserFunction(AbstractFunction):
         return self._get_return_value(frame)
 
     def _get_frame(self, context, stack_values):
+        values_count = len(stack_values)
         frame = Frame()
-        for index in enumerate(self.arguments):
-            argument_name, argument_type, default = self.arguments[index]
+        for index, argument in enumerate(self.arguments):
+            argument_name, argument_type, default = argument
             try:
-                value = stack_values[index]
+                value = stack_values[values_count - index - 1]
                 if argument_type == self.REFERENCE:
                     if not isinstance(value, W_Variable):
                         error = NonVariablePassedByReference(context)
@@ -80,3 +80,16 @@ class UserFunction(AbstractFunction):
             return_value = return_value.deref()
 
         return return_value
+
+    def __repr__(self):
+        return '%s%s(%s) {\n    %s\n}' % (
+            {self.VALUE: '', self.REFERENCE: '&'}[self.return_type],
+            self.name,
+            ', '.join([
+                    '%s$%s%s' % (
+                    {self.VALUE: '', self.REFERENCE: '&'}[argument[1]],
+                    argument[0],
+                    '' if argument[2] is None else ' = %s' % argument[2]
+                ) for argument in self.arguments]),
+            self.bytecode.__repr__().replace('\n', '\n    ')
+        )

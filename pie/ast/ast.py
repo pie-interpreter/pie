@@ -2,15 +2,12 @@
 
 from pie.ast.nodes import *
 from pie.parsing import parsing
-from pie.interpreter.function import UserFunction
 from pypy.rlib.parsing.tree import RPythonVisitor
 
 
 def build(source):
     parse_tree = parsing.parse(source)
     astree = build_ast(parse_tree)
-    print astree
-    exit()
     return astree
 
 
@@ -217,6 +214,11 @@ class AstBuilder(RPythonVisitor):
             parameters = ItemsList()
 
         return FunctionCall(name, parameters.list)
+
+    def visit_top_level_function_declaration(self, node):
+        function = self.visit_function_declaration(node)
+        function.top_level = True
+        return function
 
     def visit_function_declaration(self, node):
         children_count = len(node.children)

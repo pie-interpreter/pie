@@ -311,6 +311,7 @@ class FunctionDeclaration(AstNode):
         self.is_returning_reference = is_returning_reference
         self.arguments = arguments
         self.body = body
+        self.top_level = False
 
     def repr(self):
         if self.is_returning_reference:
@@ -325,7 +326,21 @@ class FunctionDeclaration(AstNode):
                 self.body.repr())
 
 
-class ArgumentVariable(AstNode):
+class Argument(AstNode):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for argument nodes
+    """
+
+
+class ArgumentWithDefaultValue(Argument):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for argument nodes
+    """
+
+
+class ArgumentVariable(Argument):
 
     def __init__(self, variable):
         self.variable = variable
@@ -334,7 +349,7 @@ class ArgumentVariable(AstNode):
         return "ArgumentVariable(%s)" % self.variable
 
 
-class ArgumentReference(AstNode):
+class ArgumentReference(Argument):
 
     def __init__(self, variable):
         self.variable = variable
@@ -343,7 +358,7 @@ class ArgumentReference(AstNode):
         return "ArgumentReference(%s)" % self.variable
 
 
-class ArgumentVariableWithDefaultValue(AstNode):
+class ArgumentVariableWithDefaultValue(ArgumentWithDefaultValue):
 
     def __init__(self, variable, value):
         self.variable = variable
@@ -354,7 +369,7 @@ class ArgumentVariableWithDefaultValue(AstNode):
             % (self.variable, self.value)
 
 
-class ArgumentReferenceWithDefaultValue(AstNode):
+class ArgumentReferenceWithDefaultValue(ArgumentWithDefaultValue):
 
     def __init__(self, variable, value):
         self.variable = variable
@@ -445,7 +460,14 @@ class SwitchDefault(AstNode):
         return "SwitchDefault(%s)" % (self.body.repr())
 
 
-class ConstantInt(AstNodeWithResult):
+class Constant(AstNodeWithResult):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for constants compiling
+    """
+
+
+class ConstantInt(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -476,7 +498,7 @@ class ConstantIntHex(ConstantInt):
         return "ConstantIntHex(%s%s)" % (self.sign, self.value)
 
 
-class ConstantFloat(AstNodeWithResult):
+class ConstantFloat(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -486,7 +508,7 @@ class ConstantFloat(AstNodeWithResult):
         return "ConstantFloat(%s%s)" % (self.sign, self.value)
 
 
-class ConstantString(AstNodeWithResult):
+class ConstantString(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -509,7 +531,7 @@ class ConstantDoubleQuotedString(ConstantString):
         return "ConstantDoubleQuotedString(\"%s\")" % (self.value)
 
 
-class ConstantBool(AstNodeWithResult):
+class ConstantBool(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -518,7 +540,7 @@ class ConstantBool(AstNodeWithResult):
         return "ConstantBool(\"%s\")" % (self.value)
 
 
-class ConstantNull(AstNodeWithResult):
+class ConstantNull(Constant):
 
     def repr(self):
         return "ConstantNull()"
