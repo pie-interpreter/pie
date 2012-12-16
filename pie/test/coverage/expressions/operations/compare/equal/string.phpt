@@ -15,6 +15,10 @@ echo "=";
 echo ("-100" == "-1e2"); //true
 echo "=";
 echo ("-100" == "-1e2A"); //false
+echo "=";
+echo (true == "0" . "0"); //true
+echo "=";
+echo (false == "0" . ""); //true
 ?>
 --EXPECT--
-1=1=1=1=1=1=1=
+1=1=1=1=1=1=1==1=1

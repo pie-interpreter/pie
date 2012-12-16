@@ -1,10 +1,11 @@
-from pie.objects.stringstrategies import *
-from pypy.rlib.objectmodel import instantiate
-from pypy.rlib import jit
+from pie.objects.strategy.base import get_string_strategy, StringFactory
 from pie.objects.base import W_Type
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
 from pie.objects.float import W_FloatObject
+
+__author__ = 'sery0ga'
+
 
 HEXADECIMAL_SYMBOLS = list("0123456789ABCDEFabcdef")
 
@@ -26,43 +27,14 @@ class W_StringObject(W_Type):
     convertible_to_number = True
 
     def __init__(self, strval):
-        strategy = get_new_strategy(ConstantStringStrategy)
+        from pie.objects.strategy.general import ConstantStringStrategy
+        strategy = get_string_strategy(ConstantStringStrategy)
         self.storage = strategy.erase(strval)
         self.strategy = strategy
         self.copies = None
 
     def __repr__(self):
         return self.strategy.repr(self)
-
-    @staticmethod
-    def newstr(strval):
-        w_s = instantiate(W_StringObject)
-        strategy = get_new_strategy(MutableStringStrategy)
-        w_s.storage = strategy.erase(strval)
-        w_s.strategy = strategy
-        w_s.copies = None
-        return w_s
-
-    @staticmethod
-    def newcopiedstr(origobj):
-        w_s = instantiate(W_StringObject)
-        strategy = get_new_strategy(StringCopyStrategy)
-        w_s.copies = None
-        w_s.storage = strategy.erase(origobj)
-        w_s.strategy = strategy
-        return w_s
-
-    @staticmethod
-    def newstrconcat(origobj, other):
-        w_s = instantiate(W_StringObject)
-        strategy = get_new_strategy(StringConcatStrategy)
-        w_s.copies = None
-        w_s.storage = strategy.erase((origobj, other, origobj.strlen() +
-                                                      other.strlen()))
-        w_s.strategy = strategy
-        origobj.add_copy(w_s)
-        other.add_copy(w_s)
-        return w_s
 
     def copy(self):
         res = self.strategy.copy(self)
@@ -72,16 +44,13 @@ class W_StringObject(W_Type):
     def is_true(self):
         return self.strategy.is_true(self)
 
-    def conststr_w(self):
-        self.force()
-        return self.strategy.conststr_w(self)
-
     def str_w(self):
-        self.force()
+        self.make_integral()
         return self.strategy.str_w(self)
 
     def as_bool(self):
-        if not self.is_true() or self.strategy.getitem(self, 0) == '0':
+        self.make_integral()
+        if not self.is_true():
             return W_BoolObject(False)
         return W_BoolObject(True)
 
@@ -119,8 +88,8 @@ class W_StringObject(W_Type):
         assert isinstance(w_object, W_StringObject)
         if self.strategy is w_object.strategy:
             return W_BoolObject(self.strategy.equal(self, w_object))
-        self.force_concatenate()
-        w_object.force_concatenate()
+        self.make_integral()
+        w_object.make_integral()
         return W_BoolObject(self.str_w() == w_object.str_w())
 
     def not_equal(self, w_object):
@@ -131,32 +100,32 @@ class W_StringObject(W_Type):
         if self is w_object:
             return W_BoolObject(False)
         assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
+        self.make_integral()
+        w_object.make_integral()
         return W_BoolObject(self.str_w() < w_object.str_w())
 
     def more_than(self, w_object):
         if self is w_object:
             return W_BoolObject(False)
         assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
+        self.make_integral()
+        w_object.make_integral()
         return W_BoolObject(self.str_w() > w_object.str_w())
 
     def less_than_or_equal(self, w_object):
         if self is w_object:
             return W_BoolObject(True)
         assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
+        self.make_integral()
+        w_object.make_integral()
         return W_BoolObject(self.str_w() <= w_object.str_w())
 
     def more_than_or_equal(self, w_object):
         if self is w_object:
             return W_BoolObject(True)
         assert isinstance(w_object, W_StringObject)
-        self.force_concatenate()
-        w_object.force_concatenate()
+        self.make_integral()
+        w_object.make_integral()
         return W_BoolObject(self.str_w() >= w_object.str_w())
 
     def inc(self):
@@ -166,7 +135,7 @@ class W_StringObject(W_Type):
             return self.as_number_strict().inc()
         except NotConvertibleToNumber:
             pass
-        self.make_mutable()
+        self._make_mutable()
         index = self.strlen() - 1
         symbol = ''
         while index >= 0:
@@ -204,38 +173,34 @@ class W_StringObject(W_Type):
             return self
 
     def concatenate(self, string):
-        return W_StringObject.newstrconcat(self, string)
-
-    def add_copy(self, other):
-        if self.copies is None:
-            self.copies = [other]
-        else:
-            self.copies.append(other)
-
-    def force(self):
-        if self.strategy.concrete:
-            return
-        self.strategy.force(self)
-
-    def force_concatenate(self):
-        self.strategy.force_concatenate(self)
-
-    def make_mutable(self):
-        self.force()
-        if self.copies:
-            self._force_mutable_copies()
-        self.strategy.make_mutable(self)
+        return StringFactory.concat_str(self, string)
 
     def strlen(self):
         return self.strategy.len(self)
 
-    def write_into(self, s, start):
-        self.strategy.write_into(self, s, start)
 
-    def _force_mutable_copies(self):
+    def make_integral(self):
+        self.strategy.make_integral(self)
+
+    def add_copy(self, w_copy):
+        if self.copies is None:
+            self.copies = [w_copy]
+        else:
+            self.copies.append(w_copy)
+
+    def _make_mutable(self):
+        self._dereference()
+        if self.copies:
+            self._dereference_copies()
+        self.strategy.make_mutable(self)
+
+    def _dereference(self):
+        self.strategy.dereference(self)
+
+    def _dereference_copies(self):
         for copy in self.copies:
             if copy:
-                copy.force()
+                copy._dereference()
         self.copies = None
 
     def _handle_number(self, strict = False, int_only = False):
@@ -243,7 +208,7 @@ class W_StringObject(W_Type):
         Converts string to number
         """
         #TODO: add setlocale() support
-        self.force_concatenate()
+        self.make_integral()
         if not self.is_true():
             return W_IntObject(0)
         (begin, end) = (0, 0)
