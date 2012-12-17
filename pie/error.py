@@ -26,12 +26,12 @@ class PHPError(InterpreterError):
         self.prefix = ''
 
     def __repr__(self):
-        return self.print_message()
+        return self.get_message()
 
     def __str__(self):
-        return self.print_message()
+        return self.get_message()
 
-    def print_message(self):
+    def get_message(self):
         import os.path
 
         execution_block = self.context.trace.current_execution_block
@@ -49,9 +49,9 @@ class PHPError(InterpreterError):
     def handle(self):
         if self.context.config.display_error(self):
             if self.context.config.display_to_stderr:
-                sys.stderr.write(self.print_message() + "\n")
+                sys.stderr.write(self.get_message() + "\n")
             else:
-                print self.print_message()
+                print self.get_message()
 
 
 class PHPFatal(PHPError):
@@ -79,20 +79,36 @@ class UndefinedFunction(PHPFatal):
         PHPFatal.__init__(self, context, message)
 
 
-class RedeclaredUserFunction(PHPFatal):
-    def __init__(self, context, function):
-        import os.path
-        message = "Cannot redeclare %s() (previously declared in %s:%s)" % \
-            (function.name, os.path.abspath(function.bytecode.filename),
-                function.line_declared)
-
-        PHPFatal.__init__(self, context, message, False)
-
-
 class RedeclaredFunction(PHPFatal):
     def __init__(self, context, function):
+        self.function = function
         message = "Cannot redeclare %s()" % function.name
         PHPFatal.__init__(self, context, message, False)
+
+    def get_message(self):
+        import os.path
+
+        execution_block = self.context.trace.current_execution_block
+        message = "PHP %s:  %s in %s on line %s %s" \
+            % (self.level, self.message,
+                os.path.abspath(execution_block.get_filename()),
+                self.function.line_declared,
+                self.prefix)
+
+        return message
+
+
+class RedeclaredUserFunction(RedeclaredFunction):
+
+    def __init__(self, context, new_function, old_function):
+        self.function = new_function
+
+        import os.path
+        message = "Cannot redeclare %s() (previously declared in %s:%s)" % \
+            (old_function.name, os.path.abspath(old_function.bytecode.filename),
+                old_function.line_declared)
+
+        PHPFatal.__init__(self, context, message)
 
 
 class NoRequiredFile(PHPFatal):

@@ -1,16 +1,16 @@
 --FILE--
 <?php
-function test($a) {
+function foo($a) {
     return $a * 10;
 }
-echo test(15);
+echo foo(15);
 
 echo "=";
 
-function test2($a, $b) {
+function foo2($a, $b) {
     return $a * $b;
 }
-echo test2(15, 10);
+echo foo2(15, 10);
 ?>
 --EXPECT--
 150=150

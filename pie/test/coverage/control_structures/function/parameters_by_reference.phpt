@@ -1,20 +1,20 @@
 --FILE--
 <?php
 $a = 5;
-function test(&$a) {
+function foo(&$a) {
     $a++;
 }
-test($a);
+foo($a);
 echo $a;
 
 echo "=";
 
 $a = 5;
-function test2(&$a, &$b) {
+function foo2(&$a, &$b) {
     $a++;
     $b++;
 }
-test2($a, $a);
+foo2($a, $a);
 echo $a;
 
 ?>

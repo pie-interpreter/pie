@@ -51,14 +51,3 @@ class SourceCode(object):
         except InterpreterError:
             context.trace.pop()
             raise PieError()
-
-
-def interpret_function(bytecode, context, frame=None):
-    if frame is None:
-        frame = Frame()
-
-    interpreter_object = interpreter.Interpreter(bytecode, context, frame)
-    try:
-        return interpreter_object.interpret()
-    except InterpreterError:
-        raise PieError()

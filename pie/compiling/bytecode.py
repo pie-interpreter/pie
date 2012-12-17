@@ -41,10 +41,15 @@ def disassemble(bytecode):
         for name in enumerate(bytecode.names):
             result += '      %4d: %s\n' % name
 
-    all_functions = list(bytecode.declared_functions).append(bytecode.functions)
-    if all_functions:
+    if bytecode.declared_functions or bytecode.functions:
         result += '\n  Functions:\n'
-        for number, function in enumerate(all_functions):
+        for number, function in enumerate(bytecode.declared_functions):
+            result += '      %4d: %s\n' % (
+                number,
+                function.__repr__().replace('\n', '\n            ')
+            )
+
+        for number, function in enumerate(bytecode.functions):
             result += '      %4d: %s\n' % (
                 number,
                 function.__repr__().replace('\n', '\n            ')

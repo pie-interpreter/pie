@@ -18,10 +18,11 @@ class Context:
         name = function.name
         if name in self.functions:
             from pie.interpreter.function import UserFunction
+            print self.functions[name].line_declared
             if isinstance(self.functions[name], UserFunction):
-                error = RedeclaredUserFunction(self, self.functions[name])
+                error = RedeclaredUserFunction(self, function, self.functions[name])
             else:
-                error = RedeclaredFunction(self, self.functions[name])
+                error = RedeclaredFunction(self, functions)
             error.handle()
         else:
             self.functions[function.name] = function
