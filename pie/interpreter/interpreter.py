@@ -222,6 +222,8 @@ class Interpreter(object):
     def STORE_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
         w_value = self.frame.stack[-1]  # we need to leave value on the stack
+        if isinstance(w_value, W_Variable):
+            w_value = w_value.deref()
         self.frame.set_variable(var_name, w_value)
 
     def CALL_FUNCTION(self, arguments_number):
