@@ -1,5 +1,5 @@
-import pie.launcher.launcher
 import sys
+import pie.launcher
 
 
 def entry_point(argv):
@@ -7,7 +7,7 @@ def entry_point(argv):
         print 'No input file provided'
         return 1
 
-    return pie.launcher.launcher.run(argv[1])
+    return pie.launcher.run(argv[1])
 
 
 if __name__ == '__main__':

@@ -195,7 +195,9 @@ def _new_comparison_op(name):
         elif type == self.w_null:
             # this is possible only if both arguments are null
             return getattr(w_left, name)(w_right)
+
         raise NotImplementedError
+
     func.func_name = name
     return func
 

@@ -2,8 +2,8 @@
 
 from pie.ast import ast
 from pie.compiling.bytecode import Bytecode
-from pie.error import CompilerError
 from pie.opcodes import get_opcode_index
+from pie.interpreter.errors.fatalerrors import IllegalBreakContinueLevel
 import pie.compiling.nodes
 
 
@@ -141,12 +141,12 @@ class BytecodeBuilder(object):
 
     def add_break_position_to_patch(self, level, position):
         if len(self.break_positions) < level:
-            raise CompilerError("Cannot break %s levels" % level)
+            raise IllegalBreakContinueLevel(None, level)
 
         self.break_positions[-level].append(position)
 
     def add_continue_position_to_patch(self, level, position):
         if len(self.continue_positions) < level:
-            raise CompilerError("Cannot continue %s levels" % level)
+            raise IllegalBreakContinueLevel(None, level)
 
         self.continue_positions[-level].append(position)

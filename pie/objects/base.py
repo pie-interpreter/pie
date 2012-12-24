@@ -1,6 +1,3 @@
-from pie.error import InterpreterError
-
-__author__ = 'sery0ga'
 
 
 class W_Root(object):
@@ -8,35 +5,36 @@ class W_Root(object):
     object at applevel
     """
     def copy(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def deref(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def is_true(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
 
 class W_Type(W_Root):
     """ Base type class representing each type in PHP and common operations
     """
+
     def as_bool(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def as_float(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def as_int(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def as_string(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def as_number(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def as_number_strict(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def deref(self):
         return self
@@ -45,43 +43,47 @@ class W_Type(W_Root):
         return False
 
     def less_than(self, object):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def more_than(self, object):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def equal(self, object):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def not_equal(self, object):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def less_than_or_equal(self, object):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def more_than_or_equal(self, object):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def inc(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def dec(self):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
 
 class W_Number(W_Type):
 
     def plus(self, number):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def minus(self, number):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def multiply(self, number):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def divide(self, number):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def mod(self, number):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
+
+
+class DivisionByZeroError(Exception):
+    pass

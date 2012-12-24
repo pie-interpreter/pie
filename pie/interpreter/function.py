@@ -1,9 +1,11 @@
 " Module with objects, representing functions "
-from pie.error import NonVariablePassedByReference, MissingArgument
-from pie.interpreter.interpreter import Interpreter
+
 from pie.objspace import space
-from pie.interpreter.frame import Frame
 from pie.objects.variable import W_Variable
+from pie.interpreter.frame import Frame
+from pie.interpreter.interpreter import Interpreter
+from pie.interpreter.errors.fatalerrors import NonVariablePassedByReference
+from pie.interpreter.errors.warningerrors import MissingArgument
 
 
 class AbstractFunction(object):
@@ -17,7 +19,7 @@ class BuiltinFunction(AbstractFunction):
     "Built-in function, implemented in python"
 
     def call(self, context, stack_values):
-        pass
+        assert False, "Not implemented"
 
 
 class UserFunction(AbstractFunction):
@@ -35,9 +37,8 @@ class UserFunction(AbstractFunction):
     def call(self, context, stack_values):
         frame = self._get_frame(context, stack_values)
 
-        context.trace.append(self.name, self.bytecode)
-        interpreter = Interpreter(self.bytecode, context, frame)
-        interpreter.interpret()
+        context.trace.append(self.name, self.bytecode.filename)
+        Interpreter(self.bytecode, context, frame).interpret()
         context.trace.pop()
 
         return self._get_return_value(frame)
@@ -51,9 +52,7 @@ class UserFunction(AbstractFunction):
                 value = stack_values[values_count - index - 1]
                 if argument_type == self.REFERENCE:
                     if not isinstance(value, W_Variable):
-                        error = NonVariablePassedByReference(context)
-                        error.handle()
-
+                        NonVariablePassedByReference(context).handle()
                         frame.variables[argument_name] = space.variable(space.null())
                     else:
                         frame.variables[argument_name] = value
@@ -62,9 +61,7 @@ class UserFunction(AbstractFunction):
 
             except IndexError:
                 if default is None:
-                    error = MissingArgument(context, index, self)
-                    error.handle()
-
+                    MissingArgument(context, index, self).handle()
                     frame.variables[argument_name] = space.variable(space.null())
                 else:
                     frame.variables[argument_name] = space.variable(default)
@@ -82,6 +79,7 @@ class UserFunction(AbstractFunction):
         return return_value
 
     def __repr__(self):
+        # TODO move it from here
         return '%s%s(%s) {\n    %s\n}' % (
             {self.VALUE: '', self.REFERENCE: '&'}[self.return_type],
             self.name,

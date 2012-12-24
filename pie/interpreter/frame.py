@@ -1,4 +1,4 @@
-from pie.error import UndefinedVariable
+from pie.interpreter.errors.noticeerros import UndefinedVariable
 from pie.objspace import space
 
 __author__ = 'sery0ga'
@@ -15,8 +15,7 @@ class Frame:
         try:
             return self.variables[name]
         except KeyError:
-            error = UndefinedVariable(context, name)
-            error.handle()
+            UndefinedVariable(context, name).handle()
             return space.null()
 
     def set_variable(self, name, w_value):

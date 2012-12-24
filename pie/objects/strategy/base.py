@@ -1,12 +1,11 @@
 from pypy.rlib.objectmodel import instantiate
 from pypy.rlib.objectmodel import specialize
-
-from pie.error import InterpreterError
 import pie.objects.string
 
 __author__ = 'sery0ga'
 
 cache = {}
+
 
 @specialize.memo()
 def get_string_strategy(strategy):
@@ -69,22 +68,22 @@ class BaseStringStrategy(object):
         return StringFactory.copied_str(w_string)
 
     def is_true(self, w_string):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def len(self, w_string):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def getitem(self, w_string, item):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def equal(self, w_obj, w_other):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def make_integral(self, w_string):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def write_into_list(self, w_string, target, start):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
 
 class GeneralStringStrategy(BaseStringStrategy):
@@ -103,16 +102,16 @@ class GeneralStringStrategy(BaseStringStrategy):
         pass
 
     def append(self, w_string, value):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def hard_copy(self, w_source, w_dest_obj):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def make_mutable(self, w_string):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def setitem(self, w_string, item, value):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
 
 class ReferenceStringStrategy(BaseStringStrategy):
@@ -121,7 +120,7 @@ class ReferenceStringStrategy(BaseStringStrategy):
         """
         Switches object strategy from 'reference' one to 'general' one
         """
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"
 
     def make_integral(self, w_string):
-        raise InterpreterError("Not implemented")
+        assert False, "Should not be reached"

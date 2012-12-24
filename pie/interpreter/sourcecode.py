@@ -1,12 +1,8 @@
-from pie.compiling import compiling
-from pie.interpreter.frame import Frame
-from pie.error import LexerError, PieError, InterpreterError
-from pie.objspace import space
-import interpreter
-from pypy.rlib.parsing.parsing import ParseError
 from pypy.rlib.streamio import open_file_as_stream
-
-__author__ = 'sery0ga'
+from pie.compiling import compiling
+from pie.objspace import space
+from pie.interpreter.interpreter import Interpreter
+from pie.interpreter.errors.base import PieError
 
 
 class SourceCode(object):
@@ -21,33 +17,20 @@ class SourceCode(object):
         input_file = open_file_as_stream(self.filename)
         self.content = input_file.readall()
 
-    def compile(self):
-        try:
-            self.raw_compile()
-        except LexerError as e:
-            print e.nice_error_message(self.filename)
-            raise PieError()
-        except ParseError as e:
-            print e.nice_error_message(self.filename, self.content)
-            raise PieError()
+    def interpret(self, context, frame):
+        if not self.bytecode:
+            try:
+                self.bytecode = compiling.compile_source(self)
+            except PieError as e:
+                e.context = context
+                e.handle()
+                return space.bool(False)
 
-    def raw_compile(self):
-        self.bytecode = compiling.compile_source(self)
+        Interpreter(self.bytecode, context, frame).interpret()
 
-    def interpret(self, context, frame, function_code_called_from=''):
-        context.trace.append(function_code_called_from, self.bytecode)
-        interpreter_object = interpreter.Interpreter(self.bytecode, context, frame)
-        try:
-            interpreter_object.interpret()
-            context.trace.pop()
-            # TODO: as debug_trace function appear, a test for
-            # this path should appear too
-
-            if frame.stack:
-                return frame.stack.pop()
-            else:
-                return space.null()
-
-        except InterpreterError:
-            context.trace.pop()
-            raise PieError()
+        # TODO: as debug_trace function appear, a test for
+        # this path should appear too
+        if frame.stack:
+            return frame.stack.pop()
+        else:
+            return space.null()

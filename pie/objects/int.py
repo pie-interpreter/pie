@@ -1,5 +1,5 @@
-from pie.error import DivisionByZeroError
-from pie.objects.base import W_Number
+from pie.objects.base import W_Number, DivisionByZeroError
+
 
 class W_IntObject(W_Number):
     _immutable_fields_ = ['value']
@@ -91,7 +91,6 @@ class W_IntObject(W_Number):
     def dec(self):
         return W_IntObject(self.value - 1)
 
-
     def plus(self, number):
         return W_IntObject(self.value + number.value)
 
@@ -103,7 +102,7 @@ class W_IntObject(W_Number):
 
     def divide(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
         # if the numbers are evenly divisible, we should return int
         if not self.value % number.value:
             return W_IntObject(self.value / number.value)
@@ -112,7 +111,7 @@ class W_IntObject(W_Number):
 
     def mod(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
         divider = number.value
         if self.value < 0 and divider > 0:
             divider *= -1

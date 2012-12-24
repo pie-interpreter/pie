@@ -1,87 +1,65 @@
-from pie.error import RedeclaredFunction, RedeclaredUserFunction
+import os.path
+from pie.config import config
 from pie.utils.path import split_path
-from pie.launcher.config import config
-
-__author__ = 'sery0ga'
+from pie.interpreter.errors.fatalerrors import RedeclaredFunction, RedeclaredUserFunction
 
 
-class Context:
+class SharedContext(object):
+    "Context data, that is shared between all other contexts"
 
-    def __init__(self, calling_file):
+    def __init__(self):
         self.functions = {}
-        self.trace = Trace()
-        self.config = config.copy()
+
+shared_context = SharedContext()
+
+
+class Context(object):
+
+    def __init__(self, filename):
+        self.functions = shared_context.functions.copy()
         self.include_cache = {}
-        self.calling_script_path, self.calling_script = split_path(calling_file)
+        self.config = config.copy()
+        self.trace = Trace(filename)
+        self.calling_script_path, self.calling_script = split_path(filename)
 
     def declare_function(self, function):
         name = function.name
         if name in self.functions:
             from pie.interpreter.function import UserFunction
-            print self.functions[name].line_declared
             if isinstance(self.functions[name], UserFunction):
-                error = RedeclaredUserFunction(self, function, self.functions[name])
+                RedeclaredUserFunction(
+                    self, function, self.functions[name]).handle()
             else:
-                error = RedeclaredFunction(self, functions)
-            error.handle()
+                RedeclaredFunction(self, function).handle()
+
         else:
             self.functions[function.name] = function
 
 
-class Trace:
+class Trace(object):
 
-    def __init__(self):
-        self.stack = []
-        self.current_execution_block = None
+    def __init__(self, filename):
+        self.line = 0
+        self.stack = [('{main}', filename, 0)]
 
-    def update_position(self, position):
-        self.current_execution_block.position = position
-
-    def append(self, function_name, bytecode):
-        if self.current_execution_block:
-            self.stack.append(self.current_execution_block)
-        else:
-            function_name = "{main}"
-
-        self.current_execution_block = ExecutionBlock(function_name, bytecode)
+    def append(self, function_name, filename):
+        self.stack.append((function_name, filename, self.line))
 
     def pop(self):
-        if self.stack:
-            self.current_execution_block = self.stack.pop()
+        assert self.stack, 'You can\'t pop an empty stack trace'
+        self.stack.pop()
 
     def to_string(self):
-        message = ''
         if self.stack:
-            message = "\nPHP Stack trace:\n"
-            depth = 1
-            for execution_block in self.stack:
-                message = ''.join([message, execution_block.to_string(depth)])
-                depth += 1
+            lines = ['PHP Stack trace:\n']
+            for depth, entry in enumerate(self.stack):
+                function_name, filename, line = entry
+                lines.append(
+                    'PHP   %s. %s() %s:%s\n' \
+                        % ((depth + 1),
+                            function_name,
+                            os.path.abspath(filename),
+                            line)
+                        )
 
-            message = ''.join([message, self.current_execution_block.to_string(depth)])
-
-        return message
-
-
-class ExecutionBlock:
-
-    def __init__(self, function_name='', bytecode=None, position=0):
-        self.function_name = function_name
-        self.bytecode = bytecode
-        self.position = position
-
-    def get_line(self):
-        assert self.position >= 0
-        return self.bytecode.opcode_lines[self.position]
-
-    def get_filename(self):
-        return self.bytecode.filename
-
-    def to_string(self, depth=0):
-        import os.path
-        message = "PHP   %s. %s() %s:%s\n"\
-            % (depth, self.function_name, os.path.abspath(
-                self.get_filename()),
-                self.get_line())
-
-        return message
+        return ''.join(lines)
