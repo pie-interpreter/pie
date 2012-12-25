@@ -136,7 +136,9 @@ class Interpreter(object):
         self.frame.stack.append(w_variable.deref())
 
     def NOT(self, value):
-        raise InterpreterError("Not implemented")
+        w_object = self.frame.stack.pop()
+        result = not w_object.deref().is_true()
+        self.frame.stack.append(space.bool(result))
 
     def CAST_TO_ARRAY(self, value):
         raise InterpreterError("Not implemented")
@@ -189,7 +191,10 @@ class Interpreter(object):
         self.frame.stack.append(w_old_value)
 
     def XOR(self, value):
-        raise InterpreterError("Not implemented")
+        w_left = self.frame.stack.pop()
+        w_right = self.frame.stack.pop()
+        result = w_left.deref().is_true() != w_right.deref().is_true()
+        self.frame.stack.append(space.bool(result))
 
     def INPLACE_CONCAT(self, var_index):
         var_name = self.frame.pop_name()
