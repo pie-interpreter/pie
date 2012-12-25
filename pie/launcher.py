@@ -1,6 +1,6 @@
 " Entry point module for interpreting "
 
-import sys
+import os
 from pie.interpreter.sourcecode import SourceCode
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame
@@ -12,14 +12,14 @@ def run(filename):
         source = SourceCode(filename)
         source.open()
     except OSError:
-        sys.stderr.write("Could not open input file: %s\n" % filename)
+        os.write(2, "Could not open input file: %s\n" % filename)
         return 1
 
     try:
         context = Context(filename)
         source.interpret(context, Frame())
     except PieError as e:
-        sys.stderr.write(e.get_message())
+        os.write(2, e.get_message())
         return 1
 
     return 0

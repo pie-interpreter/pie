@@ -68,22 +68,22 @@ class BaseStringStrategy(object):
         return StringFactory.copied_str(w_string)
 
     def is_true(self, w_string):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def len(self, w_string):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def getitem(self, w_string, item):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def equal(self, w_obj, w_other):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def make_integral(self, w_string):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def write_into_list(self, w_string, target, start):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
 
 class GeneralStringStrategy(BaseStringStrategy):
@@ -102,16 +102,16 @@ class GeneralStringStrategy(BaseStringStrategy):
         pass
 
     def append(self, w_string, value):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def hard_copy(self, w_source, w_dest_obj):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def make_mutable(self, w_string):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def setitem(self, w_string, item, value):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
 
 class ReferenceStringStrategy(BaseStringStrategy):
@@ -120,7 +120,7 @@ class ReferenceStringStrategy(BaseStringStrategy):
         """
         Switches object strategy from 'reference' one to 'general' one
         """
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def make_integral(self, w_string):
-        assert False, "Should not be reached"
+        raise NotImplementedError

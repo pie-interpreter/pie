@@ -22,7 +22,11 @@ class PieConfiguration(object):
         return self.sectionget(self.DEFAULT_SECTION, key, default)
 
     def sectionget(self, section, key, default):
-        return self.configuration.get(section, default).get(key, default)
+        try:
+            config_section = self.configuration[section]
+            return config_section.get(key, default)
+        except KeyError:
+            return default
 
     def set(self, key, value):
         self.sectionset(self.DEFAULT_SECTION, key, value)

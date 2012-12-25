@@ -7,6 +7,7 @@ from pie.objspace import space
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 from pie.objects.base import DivisionByZeroError
 from pie.objects.variable import W_Variable
+from pie.interpreter.errors.base import InternalError
 from pie.interpreter.errors.noticeerrors import NonVariableReturnedByReference
 from pie.interpreter.errors.warningerrors import DivisionByZero
 from pie.interpreter.errors.fatalerrors import UndefinedFunction
@@ -53,7 +54,7 @@ class Interpreter(object):
                         getattr(self, name)(arg)
                         break
                 else:
-                    assert False
+                    raise InternalError("Unknown opcode")
             else:
                 opcode_name = get_opcode_name(opcode_index)
                 getattr(self, opcode_name)(arg)
@@ -112,10 +113,10 @@ class Interpreter(object):
             self.frame.stack.append(w_variable.deref())
 
     def NOT(self, value):
-        assert False, "Not implemented"
+        raise InternalError("Not implemented")
 
     def CAST_TO_ARRAY(self, value):
-        assert False, "Not implemented"
+        raise InternalError("Not implemented")
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()
@@ -130,7 +131,7 @@ class Interpreter(object):
         self.frame.stack.append(w_object.as_int())
 
     def CAST_TO_OBJECT(self, value):
-        assert False, "Not implemented"
+        raise InternalError("Not implemented")
 
     def CAST_TO_STRING(self, value):
         w_object = self.frame.stack.pop()
@@ -165,7 +166,7 @@ class Interpreter(object):
         self.frame.stack.append(w_old_value)
 
     def XOR(self, value):
-        assert False, "Not implemented"
+        raise InternalError("Not implemented")
 
     def INPLACE_CONCAT(self, var_index):
         var_name = self.frame.pop_name()
@@ -182,7 +183,7 @@ class Interpreter(object):
         self.frame.stack.append(w_value)
 
     def STORE_VAR(self, value):
-        assert False, "Not implemented"
+        raise InternalError("Not implemented")
 
     def LOAD_CONST(self, value):
         self.frame.stack.append(self.bytecode.consts[value].copy())

@@ -5,13 +5,13 @@ class W_Root(object):
     object at applevel
     """
     def copy(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def deref(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def is_true(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
 
 class W_Type(W_Root):
@@ -19,22 +19,22 @@ class W_Type(W_Root):
     """
 
     def as_bool(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def as_float(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def as_int(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def as_string(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def as_number(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def as_number_strict(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def deref(self):
         return self
@@ -43,46 +43,46 @@ class W_Type(W_Root):
         return False
 
     def less_than(self, object):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def more_than(self, object):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def equal(self, object):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def not_equal(self, object):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def less_than_or_equal(self, object):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def more_than_or_equal(self, object):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def inc(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def dec(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
 
 class W_Number(W_Type):
 
     def plus(self, number):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def minus(self, number):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def multiply(self, number):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def divide(self, number):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def mod(self, number):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
 
 class DivisionByZeroError(Exception):

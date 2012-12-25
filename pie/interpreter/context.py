@@ -50,8 +50,9 @@ class Trace(object):
         self.stack.pop()
 
     def to_string(self):
+        lines = []
         if self.stack:
-            lines = ['PHP Stack trace:\n']
+            lines.append('PHP Stack trace:\n')
             for depth, entry in enumerate(self.stack):
                 function_name, filename, line = entry
                 lines.append(

@@ -59,6 +59,10 @@ class NonVariablePassedByReference(Fatal):
 class IllegalBreakContinueLevel(Fatal):
 
     def __init__(self, context, level):
-        message = "Cannot break/continue %s levels" & \
-            {1: 'level'}.get(level, 'levels')
+        if level == 1:
+            level_string = 'level'
+        else:
+            level_string = 'levels'
+        message = "Cannot break/continue %s levels" % level_string
+
         Fatal.__init__(self, context, message)

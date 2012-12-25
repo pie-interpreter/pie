@@ -1,5 +1,5 @@
+import os
 import os.path
-import sys
 
 
 class PieError(Exception):
@@ -20,11 +20,11 @@ class PieError(Exception):
         return self.get_message()
 
     def handle(self):
-        if self.level & int(self.context.config.get('error.fatal_level', 1023)):
+        if self.level & int(self.context.config.get('error.fatal_level', '1023')):
             raise self
 
-        if self.level & int(self.context.config.get('errors.display_level', 1023)):
-            sys.stderr.write(self.get_message())
+        if self.level & int(self.context.config.get('errors.display_level', '1023')):
+            os.write(2, self.get_message())
 
     def get_message(self):
         message = "PHP %s:  %s in %s on line %s %s\n" \
@@ -34,7 +34,7 @@ class PieError(Exception):
                 self.get_line(),
                 self.get_additional_message())
 
-        if self.context.config.get('error.print_trace', True):
+        if self.context.config.get('error.print_trace', '1'):
             message = ''.join([message, self.context.trace.to_string()])
 
         return message
@@ -72,3 +72,7 @@ class Parse(PieError):
 
     level = 1 << 3
     severity = 'Parse error'
+
+
+class InternalError(Exception):
+    "Class for internal exceptions, that should never happen in real world"

@@ -1,5 +1,6 @@
 from pypy.rlib.rerased import new_erasing_pair
 from pie.objects.strategy.base import GeneralStringStrategy, get_string_strategy
+from pie.interpreter.errors.base import InternalError
 
 __author__ = 'sery0ga'
 
@@ -35,10 +36,10 @@ class ConstantStringStrategy(GeneralStringStrategy):
         return self.unerase(w_string.storage)[item]
 
     def setitem(self, w_string, item, value):
-        assert False, "You cannot modify constant string"
+        raise InternalError("You cannot modify constant string")
 
     def append(self, w_string, value):
-        assert False, "You cannot modify constant string"
+        raise InternalError("You cannot modify constant string")
 
     def equal(self, w_obj, w_other):
         return self.unerase(w_obj.storage) == self.unerase(w_other.storage)

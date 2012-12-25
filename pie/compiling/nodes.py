@@ -558,10 +558,10 @@ class __extend__(nodes.Constant):
 
     def get_str_value(self):
         " Used for caching in builder "
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def get_compiled_value(self):
-        assert False, "Should not be reached"
+        raise NotImplementedError
 
     def calculate_const_value(self):
         " Some types of constants need pre-calculation of values"

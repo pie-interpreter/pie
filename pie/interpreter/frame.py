@@ -1,4 +1,4 @@
-from pie.interpreter.errors.noticeerros import UndefinedVariable
+from pie.interpreter.errors.noticeerrors import UndefinedVariable
 from pie.objspace import space
 
 __author__ = 'sery0ga'
