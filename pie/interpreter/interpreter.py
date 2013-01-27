@@ -8,8 +8,8 @@ from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
 from pie.objects.base import DivisionByZeroError
 from pie.objects.variable import W_Variable
 from pie.interpreter.errors.base import InternalError
-from pie.interpreter.errors.noticeerrors import NonVariableReturnedByReference
-from pie.interpreter.errors.warningerrors import DivisionByZero
+from pie.interpreter.errors.notices import NonVariableReturnedByReference
+from pie.interpreter.errors.warnings import DivisionByZero
 from pie.interpreter.errors.fatalerrors import UndefinedFunction
 import pie.interpreter.include as include
 
@@ -39,14 +39,11 @@ class Interpreter(object):
             opcode_index = ord(code[self.position])
             self.position += 1
 
+            arg = 0
             if opcode_index > OPCODE_INDEX_DIVIDER:
-                arg = ord(code[self.position]) \
-                    + (ord(code[self.position + 1]) << 8)
+                arg = ord(code[self.position]) + (
+                    ord(code[self.position + 1]) << 8)
                 self.position += 2
-            else:
-                arg = 0  # don't make it negative
-
-            assert arg >= 0
 
             if we_are_translated():
                 for index, name in unrolling_bc:

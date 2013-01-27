@@ -24,6 +24,24 @@ class MissingArgument(Warning):
                 self.function.line_declared)
 
 
+class NotEnoughParameters(Warning):
+
+    def __init__(self, context, given, expected, name):
+        message = "%s() expects at least %s parameters, %s given" \
+            % (name, expected, given)
+
+        Warning.__init__(self, context, message)
+
+
+class WrongParameterType(Warning):
+
+    def __init__(self, context, given, expected, position, name):
+        message = "%s() expects parameter %s to be %s, %s given" \
+            (name, position, expected, given)
+
+        Warning.__init__(self, context, message)
+
+
 class NoFile(Warning):
 
     def __init__(self, context, include_function, included_file):

@@ -4,7 +4,7 @@ from abc import ABCMeta, abstractmethod
 from pypy.rlib.objectmodel import specialize
 from pie.objects.bool import W_BoolObject
 from pie.utils.path import split_path
-from pie.interpreter.errors.warningerrors import NoFile, NoFileInIncludePath
+from pie.interpreter.errors.warnings import NoFile, NoFileInIncludePath
 from pie.interpreter.errors.fatalerrors import NoRequiredFile, NoRequiredFileInIncludePath
 
 __author__ = 'sery0ga'

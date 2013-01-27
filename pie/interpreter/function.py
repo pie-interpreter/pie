@@ -5,21 +5,17 @@ from pie.objects.variable import W_Variable
 from pie.interpreter.frame import Frame
 from pie.interpreter.interpreter import Interpreter
 from pie.interpreter.errors.fatalerrors import NonVariablePassedByReference
-from pie.interpreter.errors.warningerrors import MissingArgument
+from pie.interpreter.errors.warnings import MissingArgument
 
 
 class AbstractFunction(object):
     "Interface for all functions"
 
-    def call(self, context, stack_values):
-        assert False, "Should not be reached"
-
-
-class BuiltinFunction(AbstractFunction):
-    "Built-in function, implemented in python"
+    def __init__(self, name):
+        self.name = name
 
     def call(self, context, stack_values):
-        assert False, "Not implemented"
+        raise NotImplementedError
 
 
 class UserFunction(AbstractFunction):
@@ -28,16 +24,16 @@ class UserFunction(AbstractFunction):
     VALUE, REFERENCE = ('value', 'reference')
 
     def __init__(self, name, return_type, bytecode, arguments, line_declared):
-        self.name = name
+        AbstractFunction.__init__(self, name)
+
         self.return_type = return_type
         self.bytecode = bytecode
         self.arguments = arguments
         self.line_declared = line_declared
 
     def call(self, context, stack_values):
-        frame = self._get_frame(context, stack_values)
-
         context.trace.append(self.name, self.bytecode.filename)
+        frame = self._get_frame(context, stack_values)
         Interpreter(self.bytecode, context, frame).interpret()
         context.trace.pop()
 
@@ -61,7 +57,7 @@ class UserFunction(AbstractFunction):
 
             except IndexError:
                 if default is None:
-                    MissingArgument(context, index, self).handle()
+                    MissingArgument(context, index + 1, self).handle()
                     frame.variables[argument_name] = space.variable(space.null())
                 else:
                     frame.variables[argument_name] = space.variable(default)
