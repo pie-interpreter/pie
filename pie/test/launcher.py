@@ -1,15 +1,16 @@
+import os
+import sys
+import tempfile
+import unittest
+
+from rpython.rlib.parsing.parsing import ParseError
+
 from pie.error import PieError, LexerError
 from pie.interpreter.frame import Frame
 from pie.interpreter.sourcecode import SourceCode
 from pie.launcher.config import config
 from pie.interpreter.context import Context
 from pie.test.parser import Parser
-from pypy.rlib.parsing.parsing import ParseError
-
-import os
-import sys
-import tempfile
-import unittest
 
 __author__ = 'sery0ga'
 

@@ -1,5 +1,5 @@
-from pypy.rlib.objectmodel import instantiate
-from pypy.rlib.objectmodel import specialize
+from rpython.rlib.objectmodel import instantiate
+from rpython.rlib.objectmodel import specialize
 
 from pie.error import InterpreterError
 import pie.objects.string

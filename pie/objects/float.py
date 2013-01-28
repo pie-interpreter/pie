@@ -21,6 +21,12 @@ class W_FloatObject(W_Number):
     def float_w(self):
         return self.value
 
+
+    def as_array(self):
+        from pie.objects.array import W_ArrayObject
+        array = W_ArrayObject()
+        return array.set(0, self.value)
+
     def as_bool(self):
         from pie.objects.bool import W_BoolObject
         return W_BoolObject(bool(self.value))

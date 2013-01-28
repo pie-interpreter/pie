@@ -1,9 +1,10 @@
+from rpython.rlib.parsing.parsing import ParseError
+from rpython.rlib.streamio import open_file_as_stream
+
 from pie.compiling import compiling
 from pie.interpreter.frame import Frame
 from pie.error import LexerError, PieError, InterpreterError
 import interpreter
-from pypy.rlib.parsing.parsing import ParseError
-from pypy.rlib.streamio import open_file_as_stream
 
 __author__ = 'sery0ga'
 

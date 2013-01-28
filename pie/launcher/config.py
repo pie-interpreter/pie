@@ -1,7 +1,9 @@
-from pie.utils.ini import raw_parse_ini_file
-from pypy.rlib.parsing.parsing import ParseError
-from pypy.rlib.objectmodel import instantiate
 import string
+
+from rpython.rlib.parsing.parsing import ParseError
+from rpython.rlib.objectmodel import instantiate
+
+from pie.utils.ini import raw_parse_ini_file
 
 __author__ = 'sery0ga'
 

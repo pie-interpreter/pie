@@ -1,6 +1,7 @@
-from pypy.rlib.objectmodel import we_are_translated
-from pypy.rlib.unroll import unrolling_iterable
 import os
+
+from rpython.rlib.objectmodel import we_are_translated
+from rpython.rlib.unroll import unrolling_iterable
 
 from pie.error import InterpreterError, DivisionByZeroError, \
     DivisionByZero, UndefinedFunction, MissingArgument
@@ -141,7 +142,8 @@ class Interpreter(object):
         self.frame.stack.append(space.bool(result))
 
     def CAST_TO_ARRAY(self, value):
-        raise InterpreterError("Not implemented")
+        w_object = self.frame.stack.pop()
+        self.frame.stack.append(w_object.as_array())
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()

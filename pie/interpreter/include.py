@@ -1,10 +1,12 @@
-from pie.error import NoFile, NoFileInIncludePath, NoRequiredFile, \
-    NoRequiredFileInIncludePath
-from pie.objects.bool import W_BoolObject
-from pypy.rlib.objectmodel import specialize
 from abc import ABCMeta, abstractmethod
 import sourcecode
 import os.path
+
+from rpython.rlib.objectmodel import specialize
+
+from pie.error import NoFile, NoFileInIncludePath, NoRequiredFile, \
+    NoRequiredFileInIncludePath
+from pie.objects.bool import W_BoolObject
 from pie.utils.path import split_path
 
 __author__ = 'sery0ga'

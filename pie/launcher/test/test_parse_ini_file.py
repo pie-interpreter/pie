@@ -1,7 +1,9 @@
 import unittest
+
+from rpython.rlib.parsing.parsing import ParseError
+
 from pie.launcher.config import config
 from pie.utils.ini import raw_parse_ini_file
-from pypy.rlib.parsing.parsing import ParseError
 
 
 class TestParseIniFile(unittest.TestCase):

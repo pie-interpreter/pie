@@ -1,101 +1,96 @@
 from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
-from pie.objects.array import W_ArrayObject
 
-class W_BoolObject(W_Type):
+class W_ArrayObject(W_Type):
 
-    _immutable_fields_ = ['value']
-
-    def __init__(self, value):
-        self.value = bool(value)
+    def __init__(self):
+        self.storage = {}
 
     def __repr__(self):
-        return "W_BoolObject(%s)" % self.value
+        return "W_ArrayObject(%s)" % self.storage
 
     def copy(self):
-        return W_BoolObject(self.value)
+        assert NotImplementedError
 
     def is_true(self):
-        return self.value
+        if not self.storage:
+            return False
+        return True
 
     def as_array(self):
-        array = W_ArrayObject()
-        array.set(0, self.value)
-
-    def as_bool(self):
         return self
 
+    def as_bool(self):
+        from pie.objects.bool import W_BoolObject
+        return W_BoolObject(self.is_true())
+
     def as_float(self):
-        return W_FloatObject(float(self.value))
+        return W_FloatObject(float(self.is_true()))
 
     def as_int(self):
-        return W_IntObject(int(self.value))
+        return W_IntObject(int(self.is_true()))
 
     def as_number(self):
         return self.as_int()
 
     def as_string(self):
         from pie.objects.string import W_StringObject
-        if self.value:
-            return W_StringObject('1')
-        return W_StringObject('')
-
+        return W_StringObject('Array')
 
     def less_than(self, object):
+        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_BoolObject)
-        if self.value < object.value:
+        if self.storage < object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def more_than(self, object):
+        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_BoolObject)
-        if self.value > object.value:
+        if self.storage > object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def equal(self, object):
+        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_BoolObject)
-        if self.value == object.value:
+        if self.storage == object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def not_equal(self, object):
+        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_BoolObject)
-        if self.value != object.value:
+        if self.storage != object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def less_than_or_equal(self, object):
+        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_BoolObject)
-        if self.value <= object.value:
+        if self.storage <= object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def more_than_or_equal(self, object):
+        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_BoolObject)
-        if self.value >= object.value:
+        if self.storage >= object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
     def inc(self):
-        """
-        http://www.php.net/manual/en/language.operators.increment.php
-
-         The increment/decrement operators do not affect boolean values
-        """
-        return self
+        raise NotImplementedError
 
     def dec(self):
-        """
-        http://www.php.net/manual/en/language.operators.increment.php
+        raise NotImplementedError
 
-         The increment/decrement operators do not affect boolean values
-        """
-        return self
+    def set(self, index, value):
+        self.storage[index] = value

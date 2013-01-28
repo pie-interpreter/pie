@@ -1,8 +1,9 @@
 " Module, providing ast building tools "
 
+from rpython.rlib.parsing.tree import RPythonVisitor
+
 from pie.ast.nodes import *
 from pie.parsing import parsing
-from pypy.rlib.parsing.tree import RPythonVisitor
 
 
 def build(source):
