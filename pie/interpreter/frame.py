@@ -1,7 +1,8 @@
-from pie.error import UndefinedVariable
+from pie.interpreter.errors.notices import UndefinedVariable
 from pie.objspace import space
 
 __author__ = 'sery0ga'
+
 
 class Frame:
 
@@ -10,22 +11,18 @@ class Frame:
         self.variables = {}
         self.names = {}
 
-        # trace data
-        self.function_trace_stack = []
-
     def get_variable(self, name, context):
         try:
             return self.variables[name]
         except KeyError:
-            error = UndefinedVariable(context, name)
-            error.handle()
+            UndefinedVariable(context, name).handle()
             return space.null()
 
     def set_variable(self, name, w_value):
         if name in self.variables:
-            self.variables[name].set_value(w_value)
+            self.variables[name].set_value(w_value.deref())
         else:
-            self.variables[name] = space.variable(w_value)
+            self.variables[name] = space.variable(w_value.deref())
 
     def pop_name(self):
         return self.stack.pop().str_w()

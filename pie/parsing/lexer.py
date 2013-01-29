@@ -1,7 +1,7 @@
-from pie.parsing import regex
 from pypy.rlib.parsing.deterministic import LexerError
 from pypy.rlib.parsing.lexer import Lexer, SourcePos, Token
-import pie.error
+from pie.parsing import regex
+from pie.interpreter.errors.parseerrors import UnrecognizedSymbol
 
 
 class PieLexer(Lexer):
@@ -33,7 +33,8 @@ class PieLexer(Lexer):
                 try:
                     grammar_tokens = self.tokenize_with_grammar(token)
                 except LexerError as e:
-                    raise pie.error.LexerError(e, text)
+                    raise UnrecognizedSymbol(
+                        None, text, e.source_pos.lineno, e.source_pos.columnno)
 
                 tokens.extend(grammar_tokens)
             else:

@@ -324,29 +324,33 @@ comma_seperated_variables: variable_expression [","] >comma_seperated_variables<
 # TOP LEVEL FINISHED STATEMENTS
 # finished statements are ones, that do not require semicolon in the end of it
 # e.g for, while, function definition, class definitions
-top_level_finished_statement: function_declaration
+top_level_finished_statement: top_level_function_declaration
                             | >finished_statement<;
+
+top_level_function_declaration: >function_declaration<;
+
+# NORMAL FINISHED STATEMENTS
+#
+finished_statement: function_declaration
+                  | if
+                  | while
+                  | dowhile
+                  | for
+                  | switch;
 
 
 function_declaration: T_FUNCTION "&"? IDENTIFIER >function_arguments< ["{"] statements_block? ["}"];
 function_arguments: ["("] function_arguments_list? [")"];
 function_arguments_list: >function_argument< [","] >function_arguments_list<
                        | >function_argument<;
-function_argument: function_argument_with_default_value
-                 | "&" variable_identifier
-                 | variable_identifier;
-function_argument_with_default_value: "&"? variable_identifier [ASSIGN_OPERATOR] >function_argument_default_value<;
-function_argument_default_value: constant_expression;
-
-
-
-# NORMAL FINISHED STATEMENTS
-#
-finished_statement: if
-                  | while
-                  | dowhile
-                  | for
-                  | switch;
+function_argument: function_argument_reference_with_default_value
+                 | function_argument_variable_with_default_value
+                 | function_argument_reference
+                 | function_argument_variable;
+function_argument_reference_with_default_value: ["&"] variable_identifier [ASSIGN_OPERATOR] constant_expression;
+function_argument_variable_with_default_value: variable_identifier [ASSIGN_OPERATOR] constant_expression;
+function_argument_reference: ["&"] variable_identifier;
+function_argument_variable: variable_identifier;
 
 if: T_IF >if_condition< >control_structure_body< >else_inner<?
   | T_IF >if_condition< [":"] statements_block? >else_inner_alt<

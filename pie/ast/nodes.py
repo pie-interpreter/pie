@@ -306,16 +306,78 @@ class FunctionCall(AstNodeWithResult):
 
 class FunctionDeclaration(AstNode):
 
-    def __init__(self, name, arguments, body):
+    def __init__(self, name, is_returning_reference, arguments, body):
         self.name = name
+        self.is_returning_reference = is_returning_reference
         self.arguments = arguments
         self.body = body
+        self.top_level = False
 
     def repr(self):
-        return "FunctionDeclaration(%s(%s){%s})" \
-            % (self.name,
-               self.get_list_repr(self.arguments),
-               self.body.repr())
+        if self.is_returning_reference:
+            reference_symbol = '&'
+        else:
+            reference_symbol = ''
+
+        return "FunctionDeclaration%s(%s(%s){%s})" \
+            % (reference_symbol,
+                self.name,
+                self.get_list_repr(self.arguments),
+                self.body.repr())
+
+
+class Argument(AstNode):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for argument nodes
+    """
+
+
+class ArgumentWithDefaultValue(Argument):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for argument nodes
+    """
+
+
+class ArgumentVariable(Argument):
+
+    def __init__(self, variable):
+        self.variable = variable
+
+    def repr(self):
+        return "ArgumentVariable(%s)" % self.variable
+
+
+class ArgumentReference(Argument):
+
+    def __init__(self, variable):
+        self.variable = variable
+
+    def repr(self):
+        return "ArgumentReference(%s)" % self.variable
+
+
+class ArgumentVariableWithDefaultValue(ArgumentWithDefaultValue):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "ArgumentVariableWithDefaultValue(%s, %s)" \
+            % (self.variable, self.value)
+
+
+class ArgumentReferenceWithDefaultValue(ArgumentWithDefaultValue):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "ArgumentReferenceWithDefaultValue(%s, %s)" \
+            % (self.variable, self.value)
 
 
 class If(AstNode):
@@ -398,7 +460,14 @@ class SwitchDefault(AstNode):
         return "SwitchDefault(%s)" % (self.body.repr())
 
 
-class ConstantInt(AstNodeWithResult):
+class Constant(AstNodeWithResult):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for constants compiling
+    """
+
+
+class ConstantInt(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -429,7 +498,7 @@ class ConstantIntHex(ConstantInt):
         return "ConstantIntHex(%s%s)" % (self.sign, self.value)
 
 
-class ConstantFloat(AstNodeWithResult):
+class ConstantFloat(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -439,7 +508,7 @@ class ConstantFloat(AstNodeWithResult):
         return "ConstantFloat(%s%s)" % (self.sign, self.value)
 
 
-class ConstantString(AstNodeWithResult):
+class ConstantString(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -462,7 +531,7 @@ class ConstantDoubleQuotedString(ConstantString):
         return "ConstantDoubleQuotedString(\"%s\")" % (self.value)
 
 
-class ConstantBool(AstNodeWithResult):
+class ConstantBool(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -471,7 +540,7 @@ class ConstantBool(AstNodeWithResult):
         return "ConstantBool(\"%s\")" % (self.value)
 
 
-class ConstantNull(AstNodeWithResult):
+class ConstantNull(Constant):
 
     def repr(self):
         return "ConstantNull()"

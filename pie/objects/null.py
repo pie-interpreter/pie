@@ -2,9 +2,11 @@ from pie.objects.base import W_Type
 from pie.objects.int import W_IntObject
 import pie.objects.bool as boolean
 
-__author__ = 'sery0ga'
 
 class W_NullObject(W_Type):
+
+    def __repr__(self):
+        return "W_NullObject()"
 
     def copy(self):
         return self

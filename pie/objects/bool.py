@@ -19,7 +19,6 @@ class W_BoolObject(W_Type):
     def is_true(self):
         return self.value
 
-
     def as_bool(self):
         return self
 

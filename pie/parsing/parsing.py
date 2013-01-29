@@ -1,14 +1,18 @@
-from pie.parsing.lexer import PieLexer
-from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
-from pypy.rlib.parsing.parsing import PackratParser, ParseError
 import os
 import py
+from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
+from pypy.rlib.parsing.parsing import PackratParser, ParseError
+from pie.parsing.lexer import PieLexer
+from pie.interpreter.errors.parseerrors import InvalidSyntax
 
 
 def parse(source):
     """ Parse php code """
-    parse_tree = parse_php(source.content)
-    parse_tree = transformer.transform(parse_tree)
+    try:
+        parse_tree = parse_php(source.content)
+        parse_tree = transformer.transform(parse_tree)
+    except ParseError as e:
+        raise InvalidSyntax(None, e.errorinformation, e.source_pos.lineno)
 
     return parse_tree
 
@@ -18,7 +22,7 @@ def get_parse_tools():
     try:
         regexs, rules, transformer_class = parse_ebnf(grammar)
     except ParseError as e:
-        print e.nice_error_message("grammar.ebnf", grammar)
+        print e.nice_error_message('grammar.ebnf', grammar)
         raise e
 
     names, regexs = zip(*regexs)

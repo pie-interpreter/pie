@@ -1,6 +1,6 @@
-from pie.error import DivisionByZeroError
-from pie.objects.base import W_Number
+from pie.objects.base import W_Number, DivisionByZeroError
 from pie.objects.int import W_IntObject
+
 
 class W_FloatObject(W_Number):
     _immutable_fields_ = ['value']
@@ -99,7 +99,6 @@ class W_FloatObject(W_Number):
     def dec(self):
         return W_FloatObject(self.value - 1)
 
-
     def plus(self, number):
         return W_FloatObject(self.value + number.value)
 
@@ -111,16 +110,18 @@ class W_FloatObject(W_Number):
 
     def divide(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
+
         return W_FloatObject(self.value / number.value)
 
     def mod(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
+
         divider = number.value
         if self.value < 0 and divider:
             divider *= -1
         elif self.value and divider < 0:
             divider *= -1
-        return W_FloatObject(self.value % divider)
 
+        return W_FloatObject(self.value % divider)
