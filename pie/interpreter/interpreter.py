@@ -211,8 +211,8 @@ class Interpreter(object):
             return
 
         parameters = []
-        for index in range(arguments_number):
-            parameters.append(self.frame.stack.pop())
+        for _ in range(arguments_number):
+            parameters.insert(0, self.frame.stack.pop())
 
         function = self.context.functions[function_name]
         w_return_value = function.call(self.context, parameters)

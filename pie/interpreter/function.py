@@ -40,12 +40,12 @@ class UserFunction(AbstractFunction):
         return self._get_return_value(frame)
 
     def _get_frame(self, context, stack_values):
-        values_count = len(stack_values)
         frame = Frame()
         for index, argument in enumerate(self.arguments):
             argument_name, argument_type, default = argument
             try:
-                value = stack_values[values_count - index - 1]
+                value = stack_values[index]
+
                 if argument_type == self.REFERENCE:
                     if not isinstance(value, W_Variable):
                         NonVariablePassedByReference(context).handle()

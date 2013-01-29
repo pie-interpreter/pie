@@ -115,8 +115,8 @@ def _add_test(filename, test_name):
             if not test.compile_only:
                 context = Context(filename)
                 source.interpret(context, Frame())
-        except PieError:
-            pass
+        except PieError as e:
+            os.write(2, e.get_message())
 
         self.restore_output()
 
