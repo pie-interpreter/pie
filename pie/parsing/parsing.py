@@ -1,9 +1,10 @@
-from pie.parsing.lexer import PieLexer
-from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
-from pypy.rlib.parsing.parsing import PackratParser, ParseError
 import os
 import py
 
+from rpython.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
+from rpython.rlib.parsing.parsing import PackratParser, ParseError
+
+from pie.parsing.lexer import PieLexer
 
 def parse(source):
     """ Parse php code """

@@ -1,4 +1,4 @@
-from pypy.rlib.parsing.parsing import ParseError
+from rpython.rlib.parsing.parsing import ParseError
 
 __author__ = "sery0ga"
 

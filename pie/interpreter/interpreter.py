@@ -1,6 +1,7 @@
-from pypy.rlib.objectmodel import we_are_translated
-from pypy.rlib.unroll import unrolling_iterable
 import os
+
+from rpython.rlib.objectmodel import we_are_translated
+from rpython.rlib.unroll import unrolling_iterable
 
 from pie.error import InterpreterError, DivisionByZeroError, \
     DivisionByZero, UndefinedFunction, MissingArgument
