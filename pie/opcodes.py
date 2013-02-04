@@ -77,6 +77,7 @@ OPCODE = {
     129: 'LOAD_NAME',  # index of the name to load
     130: 'LOAD_VAR_FAST',  # index of the name of the variable to load
     131: 'STORE_VAR_FAST',  # index of the name of the varibale to store value to
+    132: 'DECLARE_FUNCTION',  # index of the function to declare
 
     # function calling by name, which is loaded from stack
     140: 'CALL_FUNCTION',  # number of arguments to load from stack

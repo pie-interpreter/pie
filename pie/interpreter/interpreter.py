@@ -3,17 +3,15 @@ import os
 from rpython.rlib.objectmodel import we_are_translated
 from rpython.rlib.unroll import unrolling_iterable
 
-from pie.error import InterpreterError, DivisionByZeroError, \
-    DivisionByZero, UndefinedFunction, MissingArgument
-from pie.interpreter.frame import Frame
-import pie.interpreter.include as include
 from pie.objspace import space
-from pie.objects.variable import W_Variable
-import sourcecode
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
-
-
-__author__ = 'sery0ga'
+from pie.objects.base import DivisionByZeroError
+from pie.objects.variable import W_Variable
+from pie.interpreter.errors.base import InternalError
+from pie.interpreter.errors.notices import NonVariableReturnedByReference
+from pie.interpreter.errors.warnings import DivisionByZero
+from pie.interpreter.errors.fatalerrors import UndefinedFunction
+import pie.interpreter.include as include
 
 
 class Interpreter(object):
@@ -27,49 +25,44 @@ class Interpreter(object):
         self.position = 0
 
     def interpret(self):
+        self.declare_functions()
+
         code = self.bytecode.code
         bytecode_length = len(self.bytecode.code)
-        try:
-            while True:
-                if self.position >= bytecode_length:
-                    break
 
-                self.context.trace.update_position(self.position)
+        while True:
+            if self.position >= bytecode_length:
+                break
 
-                next_instr = ord(code[self.position])
-                self.position += 1
+            self.context.trace.line = self.bytecode.opcode_lines[self.position]
 
-                if next_instr > OPCODE_INDEX_DIVIDER:
-                    arg = ord(code[self.position]) \
-                        + (ord(code[self.position + 1]) << 8)
-                    self.position += 2
+            opcode_index = ord(code[self.position])
+            self.position += 1
+
+            arg = 0
+            if opcode_index > OPCODE_INDEX_DIVIDER:
+                arg = ord(code[self.position]) + (
+                    ord(code[self.position + 1]) << 8)
+                self.position += 2
+
+            if we_are_translated():
+                for index, name in unrolling_bc:
+                    if index == opcode_index:
+                        getattr(self, name)(arg)
+                        break
                 else:
-                    arg = 0  # don't make it negative
+                    raise InternalError("Unknown opcode")
+            else:
+                opcode_name = get_opcode_name(opcode_index)
+                getattr(self, opcode_name)(arg)
 
-                assert arg >= 0
+            # this is a return condition
+            if self.position == self.RETURN_FLAG:
+                break
 
-                if we_are_translated():
-                    for index, name in unrolling_bc:
-                        if index == next_instr:
-                            getattr(self, name)(arg)
-                            break
-                    else:
-                        assert False
-                else:
-                    opcode_name = get_opcode_name(next_instr)
-                    getattr(self, opcode_name)(arg)
-
-                # this is a return condition
-                if self.position == self.RETURN_FLAG:
-                    break
-
-        except InterpreterError:
-            raise
-
-        if self.frame.stack:
-            return self.frame.stack.pop()
-        else:
-            return space.int(0)
+    def declare_functions(self):
+        for function in self.bytecode.declared_functions:
+            self.context.declare_function(function)
 
     def ECHO(self, value):
         w_value = self.frame.stack.pop()
@@ -89,30 +82,6 @@ class Interpreter(object):
     def DUPLICATE_TOP(self, value):
         self.frame.stack.append(self.frame.stack[-1])
 
-    def INCLUDE(self, value):
-        w_filename = self.frame.pop_name()
-        statement = include.IncludeStatement(self.context, self.frame)
-        w_result = statement.include(w_filename)
-        self.frame.stack.append(w_result)
-
-    def INCLUDE_ONCE(self, value):
-        w_filename = self.frame.pop_name()
-        statement = include.IncludeOnceStatement(self.context, self.frame)
-        w_result = statement.include(w_filename)
-        self.frame.stack.append(w_result)
-
-    def REQUIRE(self, value):
-        w_filename = self.frame.pop_name()
-        statement = include.RequireStatement(self.context, self.frame)
-        w_result = statement.include(w_filename)
-        self.frame.stack.append(w_result)
-
-    def REQUIRE_ONCE(self, value):
-        w_filename = self.frame.pop_name()
-        statement = include.RequireOnceStatement(self.context, self.frame)
-        w_result = statement.include(w_filename)
-        self.frame.stack.append(w_result)
-
     def EMPTY_VAR(self, value):
         #TODO: array support
         #TODO: object support
@@ -131,10 +100,14 @@ class Interpreter(object):
     def MAKE_REFERENCE(self, value):
         ref_name = self.frame.pop_name()
         w_variable = self.frame.stack.pop()
+
         if not isinstance(w_variable, W_Variable):
-            raise InterpreterError("We can make reference only to variable")
-        self.frame.variables[ref_name] = w_variable
-        self.frame.stack.append(w_variable.deref())
+            NonVariableReturnedByReference(self.context).handle()
+            self.frame.set_variable(ref_name, w_variable)
+            self.frame.stack.append(w_variable)
+        else:
+            self.frame.variables[ref_name] = w_variable
+            self.frame.stack.append(w_variable.deref())
 
     def NOT(self, value):
         w_object = self.frame.stack.pop()
@@ -142,7 +115,7 @@ class Interpreter(object):
         self.frame.stack.append(space.bool(result))
 
     def CAST_TO_ARRAY(self, value):
-        raise InterpreterError("Not implemented")
+        raise InternalError("Not implemented")
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()
@@ -157,7 +130,7 @@ class Interpreter(object):
         self.frame.stack.append(w_object.as_int())
 
     def CAST_TO_OBJECT(self, value):
-        raise InterpreterError("Not implemented")
+        raise InternalError("Not implemented")
 
     def CAST_TO_STRING(self, value):
         w_object = self.frame.stack.pop()
@@ -200,7 +173,7 @@ class Interpreter(object):
     def INPLACE_CONCAT(self, var_index):
         var_name = self.frame.pop_name()
         w_concat_value = self.frame.stack.pop()
-        w_value = self.frame.get_variable(var_name, self.context)
+        w_value = self.frame.get_variable(var_name, self.context).deref()
         # operation itself
         w_value = w_value.as_string().concatenate(w_concat_value.as_string())
         self.frame.set_variable(var_name, w_value)
@@ -208,10 +181,11 @@ class Interpreter(object):
 
     def LOAD_VAR(self, var_index):
         var_name = self.bytecode.names[var_index]
-        self.frame.stack.append(space.str(var_name))
+        w_value = self.frame.get_variable(var_name, self.context)
+        self.frame.stack.append(w_value)
 
     def STORE_VAR(self, value):
-        raise InterpreterError("Not implemented")
+        raise InternalError("Not implemented")
 
     def LOAD_CONST(self, value):
         self.frame.stack.append(self.bytecode.consts[value].copy())
@@ -228,37 +202,25 @@ class Interpreter(object):
     def STORE_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]
         w_value = self.frame.stack[-1]  # we need to leave value on the stack
-        if isinstance(w_value, W_Variable):
-            w_value = w_value.deref()
         self.frame.set_variable(var_name, w_value)
 
+    def DECLARE_FUNCTION(self, function_index):
+        function = self.bytecode.functions[function_index]
+        self.context.declare_function(function)
+
     def CALL_FUNCTION(self, arguments_number):
-        # load function name
         function_name = self.frame.pop_name()
-        # load function bytecode
-        try:
-            function = self.context.functions[function_name]
-        except KeyError:
-            error = UndefinedFunction(self.context, function_name)
-            error.handle()
-            raise error
+        if function_name not in self.context.functions:
+            UndefinedFunction(self.context, function_name).handle()
+            self.frame.stack.append(space.null())
+            return
 
-        function_frame = Frame()
-        # put function arguments to frame
-        arg_position = 1
-        for argument in function.arguments:
-            if not self.frame.stack:
-                error = MissingArgument(self.context, arg_position, function_name, function)
-                error.handle()
-            else:
-                function_frame.variables[argument] = self.frame.stack.pop()
-            arg_position += 1
+        parameters = []
+        for _ in range(arguments_number):
+            parameters.insert(0, self.frame.stack.pop())
 
-        # update trace stack and call function
-        self.context.trace.append(function_name, function.bytecode)
-        w_return_value = sourcecode.interpret_function(function.bytecode,
-            self.context, function_frame)
-        self.context.trace.pop()
+        function = self.context.functions[function_name]
+        w_return_value = function.call(self.context, parameters)
 
         self.frame.stack.append(w_return_value)
 
@@ -314,9 +276,16 @@ def _new_binary_op(name, space_name):
         except DivisionByZeroError:
             DivisionByZero(self.context).handle()
             w_result = space.bool(False)
+
         self.frame.stack.append(w_result)
     func.func_name = name
+
     return func
+
+for name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE', 'LESS_THAN',
+              'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
+              'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
+    setattr(Interpreter, name, _new_binary_op(name, name.lower()))
 
 
 def _new_inplace_op(name, space_name):
@@ -327,20 +296,38 @@ def _new_inplace_op(name, space_name):
             w_result = getattr(space, space_name)(w_value, w_right)
         except DivisionByZeroError:
             DivisionByZero(self.context).handle()
-            w_result = space.null()
+            w_result = space.bool(False)
+
         w_value.set_value(w_result)
         self.frame.stack.append(w_result)
     func.func_name = name
+
     return func
 
-for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE', 'LESS_THAN',
-              'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
-              'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
-    setattr(Interpreter, _name, _new_binary_op(_name, _name.lower()))
+for name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE']:
+    operation_name = 'INPLACE_' + name
+    setattr(Interpreter, operation_name, _new_inplace_op(
+        operation_name, name.lower()))
 
-for _name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE']:
-    operation_name = 'INPLACE_' + _name
-    setattr(Interpreter, operation_name, _new_inplace_op(operation_name, _name.lower()))
+
+def _new_include_op(name, include_class):
+    def func(self, value):
+        filename = self.frame.pop_name()
+        statement = include_class(self.context, self.frame)
+        w_result = statement.include(filename)
+        self.frame.stack.append(w_result)
+    func.func_name = name
+
+    return func
+
+for name, include_class in [
+        ('INCLUDE', include.IncludeStatement),
+        ('INCLUDE_ONCE', include.IncludeOnceStatement),
+        ('REQUIRE', include.RequireStatement),
+        ('REQUIRE_ONCE', include.RequireOnceStatement)
+    ]:
+    setattr(Interpreter, name, _new_include_op(name, include_class))
+
 
 def _define_opcodes():
     for index in OPCODE:

@@ -214,26 +214,54 @@ class AstBuilder(RPythonVisitor):
 
         return FunctionCall(name, parameters.list)
 
+    def visit_top_level_function_declaration(self, node):
+        function = self.visit_function_declaration(node)
+        function.top_level = True
+        return function
+
     def visit_function_declaration(self, node):
         children_count = len(node.children)
-        assert children_count in [2, 3, 4]
+        assert children_count in [2, 3, 4, 5]
 
-        name = self.transform(node.children[1])
-        # function declaration can have arguments list or/and function body
-        # missing, we need to check which is which
-        if children_count > 2 \
-                and node.children[2].symbol == "function_arguments_list":
-            arguments = self.transform(node.children[2])
-        else:
-            arguments = ItemsList()
+        parts_index = 1  # index 0 is "function" token
+        is_returning_reference = False
+        if node.children[1].token.source == '&':
+            is_returning_reference = True
+            parts_index += 1
 
-        if children_count > 3 \
-                or node.children[2].symbol == "statements_block":
-            body = self.transform(node.children[-1])
-        else:
-            body = EmptyStatement()
+        name = self.transform(node.children[parts_index])
+        arguments = ItemsList()
+        body = EmptyStatement()
 
-        return FunctionDeclaration(name, arguments.list, body)
+        for index in range(parts_index + 1, children_count):
+            child = node.children[index]
+            if child.symbol == 'function_arguments_list':
+                arguments = self.transform(child)
+            elif child.symbol == 'statements_block':
+                body = self.transform(child)
+
+        return FunctionDeclaration(
+            name, is_returning_reference,
+            arguments.list, body
+        )
+
+    def visit_function_argument_variable(self, node):
+        return ArgumentVariable(self.get_single_child(node))
+
+    def visit_function_argument_reference(self, node):
+        return ArgumentReference(self.get_single_child(node))
+
+    def visit_function_argument_variable_with_default_value(self, node):
+        assert len(node.children) == 2
+        return ArgumentVariableWithDefaultValue(
+            self.transform(node.children[0]),
+            self.transform(node.children[1]))
+
+    def visit_function_argument_reference_with_default_value(self, node):
+        assert len(node.children) == 2
+        return ArgumentReferenceWithDefaultValue(
+            self.transform(node.children[0]),
+            self.transform(node.children[1]))
 
     def visit_if(self, node):
         children_count = len(node.children)

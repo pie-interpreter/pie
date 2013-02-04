@@ -1,6 +1,5 @@
 from sys import argv
 
-__author__ = 'sery0ga'
 
 class Test(object):
 
@@ -18,6 +17,7 @@ class Test(object):
     def __str__(self):
         return "Doc:\n%s\nFILE:\n%s\nRESULT:\n%s" \
             % (self.doc, self.source, self.result)
+
 
 class Parser(object):
 

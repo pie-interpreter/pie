@@ -2,6 +2,8 @@
 
 import pie.ast.nodes as nodes
 from pie.compiling import util
+from pie.objspace import space
+from pie.interpreter.function import UserFunction
 
 
 class __extend__(nodes.AstNode):
@@ -77,7 +79,7 @@ class __extend__(nodes.Return):
 
     def compile_node(self, builder):
         if isinstance(self.expression, nodes.EmptyStatement):
-            index = builder.register_null_const()
+            index = builder.register_const(nodes.ConstantNull())
             builder.emit('LOAD_CONST', index)
         else:
             self.expression.compile(builder)
@@ -329,24 +331,69 @@ class __extend__(nodes.FunctionCall):
 class __extend__(nodes.FunctionDeclaration):
 
     def compile_node(self, builder):
-        # creating context to compile function's body
-        function_bytecode_builder = builder.get_child_builder()
-        # compiling
-        self.body.compile(function_bytecode_builder)
-        bytecode = function_bytecode_builder.create_bytecode()
+        function_builder = builder.get_child_builder()
+        self.body.compile(function_builder)
+        bytecode = function_builder.create_bytecode()
 
         # preparing arguments
         arguments = []
         for argument in self.arguments:
-            identifier = argument.name
-            assert isinstance(identifier, nodes.Identifier)
-            arguments.append(identifier.value)
+            assert isinstance(argument, nodes.Argument)
+            arguments.append(argument.get_argument_tuple())
 
-        # registering function in current builder, so it will be added to
-        # bytecode
+        return_type = UserFunction.VALUE
+        if self.is_returning_reference:
+            return_type = UserFunction.REFERENCE
+
         identifier = self.name
         assert isinstance(identifier, nodes.Identifier)
-        builder.register_function(identifier.value, arguments, bytecode, self.line)
+
+        function = UserFunction(
+            identifier.value, return_type, bytecode, arguments, self.line)
+
+        if self.top_level:
+            builder.register_declared_function(function)
+        else:
+            index = builder.register_function(function)
+            builder.emit('DECLARE_FUNCTION', index)
+
+
+class __extend__(nodes.Argument):
+
+    def get_argument_tuple(self):
+        return (
+            self._get_argument_name(),
+            self._get_argument_type(),
+            self._get_argument_default_value())
+
+    def _get_argument_name(self):
+        return _get_variable_name(self.variable)
+
+    def _get_argument_type(self):
+        return UserFunction.VALUE
+
+    def _get_argument_default_value(self):
+        return None
+
+
+class __extend__(nodes.ArgumentWithDefaultValue):
+
+    def _get_argument_default_value(self):
+        assert isinstance(self.value, nodes.Constant)
+        self.value.calculate_const_value()
+        return self.value.get_compiled_value()
+
+
+class __extend__(nodes.ArgumentReference):
+
+    def _get_argument_type(self):
+        return UserFunction.REFERENCE
+
+
+class __extend__(nodes.ArgumentReferenceWithDefaultValue):
+
+    def _get_argument_type(self):
+        return UserFunction.REFERENCE
 
 
 class __extend__(nodes.If):
@@ -502,91 +549,129 @@ class __extend__(nodes.Switch):
         builder.patch_break_positions(builder.get_current_position())
 
 
-class __extend__(nodes.ConstantIntBin):
+class __extend__(nodes.Constant):
 
     def compile_node(self, builder):
-        value = int(self.value[2:], 2)
-        if self.sign == '-':
-            value = -value
-        index = builder.register_int_const(value)
+        self.calculate_const_value()  # needed for calculations
+        index = builder.register_const(self)
         builder.emit('LOAD_CONST', index)
+
+    def get_str_value(self):
+        " Used for caching in builder "
+        raise NotImplementedError
+
+    def get_compiled_value(self):
+        raise NotImplementedError
+
+    def calculate_const_value(self):
+        " Some types of constants need pre-calculation of values"
+
+
+class __extend__(nodes.ConstantInt):
+
+    type_name = 'int'
+
+    def get_str_value(self):
+        return str(self.const_value)
+
+    def get_compiled_value(self):
+        return space.int(self.const_value)
+
+
+class __extend__(nodes.ConstantIntBin):
+
+    def calculate_const_value(self):
+        self.const_value = int(self.value[2:], 2)
+        if self.sign == '-':
+            self.const_value = -self.const_value
 
 
 class __extend__(nodes.ConstantIntOct):
 
-    def compile_node(self, builder):
-        value = int(self.value, 8)
+    def calculate_const_value(self):
+        self.const_value = int(self.value, 8)
         if self.sign == '-':
-            value = -value
-        index = builder.register_int_const(value)
-        builder.emit('LOAD_CONST', index)
+            self.const_value = -self.const_value
 
 
 class __extend__(nodes.ConstantIntDec):
 
-    def compile_node(self, builder):
-        value = int(self.value)
+    def calculate_const_value(self):
+        self.const_value = int(self.value)
         if self.sign == '-':
-            value = -value
-        index = builder.register_int_const(value)
-        builder.emit('LOAD_CONST', index)
+            self.const_value = -self.const_value
 
 
 class __extend__(nodes.ConstantIntHex):
 
-    def compile_node(self, builder):
-        value = int(self.value[2:], 16)
+    def calculate_const_value(self):
+        self.const_value = int(self.value[2:], 16)
         if self.sign == '-':
-            value = -value
-        index = builder.register_int_const(value)
-        builder.emit('LOAD_CONST', index)
+            self.const_value = -self.const_value
 
 
 class __extend__(nodes.ConstantFloat):
 
-    def compile_node(self, builder):
-        value = float(self.value)
+    type_name = 'float'
+
+    def get_str_value(self):
+        return str(self.const_value)
+
+    def get_compiled_value(self):
+        return space.float(self.const_value)
+
+    def calculate_const_value(self):
+        self.const_value = float(self.value)
         if self.sign == '-':
-            value = -value
-        index = builder.register_float_const(value)
-        builder.emit('LOAD_CONST', index)
+            self.const_value = -self.const_value
 
 
 class __extend__(nodes.ConstantBool):
 
-    def compile_node(self, builder):
-        index = builder.register_bool_const(self.value)
-        builder.emit('LOAD_CONST', index)
+    type_name = 'bool'
+
+    def get_str_value(self):
+        return str(self.value)
+
+    def get_compiled_value(self):
+        return space.bool(self.value)
 
 
 class __extend__(nodes.ConstantNull):
 
-    def compile_node(self, builder):
-        index = builder.register_null_const()
-        builder.emit('LOAD_CONST', index)
+    type_name = 'null'
+
+    def get_str_value(self):
+        return 'null'
+
+    def get_compiled_value(self):
+        return space.null()
 
 
 class __extend__(nodes.ConstantString):
 
-    def compile_node(self, builder):
-        index = builder.register_string_const(self.value)
-        builder.emit('LOAD_CONST', index)
+    type_name = 'string'
+
+    def calculate_const_value(self):
+        self.const_value = self.value
+
+    def get_str_value(self):
+        return self.const_value
+
+    def get_compiled_value(self):
+        return space.str(self.const_value)
 
 
 class __extend__(nodes.ConstantSingleQuotedString):
 
-    def compile_node(self, builder):
-        value = util.process_single_quoted_string(self.value)
-        index = builder.register_string_const(value)
-        builder.emit('LOAD_CONST', index)
+    def calculate_const_value(self):
+        self.const_value = util.process_single_quoted_string(self.value)
 
 
 class __extend__(nodes.ConstantDoubleQuotedString):
 
-    def compile_node(self, builder):
-        value = util.process_double_quoted_string(self.value)
-        index = builder.register_string_const(value)
-        builder.emit('LOAD_CONST', index)
+    def calculate_const_value(self):
+        self.const_value = util.process_double_quoted_string(self.value)
 
 
 def _get_variable_name(var):
