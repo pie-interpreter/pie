@@ -1,4 +1,5 @@
 import os
+from phplib.standard import *
 
 from pypy.rlib.objectmodel import we_are_translated
 from pypy.rlib.unroll import unrolling_iterable
@@ -12,6 +13,7 @@ from pie.interpreter.errors.notices import NonVariableReturnedByReference
 from pie.interpreter.errors.warnings import DivisionByZero
 from pie.interpreter.errors.fatalerrors import UndefinedFunction
 import pie.interpreter.include as include
+
 
 
 class Interpreter(object):
