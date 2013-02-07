@@ -25,7 +25,7 @@ class Context(object):
     def declare_function(self, function):
         name = function.name
         if name in self.functions:
-            from pie.interpreter.function import UserFunction
+            from pie.interpreter.functions.user import UserFunction
             if isinstance(self.functions[name], UserFunction):
                 RedeclaredUserFunction(
                     self, function, self.functions[name]).handle()

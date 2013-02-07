@@ -15,7 +15,6 @@ from pie.interpreter.errors.fatalerrors import UndefinedFunction
 import pie.interpreter.include as include
 
 
-
 class Interpreter(object):
 
     RETURN_FLAG = -1

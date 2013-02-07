@@ -3,7 +3,7 @@
 import pie.ast.nodes as nodes
 from pie.compiling import util
 from pie.objspace import space
-from pie.interpreter.function import UserFunction
+from pie.interpreter.functions.user import UserFunction
 
 
 class __extend__(nodes.AstNode):

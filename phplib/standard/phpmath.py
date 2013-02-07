@@ -1,6 +1,6 @@
 import math
-from pie.interpreter.function import SCALAR
-from pie.interpreter.function import builtin_function
+from pie.interpreter.functions.builtin import SCALAR
+from pie.interpreter.functions.builtin import builtin_function
 from pie.objspace import space
 
 
