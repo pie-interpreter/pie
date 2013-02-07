@@ -1,4 +1,5 @@
 import os
+from phplib.standard import *
 
 from rpython.rlib.objectmodel import we_are_translated
 from rpython.rlib.unroll import unrolling_iterable

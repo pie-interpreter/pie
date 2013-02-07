@@ -37,7 +37,7 @@ class WrongParameterType(Warning):
 
     def __init__(self, context, given, expected, position, name):
         message = "%s() expects parameter %s to be %s, %s given" \
-            (name, position, expected, given)
+            % (name, position, expected, given)
 
         Warning.__init__(self, context, message)
 

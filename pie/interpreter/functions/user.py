@@ -6,16 +6,7 @@ from pie.interpreter.frame import Frame
 from pie.interpreter.interpreter import Interpreter
 from pie.interpreter.errors.fatalerrors import NonVariablePassedByReference
 from pie.interpreter.errors.warnings import MissingArgument
-
-
-class AbstractFunction(object):
-    "Interface for all functions"
-
-    def __init__(self, name):
-        self.name = name
-
-    def call(self, context, stack_values):
-        raise NotImplementedError
+from pie.interpreter.functions.base import AbstractFunction
 
 
 class UserFunction(AbstractFunction):
