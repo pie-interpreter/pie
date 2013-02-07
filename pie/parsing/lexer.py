@@ -1,5 +1,6 @@
-from pypy.rlib.parsing.deterministic import LexerError
-from pypy.rlib.parsing.lexer import Lexer, SourcePos, Token
+from rpython.rlib.parsing.deterministic import LexerError
+from rpython.rlib.parsing.lexer import Lexer, SourcePos, Token
+
 from pie.parsing import regex
 from pie.interpreter.errors.parseerrors import UnrecognizedSymbol
 

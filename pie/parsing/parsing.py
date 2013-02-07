@@ -1,10 +1,11 @@
 import os
 import py
-from pypy.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
-from pypy.rlib.parsing.parsing import PackratParser, ParseError
+
+from rpython.rlib.parsing.ebnfparse import parse_ebnf, check_for_missing_names
+from rpython.rlib.parsing.parsing import PackratParser, ParseError
+
 from pie.parsing.lexer import PieLexer
 from pie.interpreter.errors.parseerrors import InvalidSyntax
-
 
 def parse(source):
     """ Parse php code """

@@ -1,5 +1,8 @@
+from rpython.rlib.objectmodel import compute_unique_id
+
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name
-from pypy.rlib.objectmodel import compute_unique_id
+
+__author__ = 'sery0ga'
 
 
 class Bytecode(object):

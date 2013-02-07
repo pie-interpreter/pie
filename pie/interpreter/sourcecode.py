@@ -1,7 +1,8 @@
-from pypy.rlib.streamio import open_file_as_stream
-from pie.interpreter.interpreter import Interpreter
+from rpython.rlib.streamio import open_file_as_stream
+
 from pie.compiling import compiling
 from pie.objspace import space
+from pie.interpreter.interpreter import Interpreter
 from pie.interpreter.errors.base import PieError
 
 

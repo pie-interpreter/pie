@@ -1,4 +1,5 @@
-from pypy.rlib.rerased import new_erasing_pair
+from rpython.rlib.rerased import new_erasing_pair
+
 from pie.objects.strategy.base import GeneralStringStrategy, get_string_strategy
 from pie.interpreter.errors.base import InternalError
 

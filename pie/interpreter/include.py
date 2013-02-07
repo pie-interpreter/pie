@@ -1,7 +1,9 @@
-import os.path
-import sourcecode
 from abc import ABCMeta, abstractmethod
-from pypy.rlib.objectmodel import specialize
+import sourcecode
+import os.path
+
+from rpython.rlib.objectmodel import specialize
+
 from pie.objects.bool import W_BoolObject
 from pie.utils.path import split_path
 from pie.interpreter.errors.warnings import NoFile, NoFileInIncludePath

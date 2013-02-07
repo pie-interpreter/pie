@@ -1,6 +1,8 @@
 import string
-from pypy.rlib.parsing.parsing import ParseError
-from pypy.rlib.objectmodel import instantiate
+
+from rpython.rlib.parsing.parsing import ParseError
+from rpython.rlib.objectmodel import instantiate
+
 from pie.utils.ini import raw_parse_ini_file
 
 DEFAULT_CONFIG_PATH = 'conf/pie.ini'

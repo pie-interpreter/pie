@@ -1,6 +1,6 @@
 """ Module, with all ast nodes """
 
-from pypy.tool.pairtype import extendabletype
+from rpython.tool.pairtype import extendabletype
 
 
 class AstNode:

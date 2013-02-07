@@ -2,11 +2,14 @@ import os
 import sys
 import tempfile
 import unittest
+
 from pie.interpreter.frame import Frame
 from pie.interpreter.sourcecode import SourceCode
 from pie.interpreter.context import Context
 from pie.test.parser import Parser
 from pie.interpreter.errors.base import PieError
+
+__author__ = 'sery0ga'
 
 
 class TestPHPLanguageCoverage(unittest.TestCase):

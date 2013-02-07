@@ -1,8 +1,8 @@
 import os
 from phplib.standard import *
 
-from pypy.rlib.objectmodel import we_are_translated
-from pypy.rlib.unroll import unrolling_iterable
+from rpython.rlib.objectmodel import we_are_translated
+from rpython.rlib.unroll import unrolling_iterable
 
 from pie.objspace import space
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE

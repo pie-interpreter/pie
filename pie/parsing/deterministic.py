@@ -1,6 +1,7 @@
-from pypy.rlib.parsing.deterministic import DFA, NFA, compress_char_set
-from pypy.rlib.parsing.codebuilder import Codebuilder
 import py
+
+from rpython.rlib.parsing.deterministic import DFA, NFA, compress_char_set
+from rpython.rlib.parsing.codebuilder import Codebuilder
 
 class PieDFA(DFA):
 
