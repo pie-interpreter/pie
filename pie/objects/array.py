@@ -2,6 +2,7 @@ from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
 
+
 class W_ArrayObject(W_Type):
 
     def __init__(self):
@@ -56,8 +57,8 @@ class W_ArrayObject(W_Type):
 
     def equal(self, object):
         from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_BoolObject)
-        if self.storage == object.value:
+        assert isinstance(object, W_ArrayObject)
+        if self.storage == object.storage:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
