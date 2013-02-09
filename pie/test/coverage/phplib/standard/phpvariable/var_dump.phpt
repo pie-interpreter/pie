@@ -19,6 +19,11 @@ var_dump("1");
 //multiple parameters test
 echo "multiple parameters test\n";
 var_dump(1, 1.1, "string", false);
+echo "variables test\n";
+$a = 51;
+$b = "yes";
+$c = 42.5;
+var_dump($a, $b, $c);
 ?>
 --EXPECT--
 bool(false)
@@ -30,10 +35,10 @@ int(43423)
 float(1.1)
 float(1.3123)
 float(-1.32)
-float(1.3E+55)
-float(1.3E-45)
+float(1.3e+55)
+float(1.3e-45)
 float(1.1)
-float(1.1E+14)
+float(1.1e+14)
 string(3) "yes"
 string(1) "1"
 multiple parameters test
@@ -41,3 +46,7 @@ int(1)
 float(1.1)
 string(6) "string"
 bool(false)
+variables test
+int(51)
+string(3) "yes"
+float(42.5)

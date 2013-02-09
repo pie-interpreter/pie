@@ -41,7 +41,7 @@ from pie.objspace import space
 @builtin_function()
 def var_dump(context, params):
     for param in params:
-        var_dump_one_parameter(context, param)
+        var_dump_one_parameter(context, param.deref())
 
 def var_dump_one_parameter(context, param):
     #FIXME: correct float var_dump for 1.0e+4 < value < 1.0e+14. Uncomment in test
@@ -56,7 +56,7 @@ def var_dump_one_parameter(context, param):
     elif param.type == space.W_INT:
         context.print_output("int(%d)\n" % param.int_w())
     elif param.type == space.W_FLOAT:
-        context.print_output("float(%G)\n" % param.float_w())
+        context.print_output("float(%s)\n" % param.float_w())
     elif param.type == space.W_BOOL:
         if param.is_true():
             context.print_output("bool(true)\n")

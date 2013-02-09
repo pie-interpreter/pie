@@ -7,6 +7,7 @@ from rpython.rlib.parsing.parsing import PackratParser, ParseError
 from pie.parsing.lexer import PieLexer
 from pie.interpreter.errors.parseerrors import InvalidSyntax
 
+
 def parse(source):
     """ Parse php code """
     try:

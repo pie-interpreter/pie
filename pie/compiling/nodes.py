@@ -315,8 +315,8 @@ class __extend__(nodes.Variable):
 class __extend__(nodes.FunctionCall):
 
     def compile_node(self, builder):
-        for i in range(0, len(self.parameters)):
-            self.parameters[-1 * i].compile(builder)
+        for parameter in self.parameters:
+            parameter.compile(builder)
 
         name = self.name
         if isinstance(name, nodes.Identifier):
