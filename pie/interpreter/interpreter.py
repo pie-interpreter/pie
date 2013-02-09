@@ -67,11 +67,11 @@ class Interpreter(object):
 
     def ECHO(self, value):
         w_value = self.frame.stack.pop()
-        os.write(1, w_value.deref().as_string().str_w())
+        self.context.print_output(w_value.deref().as_string().str_w())
 
     def PRINT(self, value):
         w_value = self.frame.stack.pop()
-        os.write(1, w_value.deref().as_string().str_w())
+        self.context.print_output(w_value.deref().as_string().str_w())
         self.frame.stack.append(space.int(1))
 
     def RETURN(self, value):

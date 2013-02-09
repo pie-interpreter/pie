@@ -15,7 +15,10 @@ var_dump(1.10);
 //var_dump(1.1e13); FIXME: this should be uncommented
 var_dump(1.1e14);
 var_dump("yes");
-var_dump("1")
+var_dump("1");
+//multiple parameters test
+echo "multiple parameters test\n";
+var_dump(1, 1.1, "string", false);
 ?>
 --EXPECT--
 bool(false)
@@ -33,3 +36,8 @@ float(1.1)
 float(1.1E+14)
 string(3) "yes"
 string(1) "1"
+multiple parameters test
+int(1)
+float(1.1)
+string(6) "string"
+bool(false)

@@ -1,12 +1,16 @@
-import os
+""" This module represents php variable handling functions.
 
+You can find full description here: http://www.php.net/manual/en/ref.var.php
+
+Important: Functions empty(), isset() and unset() are a part of the
+interpreter core and not implemented here
+"""
 from pie.interpreter.functions.builtin import builtin_function
 from pie.objspace import space
 
 #TODO: boolval
 #TODO: debug_zval_dump (?)
 #TODO: doubleval
-# empty() -- already implemented as part of interpreter
 #TODO: floatval
 #TODO: get_defined_vars
 #TODO: get_resource_type
@@ -28,34 +32,37 @@ from pie.objspace import space
 #TODO: is_resource
 #TODO: is_scalar
 #TODO: is_string
-#isset() -- already implemented as part of interpreter
 #TODO: print_r
 #TODO: serialize
 #TODO: settype
 #TODO: strval
 #TODO: unserialize
-#unset() -- already implemented as part of interpreter
 
 @builtin_function()
 def var_dump(context, params):
+    for param in params:
+        var_dump_one_parameter(context, param)
+
+def var_dump_one_parameter(context, param):
     #FIXME: correct float var_dump for 1.0e+4 < value < 1.0e+14. Uncomment in test
     #TODO: array
     #TODO: resource
     #TODO: object
     #TODO: unknown type (?)
-    for param in params:
-        if param.type == space.W_STR:
-            os.write(1, "string(%d) \"%s\"\n" % (param.strlen(), param.str_w()))
-        elif param.type == space.W_INT:
-            os.write(1, "int(%d)\n" % param.int_w())
-        elif param.type == space.W_FLOAT:
-            os.write(1, "float(%G)\n" % param.float_w())
-        elif param.type == space.W_BOOL:
-            if param.is_true():
-                os.write(1, "bool(true)\n")
-            else:
-                os.write(1, "bool(false)\n")
-        elif param.type == space.W_NULL:
-            os.write(1, "NULL\n")
+    #TODO: add JIT support
+    if param.type == space.W_STR:
+        context.print_output("string(%d) \"%s\"\n" %
+            (param.strlen(), param.str_w()))
+    elif param.type == space.W_INT:
+        context.print_output("int(%d)\n" % param.int_w())
+    elif param.type == space.W_FLOAT:
+        context.print_output("float(%G)\n" % param.float_w())
+    elif param.type == space.W_BOOL:
+        if param.is_true():
+            context.print_output("bool(true)\n")
+        else:
+            context.print_output("bool(false)\n")
+    elif param.type == space.W_NULL:
+        context.print_output("NULL\n")
 
 #TODO: var_export

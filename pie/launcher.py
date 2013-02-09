@@ -1,6 +1,7 @@
 " Entry point module for interpreting "
 
 import os
+
 from pie.interpreter.sourcecode import SourceCode
 from pie.interpreter.context import Context
 from pie.interpreter.frame import Frame

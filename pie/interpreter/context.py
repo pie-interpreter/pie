@@ -35,6 +35,8 @@ class Context(object):
         else:
             self.functions[function.name] = function
 
+    def print_output(self, string):
+        os.write(1, string)
 
 class Trace(object):
 
