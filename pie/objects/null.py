@@ -1,9 +1,16 @@
 from pie.objects.base import W_Type
 from pie.objects.int import W_IntObject
+from pie.objects.array import W_ArrayObject
 import pie.objects.bool as boolean
+from pie.types import PHPTypes
 
 
 class W_NullObject(W_Type):
+
+    _immutable_fields_ = ['type']
+
+    def __init__(self):
+        self.type = PHPTypes.w_null
 
     def __repr__(self):
         return "W_NullObject()"
@@ -13,6 +20,9 @@ class W_NullObject(W_Type):
 
     def is_true(self):
         return False
+
+    def as_array(self):
+        return W_ArrayObject()
 
     def as_bool(self):
         return boolean.W_BoolObject(False)

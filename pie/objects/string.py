@@ -3,6 +3,7 @@ from pie.objects.base import W_Type
 from pie.objects.bool import W_BoolObject
 from pie.objects.int import W_IntObject
 from pie.objects.float import W_FloatObject
+from pie.types import PHPTypes
 
 __author__ = 'sery0ga'
 
@@ -24,7 +25,9 @@ class W_StringObject(W_Type):
                     on strategy.
       - strategy -- defines object behaviour. For more info see stringstrategies.py
     """
+    _immutable_fields_ = ['type']
     convertible_to_number = True
+    type = PHPTypes.w_string
 
     def __init__(self, strval):
         from pie.objects.strategy.general import ConstantStringStrategy
@@ -47,6 +50,11 @@ class W_StringObject(W_Type):
     def str_w(self):
         self.make_integral()
         return self.strategy.str_w(self)
+
+    def as_array(self):
+        from pie.objects.array import W_ArrayObject
+        array = W_ArrayObject()
+        return array.set(0, self.str_w())
 
     def as_bool(self):
         self.make_integral()

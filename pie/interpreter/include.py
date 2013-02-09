@@ -91,6 +91,7 @@ class BaseIncludeStatement(object):
     def __init__(self, context, frame):
         self.context = context
         self.frame = frame
+        self.error_strategy = _get_strategy(error_strategy)
 
     def include(self, filename):
         try:

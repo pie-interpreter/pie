@@ -87,3 +87,7 @@ class W_Number(W_Type):
 
 class DivisionByZeroError(Exception):
     pass
+
+
+class W_Undefined(W_Type):
+    type = PHPTypes.w_undefined

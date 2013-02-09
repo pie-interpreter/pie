@@ -116,7 +116,8 @@ class Interpreter(object):
         self.frame.stack.append(space.bool(result))
 
     def CAST_TO_ARRAY(self, value):
-        raise InternalError("Not implemented")
+        w_object = self.frame.stack.pop()
+        self.frame.stack.append(w_object.as_array())
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()
