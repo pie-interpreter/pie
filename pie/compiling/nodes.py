@@ -133,6 +133,12 @@ class __extend__(nodes.Empty):
             builder.emit('EMPTY_RESULT')
 
 
+class __extend__(nodes.ArrayDeclaration):
+
+    def compile_node(self, builder):
+        pass
+
+
 class __extend__(nodes.BinaryOperator):
 
     def compile_node(self, builder):

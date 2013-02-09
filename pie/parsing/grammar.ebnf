@@ -12,6 +12,7 @@ T_INLINE_COMMENT: "/\*([^\*]|\*[^/])*\*?\*/";
 T_WHITESPACE: "\s";
 
 # original PHP tokens
+T_ARRAY: "array";
 T_ARRAY_CAST: "\([ \t]*(array)[ \t]*\)";
 T_BOOL_CAST: "\([ \t]*((bool)|(boolean))[ \t]*\)";
 T_BOOLEAN_AND: "&&";
@@ -154,8 +155,24 @@ float_type: ADDITIVE_OPERATOR FLOAT
 
 string_type: <SINGLE_QUOTED_STRING>
            | <DOUBLE_QUOTED_STRING>;
+
 bool_type: <TRUE>
          | <FALSE>;
+
+# array type here means constant arrays only, complicated arrays
+# declarations go into constructs
+array_type: T_ARRAY ["("] >array_type_values<? [")"]
+          | "[" >array_type_values<? ["]"];
+array_type_values: array_type_value [","] >array_type_values<
+                 | array_type_value [","]?;
+array_type_value: >array_type_key< ["=>"] constant_expression
+                | constant_expression;
+array_type_key: int_type
+              | bool_type
+              | float_type
+              | string_type
+              | NULL;
+
 
 
 # NOT FINISHED STATEMENTS
@@ -179,7 +196,8 @@ constructs_with_return_value: <construct_print>
                             | <construct_require>
                             | <construct_require_once>
                             | <construct_isset>
-                            | <construct_empty>;
+                            | <construct_empty>
+                            | <construct_array>;
 
 construct_print: T_PRINT expression;
 
@@ -207,6 +225,13 @@ construct_isset: T_ISSET ["("] comma_seperated_variables [")"];
 construct_unset: T_UNSET ["("] comma_seperated_variables [")"];
 
 construct_empty: T_EMPTY ["("] expression [")"];
+
+construct_array: T_ARRAY ["("] >construct_array_values<? [")"]
+              | "[" >construct_array_values<? ["]"];
+construct_array_values: construct_array_value [","] >construct_array_values<
+                      | construct_array_value [","]?;
+construct_array_value: expression ["=>"] expression
+                     | expression;
 
 
 # expressions definition, based on priority of operators
@@ -301,6 +326,7 @@ constant_expression: <int_type>
                    | <float_type>
                    | <string_type>
                    | <bool_type>
+                   | <array_type>
                    | <NULL>;
 
 function_call: >function_call_identifier< >function_parameters<;

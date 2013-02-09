@@ -4,9 +4,12 @@ from rpython.rlib.parsing.tree import RPythonVisitor
 from pie.ast.nodes import *
 from pie.parsing import parsing
 
+
 def build(source):
     parse_tree = parsing.parse(source)
     astree = build_ast(parse_tree)
+    print astree
+    exit()
     return astree
 
 
@@ -91,6 +94,27 @@ class AstBuilder(RPythonVisitor):
 
     def visit_construct_empty(self, node):
         return Empty(self.get_second_child(node))
+
+    def visit_construct_array(self, node):
+        children_count = len(node.children)
+        assert children_count > 0
+
+        values = []
+        for index in range(1, children_count):
+            values.append(self.transform(node.children[index]))
+
+        return ArrayDeclaration(values)
+
+    def visit_construct_array_value(self, node):
+        children_count = len(node.children)
+        assert children_count in [1, 2]
+
+        if children_count == 1:
+            return ArrayValue(None, self.transform(node.children[0]))
+        else:
+            return ArrayValue(
+                self.transform(node.children[0]),
+                self.transform(node.children[1]))
 
     def visit_logical_xor_expression(self, node):
         children_count = len(node.children)
@@ -391,6 +415,19 @@ class AstBuilder(RPythonVisitor):
         float_constant.sign = sign
 
         return float_constant
+
+    def visit_array_type(self, node):
+        children_count = len(node.children)
+        assert children_count > 0
+
+        values = []
+        for index in range(1, children_count):
+            values.append(self.transform(node.children[index]))
+
+        return ConstantArray(values)
+
+    def visit_array_type_value(self, node):
+        return self.visit_construct_array_value(node)
 
     def visit_INT_BIN(self, node):
         return ConstantIntBin(node.token.source)

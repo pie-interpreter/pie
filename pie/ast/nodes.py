@@ -169,11 +169,35 @@ class Unset(ItemsList):
 
 class Empty(AstNodeWithResult):
 
-        def __init__(self, expression):
-            self.expression = expression
+    def __init__(self, expression):
+        self.expression = expression
 
-        def repr(self):
-            return "Empty(%s)" % self.expression.repr()
+    def repr(self):
+        return "Empty(%s)" % self.expression.repr()
+
+
+class ArrayDeclaration(AstNodeWithResult):
+
+    def __init__(self, values):
+        self.values = values
+
+    def repr(self):
+        return "ArrayDeclaration(%s)" % self.get_list_repr(self.values)
+
+
+class ArrayValue(AstNode):
+
+    def __init__(self, key, value):
+        self.key = key
+        self.value = value
+
+    def repr(self):
+        if self.key:
+            key_repr = self.key.repr()
+        else:
+            key_repr = 'None'
+
+        return "ArrayValue(%s => %s)" % (key_repr, self.value.repr())
 
 
 class BinaryOperator(AstNodeWithResult):
@@ -321,7 +345,7 @@ class FunctionDeclaration(AstNode):
 
         return "FunctionDeclaration%s(%s(%s){%s})" \
             % (reference_symbol,
-                self.name,
+                self.name.repr(),
                 self.get_list_repr(self.arguments),
                 self.body.repr())
 
@@ -538,6 +562,15 @@ class ConstantBool(Constant):
 
     def repr(self):
         return "ConstantBool(\"%s\")" % (self.value)
+
+
+class ConstantArray(Constant):
+
+    def __init__(self, values):
+        self.values = values
+
+    def repr(self):
+        return "ConstantArray(%s)" % self.get_list_repr(self.values)
 
 
 class ConstantNull(Constant):
