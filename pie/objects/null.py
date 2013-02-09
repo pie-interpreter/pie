@@ -2,10 +2,16 @@ from pie.objects.base import W_Type
 from pie.objects.int import W_IntObject
 from pie.objects.array import W_ArrayObject
 import pie.objects.bool as boolean
+from pie.types import PHPTypes
 
 __author__ = 'sery0ga'
 
 class W_NullObject(W_Type):
+
+    _immutable_fields_ = ['type']
+
+    def __init__(self):
+        self.type = PHPTypes.w_null
 
     def copy(self):
         return self

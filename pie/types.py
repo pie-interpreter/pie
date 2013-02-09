@@ -1,7 +1,7 @@
 __author__ = 'sery0ga'
 
 
-class PossibleTypes(object):
+class PHPTypes(object):
 
-    (w_int, w_float, w_str, w_bool, w_null) = range(5)
-
+    (w_int, w_float, w_string, w_bool,
+        w_null, w_array, w_undefined) = range(7)

@@ -1,4 +1,5 @@
 from pie.error import InterpreterError
+from pie.types import PHPTypes
 
 __author__ = 'sery0ga'
 
@@ -84,3 +85,7 @@ class W_Number(W_Type):
 
     def mod(self, number):
         raise InterpreterError("Not implemented")
+
+
+class W_Undefined(W_Type):
+    type = PHPTypes.w_undefined

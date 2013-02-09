@@ -1,12 +1,16 @@
 from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
-from pie.types import PossibleTypes
+from pie.types import PHPTypes
 
 class W_ArrayObject(W_Type):
 
-    def __init__(self, raw_data):
+    _immutable_fields = ['type']
+    type = PHPTypes.w_array
+
+    def __init__(self, raw_data = []):
         self.storage = {}
+        self.last_index = 0
         record = False
         key = None
         for data_unit in raw_data:
@@ -15,14 +19,36 @@ class W_ArrayObject(W_Type):
                 self.storage[key] = data_unit
             else:
                 record = True
-                if data_unit.type == ObjSpace.w_float or \
-                    data_unit.type == ObjSpace.w_int or \
-                    data_unit.type == ObjSpace.w_bool:
-                    key = data_unit.as_int().int_w()
-                elif data_unit.type == ObjSpace.w_string:
-                    key = ""
-                elif data_unit.type == ObjSpace.w_null:
-                    key = ""
+                key = self._get_key(data_unit)
+
+    def _get_key(self, data_unit):
+        if data_unit.type == PHPTypes.w_float or \
+            data_unit.type == PHPTypes.w_int or \
+            data_unit.type == PHPTypes.w_bool:
+            key = data_unit.as_int().int_w()
+            if key >= self.last_index:
+                self.last_index = key + 1
+            return key
+        elif data_unit.type == PHPTypes.w_string:
+            key = data_unit.str_w()
+            if key[0] == '0' or (key[0] == '-' and key[1] == '0'):
+                return key
+            try:
+                key = int(key)
+                if key >= self.last_index:
+                    self.last_index = key + 1
+            except ValueError:
+                pass
+            return key
+        elif data_unit.type == PHPTypes.w_null:
+            return ""
+        elif data_unit.type == PHPTypes.w_undefined:
+            key = self.last_index
+            self.last_index = key + 1
+            return key
+        else:
+            #TODO: Illegal offset type
+            raise NotImplementedError
 
     def __repr__(self):
         return "W_ArrayObject(%s)" % self.storage

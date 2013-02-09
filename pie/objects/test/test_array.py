@@ -2,30 +2,74 @@ import unittest
 
 from pie.objects.array import W_ArrayObject
 from pie.objects.bool import W_BoolObject
-from pie.objects.bool import W_IntObject
-from pie.objects.bool import W_FloatObject
+from pie.objects.int import W_IntObject
+from pie.objects.float import W_FloatObject
+from pie.objects.null import W_NullObject
 from pie.objects.string import W_StringObject
-
+from pie.objects.base import W_Undefined
 
 class TestArray(unittest.TestCase):
 
     def setUp(self):
         self.array = W_ArrayObject()
 
-    def test_array_creation(self):
-        raw = [1,1]
-        array = W_ArrayObject(raw)
-        expected = {1: 1}
-        self.assertEqual(expected, array.storage)
+    def test_array_creation_int_branch(self):
+        raw = [W_IntObject(3), W_IntObject(1),
+                W_FloatObject(-1.2), W_IntObject(2),
+                W_BoolObject(False), W_IntObject(2),
+                W_BoolObject(True), W_IntObject(3)]
+        actual = W_ArrayObject(raw)
+        expected = {3: W_IntObject(1), -1: W_IntObject(2),
+                    0: W_IntObject(2), 1: W_IntObject(3)}
+        self.assertEqual(expected, actual.storage)
+
+    def test_array_creation_null_string_branch(self):
+        raw = [W_StringObject("test"), W_IntObject(1),
+                W_StringObject("08"), W_IntObject(2),
+                W_StringObject("99"), W_IntObject(3),
+                W_NullObject(), W_IntObject(4),
+                W_StringObject("-5"), W_IntObject(5),
+                W_StringObject("-09"), W_IntObject(7)]
+        actual = W_ArrayObject(raw)
+        expected = {"test": W_IntObject(1), "08": W_IntObject(2),
+                    99: W_IntObject(3), "": W_IntObject(4),
+                    -5: W_IntObject(5), "-09": W_IntObject(7)}
+        self.assertEqual(expected, actual.storage)
+
+    def test_array_creation_one_key(self):
+        raw = [W_IntObject(1), W_IntObject(1),
+                W_StringObject("1"), W_IntObject(2),
+                W_FloatObject(1.5), W_IntObject(3),
+                W_BoolObject(True), W_IntObject(4)]
+        actual = W_ArrayObject(raw)
+        expected = {1: W_IntObject(4)}
+        self.assertEqual(expected, actual.storage)
+
+    def test_array_creation_with_no_keys(self):
+        raw = [W_Undefined(), W_IntObject(1),
+                W_Undefined(), W_IntObject(2),
+                W_FloatObject(6.0), W_IntObject(3),
+                W_Undefined(), W_IntObject(4),
+                W_IntObject(3), W_IntObject(5),
+                W_Undefined(), W_IntObject(6)]
+        actual = W_ArrayObject(raw)
+        expected = {0: W_IntObject(1), 1: W_IntObject(2),
+                    6: W_IntObject(3), 7: W_IntObject(4),
+                    3: W_IntObject(5), 8: W_IntObject(6)}
+        self.assertEqual(expected, actual.storage)
+        raw = [W_StringObject("6"), W_IntObject(3),
+                W_StringObject("3"), W_IntObject(5),
+                W_Undefined(), W_IntObject(6)]
+        actual = W_ArrayObject(raw)
+        expected = {6: W_IntObject(3), 3: W_IntObject(5),
+                    7: W_IntObject(6)}
+        self.assertEqual(expected, actual.storage)
 
     def test_is_true(self):
         self.assertFalse(self.array.is_true())
         self.array.set(0, 3)
         self.assertTrue(self.array.is_true())
 
-    # def test_as_array(self):
-    #     expected = W_ArrayObject()
-    #     self.assertNotEqual(expected, self.array.as_array())
     def test_as_bool(self):
         false = W_BoolObject(False)
         self.assertTrue(false.equal(self.array.as_bool()).is_true())
