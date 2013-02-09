@@ -12,6 +12,12 @@ class TestArray(unittest.TestCase):
     def setUp(self):
         self.array = W_ArrayObject()
 
+    def test_array_creation(self):
+        raw = [1,1]
+        array = W_ArrayObject(raw)
+        expected = {1: 1}
+        self.assertEqual(expected, array.storage)
+
     def test_is_true(self):
         self.assertFalse(self.array.is_true())
         self.array.set(0, 3)

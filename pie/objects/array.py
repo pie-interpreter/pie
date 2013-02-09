@@ -1,12 +1,28 @@
 from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
-
+from pie.types import PossibleTypes
 
 class W_ArrayObject(W_Type):
 
-    def __init__(self):
+    def __init__(self, raw_data):
         self.storage = {}
+        record = False
+        key = None
+        for data_unit in raw_data:
+            if record:
+                record = False
+                self.storage[key] = data_unit
+            else:
+                record = True
+                if data_unit.type == ObjSpace.w_float or \
+                    data_unit.type == ObjSpace.w_int or \
+                    data_unit.type == ObjSpace.w_bool:
+                    key = data_unit.as_int().int_w()
+                elif data_unit.type == ObjSpace.w_string:
+                    key = ""
+                elif data_unit.type == ObjSpace.w_null:
+                    key = ""
 
     def __repr__(self):
         return "W_ArrayObject(%s)" % self.storage

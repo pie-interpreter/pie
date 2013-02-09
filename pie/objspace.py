@@ -10,8 +10,6 @@ __author__ = 'sery0ga'
 
 class ObjSpace(object):
 
-    (w_int, w_float, w_str, w_bool, w_null) = range(5)
-
     def int(self, value):
         return W_IntObject(value)
 
