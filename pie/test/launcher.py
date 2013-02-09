@@ -120,6 +120,9 @@ def _add_test(filename, test_name):
                 source.interpret(context, Frame())
         except PieError as e:
             os.write(2, e.get_message())
+        except Exception as e:
+            self.restore_output()
+            self.fail(e)
 
         self.restore_output()
 

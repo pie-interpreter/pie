@@ -6,7 +6,7 @@ Important: Functions empty(), isset() and unset() are a part of the
 interpreter core and not implemented here
 """
 from pie.interpreter.functions.builtin import builtin_function
-from pie.objspace import space
+from pie.types import PHPTypes
 
 #TODO: boolval
 #TODO: debug_zval_dump (?)
@@ -38,10 +38,12 @@ from pie.objspace import space
 #TODO: strval
 #TODO: unserialize
 
+
 @builtin_function()
 def var_dump(context, params):
     for param in params:
         var_dump_one_parameter(context, param.deref())
+
 
 def var_dump_one_parameter(context, param):
     #FIXME: correct float var_dump for 1.0e+4 < value < 1.0e+14. Uncomment in test
@@ -50,19 +52,20 @@ def var_dump_one_parameter(context, param):
     #TODO: object
     #TODO: unknown type (?)
     #TODO: add JIT support
-    if param.type == space.W_STR:
+    if param.type == PHPTypes.w_string:
         context.print_output("string(%d) \"%s\"\n" %
             (param.strlen(), param.str_w()))
-    elif param.type == space.W_INT:
+    elif param.type == PHPTypes.w_int:
         context.print_output("int(%d)\n" % param.int_w())
-    elif param.type == space.W_FLOAT:
+    elif param.type == PHPTypes.w_float:
         context.print_output("float(%s)\n" % param.float_w())
-    elif param.type == space.W_BOOL:
+    elif param.type == PHPTypes.w_bool:
         if param.is_true():
             context.print_output("bool(true)\n")
         else:
             context.print_output("bool(false)\n")
-    elif param.type == space.W_NULL:
+    elif param.type == PHPTypes.w_null:
         context.print_output("NULL\n")
+
 
 #TODO: var_export
