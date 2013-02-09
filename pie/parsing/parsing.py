@@ -14,10 +14,7 @@ def parse(source):
         parse_tree = parse_php(source.content)
         parse_tree = transformer.transform(parse_tree)
     except ParseError as e:
-        print e.nice_error_message()
         raise InvalidSyntax(None, e.errorinformation, e.source_pos.lineno)
-
-    parse_tree.view()
 
     return parse_tree
 

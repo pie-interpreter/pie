@@ -8,6 +8,7 @@ from pie.objects.null import W_NullObject
 from pie.objects.string import W_StringObject
 from pie.objects.base import W_Undefined
 
+
 class TestArray(unittest.TestCase):
 
     def setUp(self):
