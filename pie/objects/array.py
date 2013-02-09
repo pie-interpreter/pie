@@ -1,6 +1,5 @@
+from pie.objspace import space
 from pie.objects.base import W_Type
-from pie.objects.float import W_FloatObject
-from pie.objects.int import W_IntObject
 from pie.types import PHPTypes
 
 class W_ArrayObject(W_Type):
@@ -65,14 +64,13 @@ class W_ArrayObject(W_Type):
         return self
 
     def as_bool(self):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(self.is_true())
+        return space.bool(self.is_true())
 
     def as_float(self):
-        return W_FloatObject(float(self.is_true()))
+        return space.float(float(self.is_true()))
 
     def as_int(self):
-        return W_IntObject(int(self.is_true()))
+        return space.int(int(self.is_true()))
 
     def as_number(self):
         return self.as_int()
@@ -98,12 +96,15 @@ class W_ArrayObject(W_Type):
             return W_BoolObject(False)
 
     def equal(self, object):
-        from pie.objects.bool import W_BoolObject
         assert isinstance(object, W_ArrayObject)
-        if self.storage == object.storage:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
+        if len(self.storage) != len(object.storage):
+            return space.bool(False)
+        for key,value in self.storage.iteritems():
+            if key not in object.storage:
+                return space.bool(False)
+            if not space.equal(value, object.storage[key]).is_true():
+                return space.bool(False)
+        return space.bool(True)
 
     def not_equal(self, object):
         from pie.objects.bool import W_BoolObject

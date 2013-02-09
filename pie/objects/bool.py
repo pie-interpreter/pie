@@ -1,7 +1,5 @@
 from pie.objects.base import W_Type
-from pie.objects.float import W_FloatObject
-from pie.objects.int import W_IntObject
-from pie.objects.array import W_ArrayObject
+from pie.objspace import space
 from pie.types import PHPTypes
 
 class W_BoolObject(W_Type):
@@ -22,26 +20,25 @@ class W_BoolObject(W_Type):
         return self.value
 
     def as_array(self):
-        array = W_ArrayObject()
+        array = space.array([])
         array.set(0, self.value)
 
     def as_bool(self):
         return self
 
     def as_float(self):
-        return W_FloatObject(float(self.value))
+        return space.float(float(self.value))
 
     def as_int(self):
-        return W_IntObject(int(self.value))
+        return space.int(int(self.value))
 
     def as_number(self):
         return self.as_int()
 
     def as_string(self):
-        from pie.objects.string import W_StringObject
         if self.value:
-            return W_StringObject('1')
-        return W_StringObject('')
+            return space.str('1')
+        return space.str('')
 
 
     def less_than(self, object):

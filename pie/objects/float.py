@@ -1,6 +1,6 @@
 from pie.error import DivisionByZeroError
 from pie.objects.base import W_Number
-from pie.objects.int import W_IntObject
+from pie.objspace import space
 from pie.types import PHPTypes
 
 class W_FloatObject(W_Number):
@@ -23,21 +23,18 @@ class W_FloatObject(W_Number):
     def float_w(self):
         return self.value
 
-
     def as_array(self):
-        from pie.objects.array import W_ArrayObject
-        array = W_ArrayObject()
+        array = space.array()
         return array.set(0, self.value)
 
     def as_bool(self):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(bool(self.value))
+        return space.bool(bool(self.value))
 
     def as_float(self):
         return self
 
     def as_int(self):
-        return W_IntObject(int(self.value))
+        return space.int(int(self.value))
 
     def as_number(self):
         return self

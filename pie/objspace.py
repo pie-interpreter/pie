@@ -1,10 +1,6 @@
-from pie.objects.null import W_NullObject
-from pie.objects.bool import W_BoolObject
-from pie.objects.float import W_FloatObject
-from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
-from pie.objects.array import W_ArrayObject
 from pie.objects.variable import W_Variable
+from pie.objects.base import W_Undefined
 from pie.types import PHPTypes
 
 __author__ = 'sery0ga'
@@ -16,19 +12,27 @@ class ObjSpace(object):
         return W_IntObject(value)
 
     def str(self, value):
+        from pie.objects.string import W_StringObject
         return W_StringObject(value)
 
     def bool(self, value):
+        from pie.objects.bool import W_BoolObject
         return W_BoolObject(value)
 
     def float(self, value):
+        from pie.objects.float import W_FloatObject
         return W_FloatObject(value)
 
     def null(self):
+        from pie.objects.null import W_NullObject
         return W_NullObject()
 
-    def array(self, value):
+    def array(self, value = []):
+        from pie.objects.array import W_ArrayObject
         return W_ArrayObject(value)
+
+    def undefined(self):
+        return W_Undefined()
 
     def variable(self, w_object):
         if isinstance(w_object, W_Variable):
@@ -97,16 +101,16 @@ class ObjSpace(object):
 
     def identical(self, w_left, w_right):
         if w_left.deref().type != w_right.deref().type:
-            return W_BoolObject(False)
+            return self.bool(False)
         return w_left.deref().equal(w_right.deref())
 
     def not_identical(self, w_left, w_right):
         if w_left.deref().type != w_right.deref().type:
-            return W_BoolObject(True)
+            return self.bool(True)
         return w_left.deref().not_equal(w_right.deref())
 
     def is_empty(self, w_object):
-        return W_BoolObject(not w_object.deref().is_true())
+        return self.bool(not w_object.deref().is_true())
 
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
@@ -174,6 +178,7 @@ class ObjSpace(object):
 
 def _new_comparison_op(name):
     def func(self, w_left, w_right):
+        from pie.objects.string import NotConvertibleToNumber
         w_left = w_left.deref()
         w_right = w_right.deref()
         type = self.get_common_comparison_type(w_left, w_right)
@@ -198,6 +203,11 @@ def _new_comparison_op(name):
         elif type == PHPTypes.w_null:
             # this is possible only if both arguments are null
             return getattr(w_left, name)(w_right)
+        elif type == PHPTypes.w_array:
+            if w_right.type == PHPTypes.w_array:
+                return getattr(w_left, name)(w_right)
+            else:
+                return space.bool(False)
         raise NotImplementedError
     func.func_name = name
     return func
