@@ -204,8 +204,16 @@ def _new_comparison_op(name):
             # this is possible only if both arguments are null
             return getattr(w_left, name)(w_right)
         elif type == PHPTypes.w_array:
+            # we're sure now, that at least w_left.type == PHPTypes.w_array
             if w_right.type == PHPTypes.w_array:
                 return getattr(w_left, name)(w_right)
+            # in php array on the left is always > than anything (except array)
+            # on the right:
+            # Example: array(5) > 7, array(0) > true.
+            # But: true == array(0) due to type conversion
+            elif name == 'more_than' or name == 'more_than_or_equal' \
+                    or name == 'not_equal':
+                return space.bool(True)
             else:
                 return space.bool(False)
         raise NotImplementedError

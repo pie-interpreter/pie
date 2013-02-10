@@ -2,6 +2,9 @@ from pie.objspace import space
 from pie.objects.base import W_Type
 from pie.types import PHPTypes
 
+class IllegalOffsetType(Exception):
+    pass
+
 class W_ArrayObject(W_Type):
 
     _immutable_fields = ['type']
@@ -10,44 +13,19 @@ class W_ArrayObject(W_Type):
     def __init__(self, raw_data = []):
         self.storage = {}
         self.last_index = 0
+        self.last_index_changed = False
+
         record = False
-        key = None
-        for data_unit in raw_data:
+        index = None
+        for w_data_unit in raw_data:
             if record:
                 record = False
-                self.storage[key] = data_unit
+                self.storage[index] = w_data_unit
             else:
                 record = True
-                key = self._get_key(data_unit)
-
-    def _get_key(self, data_unit):
-        if data_unit.type == PHPTypes.w_float or \
-            data_unit.type == PHPTypes.w_int or \
-            data_unit.type == PHPTypes.w_bool:
-            key = data_unit.as_int().int_w()
-            if key >= self.last_index:
-                self.last_index = key + 1
-            return key
-        elif data_unit.type == PHPTypes.w_string:
-            key = data_unit.str_w()
-            if key[0] == '0' or (key[0] == '-' and key[1] == '0'):
-                return key
-            try:
-                key = int(key)
-                if key >= self.last_index:
-                    self.last_index = key + 1
-            except ValueError:
-                pass
-            return key
-        elif data_unit.type == PHPTypes.w_null:
-            return ""
-        elif data_unit.type == PHPTypes.w_undefined:
-            key = self.last_index
-            self.last_index = key + 1
-            return key
-        else:
-            #TODO: Illegal offset type
-            raise NotImplementedError
+                index = self._convert_index(w_data_unit)
+                if self.last_index_changed:
+                    self._update_last_index(index)
 
     def __repr__(self):
         return "W_ArrayObject(%s)" % self.storage
@@ -67,9 +45,13 @@ class W_ArrayObject(W_Type):
         return space.bool(self.is_true())
 
     def as_float(self):
+        #TODO: make caution
+        # http://www.php.net/manual/en/language.types.integer.php
         return space.float(float(self.is_true()))
 
     def as_int(self):
+        #TODO: make caution
+        # http://www.php.net/manual/en/language.types.integer.php
         return space.int(int(self.is_true()))
 
     def as_number(self):
@@ -79,62 +61,122 @@ class W_ArrayObject(W_Type):
         from pie.objects.string import W_StringObject
         return W_StringObject('Array')
 
-    def less_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_BoolObject)
-        if self.storage < object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
+    def less_than(self, w_object):
+        assert isinstance(w_object, W_ArrayObject)
+        self_length = len(self.storage)
+        object_length = len(w_object.storage)
+        if self_length < object_length:
+            return space.bool(True)
+        elif self_length == object_length:
+            return self._compare_elements('less_than', w_object)
+        return space.bool(False)
 
-    def more_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_BoolObject)
-        if self.storage > object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
+    def more_than(self, w_object):
+        assert isinstance(w_object, W_ArrayObject)
+        self_length = len(self.storage)
+        object_length = len(w_object.storage)
+        if self_length > object_length:
+            return space.bool(True)
+        elif self_length == object_length:
+            return self._compare_elements('more_than', w_object)
+        return space.bool(False)
 
-    def equal(self, object):
-        assert isinstance(object, W_ArrayObject)
-        if len(self.storage) != len(object.storage):
+    def equal(self, w_object):
+        assert isinstance(w_object, W_ArrayObject)
+        if len(self.storage) != len(w_object.storage):
             return space.bool(False)
-        for key,value in self.storage.iteritems():
-            if key not in object.storage:
+        return self._compare_elements('equal', w_object)
+
+    def not_equal(self, w_object):
+        assert isinstance(w_object, W_ArrayObject)
+        if len(self.storage) != len(w_object.storage):
+            return space.bool(True)
+        else:
+            for key,value in self.storage.iteritems():
+                if key not in w_object.storage:
+                    return space.bool(True)
+                if space.not_equal(value, w_object.storage[key]).is_true():
+                    return space.bool(True)
+            return space.bool(False)
+
+    def less_than_or_equal(self, w_object):
+        assert isinstance(w_object, W_ArrayObject)
+        self_length = len(self.storage)
+        object_length = len(w_object.storage)
+        if self_length < object_length:
+            return space.bool(True)
+        elif self_length == object_length:
+            return self._compare_elements('less_than_or_equal', w_object)
+        return space.bool(False)
+
+    def more_than_or_equal(self, w_object):
+        assert isinstance(w_object, W_ArrayObject)
+        self_length = len(self.storage)
+        object_length = len(w_object.storage)
+        if self_length > object_length:
+            return space.bool(True)
+        elif self_length == object_length:
+            return self._compare_elements('more_than_or_equal', w_object)
+        return space.bool(False)
+
+    def inc(self):
+        return self
+
+    def dec(self):
+        return self
+
+    def get(self, w_index):
+        assert isinstance(w_index, W_Type)
+        index = self._convert_index(w_index)
+        return self.storage[index]
+
+    def set(self, w_index, w_value):
+        assert isinstance(w_index, W_Type)
+        assert isinstance(w_value, W_Type)
+        index = self._convert_index(w_index)
+        self.storage[index] = w_value
+        if self.last_index_changed:
+            self._update_last_index(index)
+
+    def _compare_elements(self, operation, w_object):
+        for key, w_value in self.storage.iteritems():
+            if key not in w_object.storage:
                 return space.bool(False)
-            if not space.equal(value, object.storage[key]).is_true():
+            if not getattr(space, operation)(w_value,
+                                             w_object.storage[key]).is_true():
                 return space.bool(False)
         return space.bool(True)
 
-    def not_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_BoolObject)
-        if self.storage != object.value:
-            return W_BoolObject(True)
+    def _convert_index(self, w_index):
+        if w_index.type == PHPTypes.w_float or \
+            w_index.type == PHPTypes.w_int or \
+            w_index.type == PHPTypes.w_bool:
+            key = w_index.as_int().int_w()
+            if key >= self.last_index:
+                self.last_index_changed = True
+            return key
+        elif w_index.type == PHPTypes.w_string:
+            key = w_index.str_w()
+            if (len(key) > 1 and key[0] == '0') \
+                or (key[0] == '-' and key[1] == '0'):
+                return key
+            try:
+                key = int(key)
+                if key >= self.last_index:
+                    self.last_index_changed = True
+            except ValueError:
+                pass
+            return key
+        elif w_index.type == PHPTypes.w_null:
+            return ""
+        elif w_index.type == PHPTypes.w_undefined:
+            key = self.last_index
+            self.last_index_changed = True
+            return key
         else:
-            return W_BoolObject(False)
+            raise IllegalOffsetType
 
-    def less_than_or_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_BoolObject)
-        if self.storage <= object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
-
-    def more_than_or_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_BoolObject)
-        if self.storage >= object.value:
-            return W_BoolObject(True)
-        else:
-            return W_BoolObject(False)
-
-    def inc(self):
-        raise NotImplementedError
-
-    def dec(self):
-        raise NotImplementedError
-
-    def set(self, index, value):
-        self.storage[index] = value
+    def _update_last_index(self, index):
+        assert isinstance(index, int)
+        self.last_index = index + 1
+        self.last_index_changed = False
