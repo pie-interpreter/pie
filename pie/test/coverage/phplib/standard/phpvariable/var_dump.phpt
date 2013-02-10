@@ -1,3 +1,8 @@
+--DOC--
+Test for var_dump() function.
+http://www.php.net/manual/en/function.var_dump.php
+
+TODO: add array and object support
 --FILE--
 <?php
 var_dump(false);

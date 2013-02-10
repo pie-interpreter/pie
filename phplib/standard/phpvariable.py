@@ -4,34 +4,115 @@ You can find full description here: http://www.php.net/manual/en/ref.var.php
 
 Important: Functions empty(), isset() and unset() are a part of the
 interpreter core and not implemented here
+
+import_request_variables() function is not implemented and we have no plan
+of doing it, because using this function is extremely bad practice.
+
+debug_zval_dump() function is not implemented because it returns ZendEngine
+related stuff. We don't use ZendEngine so there's no reason to have such
+function.
 """
 from pie.interpreter.functions.builtin import builtin_function
 from pie.objspace import space
 
-#TODO: boolval
-#TODO: debug_zval_dump (?)
-#TODO: doubleval
-#TODO: floatval
+@builtin_function()
+def boolval(context, params):
+    return params[0].deref().as_bool()
+
+@builtin_function()
+def doubleval(context, params):
+    return params[0].deref().as_float()
+
+@builtin_function()
+def floatval(context, params):
+    return params[0].deref().as_float()
+
 #TODO: get_defined_vars
 #TODO: get_resource_type
-#TODO: gettype
-#TODO: import_request_variables
-#TODO: intval
-#TODO: is_array
-#TODO: is_bool
+
+@builtin_function()
+def gettype(context, params):
+    type = params[0].deref().get_type()
+    type_name = 'unknown type'
+    if type == space.W_INT:
+        type_name = 'integer'
+    elif type == space.W_FLOAT:
+        type_name = 'double'
+    elif type == space.W_STR:
+        type_name = 'string'
+    elif type == space.W_BOOL:
+        type_name = 'boolean'
+    elif type == space.W_NULL:
+        type_name = 'NULL'
+    return space.str(type_name)
+
 #TODO: is_callable
-#TODO: is_double
-#TODO: is_float
-#TODO: is_int
-#TODO: is_integer
-#TODO: is_long
-#TODO: is_null
+#TODO: intval
+
+@builtin_function()
+def is_array(context, params):
+    result = (params[0].deref().get_type() == space.W_ARRAY)
+    return space.bool(result)
+
+@builtin_function()
+def is_bool(context, params):
+    result = (params[0].deref().get_type() == space.W_BOOL)
+    return space.bool(result)
+
+@builtin_function()
+def is_double(context, params):
+    result = (params[0].deref().get_type() == space.W_FLOAT)
+    return space.bool(result)
+
+@builtin_function()
+def is_float(context, params):
+    result = (params[0].deref().get_type() == space.W_FLOAT)
+    return space.bool(result)
+
+@builtin_function()
+def is_int(context, params):
+    result = (params[0].deref().get_type() == space.W_INT)
+    return space.bool(result)
+
+@builtin_function()
+def is_integer(context, params):
+    result = (params[0].deref().get_type() == space.W_INT)
+    return space.bool(result)
+
+@builtin_function()
+def is_long(context, params):
+    result = (params[0].deref().get_type() == space.W_INT)
+    return space.bool(result)
+
+@builtin_function()
+def is_null(context, params):
+    result = (params[0].deref().get_type() == space.W_NULL)
+    return space.bool(result)
+
 #TODO: is_numeric
 #TODO: is_object
-#TODO: is_real
+
+@builtin_function()
+def is_real(context, params):
+    result = (params[0].deref().get_type() == space.W_FLOAT)
+    return space.bool(result)
+
 #TODO: is_resource
-#TODO: is_scalar
-#TODO: is_string
+
+@builtin_function()
+def is_scalar(context, params):
+    type = params[0].deref().get_type()
+    if type == space.W_STR or type == space.W_INT or type == space.W_FLOAT \
+        or type == space.W_BOOL:
+        return space.bool(True)
+    return space.bool(False)
+
+
+@builtin_function()
+def is_string(context, params):
+    result = (params[0].deref().get_type() == space.W_STR)
+    return space.bool(result)
+
 #TODO: print_r
 #TODO: serialize
 #TODO: settype
