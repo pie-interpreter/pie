@@ -1,3 +1,4 @@
+from pie.objects.base import W_Undefined
 from pie.objects.null import W_NullObject
 from pie.objects.bool import W_BoolObject
 from pie.objects.float import W_FloatObject
@@ -26,6 +27,9 @@ class ObjSpace(object):
 
     def null(self):
         return W_NullObject()
+
+    def undefined(self):
+        return W_Undefined()
 
     def array(self, value):
         return W_ArrayObject(value)

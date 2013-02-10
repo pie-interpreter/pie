@@ -166,6 +166,11 @@ class Interpreter(object):
         w_value.set_value(w_value.deref().dec())
         self.frame.stack.append(w_old_value)
 
+    def CONCAT(self, value):
+        w_right = self.frame.stack.pop()
+        w_left = self.frame.stack.pop()
+        self.frame.stack.append(space.concat(w_left, w_right))
+
     def XOR(self, value):
         w_left = self.frame.stack.pop()
         w_right = self.frame.stack.pop()
@@ -263,10 +268,15 @@ class Interpreter(object):
             if var_name in self.frame.variables:
                 del self.frame.variables[var_name]
 
-    def CONCAT(self, value):
-        w_right = self.frame.stack.pop()
-        w_left = self.frame.stack.pop()
-        self.frame.stack.append(space.concat(w_left, w_right))
+    def MAKE_ARRAY(self, values_count):
+        values = []
+        for _ in range(values_count):
+            values.insert(0, self.frame.stack.pop())
+
+        self.frame.stack.append(space.array(values))
+
+        print self.frame.stack
+        exit()
 
 
 def _new_binary_op(name, space_name):

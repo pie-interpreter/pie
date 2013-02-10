@@ -90,4 +90,11 @@ class DivisionByZeroError(Exception):
 
 
 class W_Undefined(W_Type):
+
     type = PHPTypes.w_undefined
+
+    def __repr__(self):
+        return "W_Undefined()"
+
+    def copy(self):
+        return self

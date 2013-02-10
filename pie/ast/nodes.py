@@ -192,12 +192,7 @@ class ArrayValue(AstNode):
         self.value = value
 
     def repr(self):
-        if self.key:
-            key_repr = self.key.repr()
-        else:
-            key_repr = 'None'
-
-        return "ArrayValue(%s => %s)" % (key_repr, self.value.repr())
+        return "ArrayValue(%s => %s)" % (self.key.repr(), self.value.repr())
 
 
 class BinaryOperator(AstNodeWithResult):
@@ -577,6 +572,12 @@ class ConstantNull(Constant):
 
     def repr(self):
         return "ConstantNull()"
+
+
+class ConstantUndefined(Constant):
+
+    def repr(self):
+        return "ConstantUndefined()"
 
 
 class Identifier(Item):

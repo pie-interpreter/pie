@@ -90,6 +90,7 @@ OPCODE = {
     # other common operations
     160: 'ISSET',  # number of var names on the stack to check set status
     161: 'UNSET',  # number of var names on the stack to unset
+    162: 'MAKE_ARRAY',  # number of values to read from the stack
 }
 
 OPCODE_INDEXES = {}

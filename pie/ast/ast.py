@@ -1,4 +1,4 @@
-" Module, providing ast building tools "
+""" Module, providing ast building tools """
 from rpython.rlib.parsing.tree import RPythonVisitor
 
 from pie.ast.nodes import *
@@ -108,7 +108,8 @@ class AstBuilder(RPythonVisitor):
         assert children_count in [1, 2]
 
         if children_count == 1:
-            return ArrayValue(None, self.transform(node.children[0]))
+            return ArrayValue(
+                ConstantUndefined(), self.transform(node.children[0]))
         else:
             return ArrayValue(
                 self.transform(node.children[0]),

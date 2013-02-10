@@ -136,7 +136,11 @@ class __extend__(nodes.Empty):
 class __extend__(nodes.ArrayDeclaration):
 
     def compile_node(self, builder):
-        pass
+        for value in self.values:
+            value.key.compile_node(builder)
+            value.value.compile_node(builder)
+
+        builder.emit('MAKE_ARRAY', len(self.values) * 2)
 
 
 class __extend__(nodes.BinaryOperator):
@@ -643,6 +647,34 @@ class __extend__(nodes.ConstantBool):
         return space.bool(self.value)
 
 
+class __extend__(nodes.ConstantArray):
+
+    type_name = 'array'
+
+    def get_str_value(self):
+        string_values = []
+        for value in self.all_values:
+            value.calculate_const_value()
+            string_values.append(value.get_str_value())
+
+        return ''.join(['[', ''.join(string_values), ']'])
+
+    def get_compiled_value(self):
+        array_values = []
+        for value in self.all_values:
+            array_values.append(value.get_compiled_value())
+
+        return space.array(array_values)
+
+    def calculate_const_value(self):
+        self.all_values = []
+        for value in self.values:
+            value.key.calculate_const_value()
+            value.value.calculate_const_value()
+            self.all_values.append(value.key)
+            self.all_values.append(value.value)
+
+
 class __extend__(nodes.ConstantNull):
 
     type_name = 'null'
@@ -652,6 +684,17 @@ class __extend__(nodes.ConstantNull):
 
     def get_compiled_value(self):
         return space.null()
+
+
+class __extend__(nodes.ConstantUndefined):
+
+    type_name = 'undefined'
+
+    def get_str_value(self):
+        return 'undefined'
+
+    def get_compiled_value(self):
+        return space.undefined()
 
 
 class __extend__(nodes.ConstantString):
