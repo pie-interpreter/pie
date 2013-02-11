@@ -22,53 +22,80 @@ TODO: add array, callable, resouce and object support
 //echo is_array()
 echo is_bool(1) . "=\n";
 echo is_bool(true) . "=\n";
+echo "+++++\n";
 //echo is_callable
 echo is_double("str") . "=\n";
 echo is_double(1.3) . "=\n";
+echo "+++++\n";
 echo is_float(null) . "=\n";
 echo is_float(1.3) . "=\n";
+echo "+++++\n";
 echo is_int("str") . "=\n";
 echo is_int(1) . "=\n";
+echo "+++++\n";
 echo is_integer(false) . "=\n";
 echo is_integer(31234123) . "=\n";
+echo "+++++\n";
 echo is_long(1.3) . "=\n";
 echo is_long(31234123) . "=\n";
+echo "+++++\n";
 echo is_null(1.3) . "=\n";
 echo is_null(null) . "=\n";
-//echo is_numeric
+echo "+++++\n";
+echo is_numeric(31234123) . "=\n";
+echo is_numeric(1.3) . "=\n";
+echo is_numeric("-1.3") . "=\n";
+echo is_numeric("0xAA") . "=\n";
 //echo is_object
+echo "+++++\n";
 echo is_real(null) . "=\n";
 echo is_real(1.3) . "=\n";
 //echo is_resource
+echo "+++++\n";
 echo is_scalar(false) . "=\n";
 echo is_scalar(31234123) . "=\n";
 echo is_scalar("1.3") . "=\n";
 echo is_scalar(1.3) . "=\n";
 echo is_scalar(null) . "=\n";
+echo "+++++\n";
 echo is_string(null) . "=\n";
 echo is_string("1.3") . "=\n";
 
 --EXPECT--
 =
 1=
++++++
 =
 1=
++++++
 =
 1=
++++++
 =
 1=
++++++
 =
 1=
++++++
 =
 1=
++++++
 =
 1=
++++++
+1=
+1=
+1=
+1=
++++++
 =
 1=
++++++
 1=
 1=
 1=
 1=
 =
++++++
 =
 1=

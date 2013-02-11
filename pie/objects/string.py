@@ -80,6 +80,13 @@ class W_StringObject(W_Type):
     def as_string(self):
         return self
 
+    def is_convertible_to_number_strict(self):
+        try:
+            self.as_number_strict()
+            return W_BoolObject(True)
+        except NotConvertibleToNumber:
+            return W_BoolObject(False)
+
     def equal(self, w_object):
         if self is w_object:
             return W_BoolObject(True)

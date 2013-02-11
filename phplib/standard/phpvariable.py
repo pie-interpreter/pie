@@ -11,8 +11,11 @@ of doing it, because using this function is extremely bad practice.
 debug_zval_dump() function is not implemented because it returns ZendEngine
 related stuff. We don't use ZendEngine so there's no reason to have such
 function.
+
+
 """
 from pie.interpreter.functions.builtin import builtin_function
+from pie.interpreter.functions.builtin import SCALAR, MIXED
 from pie.objspace import space
 
 @builtin_function()
@@ -44,6 +47,12 @@ def gettype(context, params):
         type_name = 'boolean'
     elif type == space.W_NULL:
         type_name = 'NULL'
+    elif type == space.W_ARRAY:
+        type_name = 'array'
+    elif type == space.W_OBJECT:
+        type_name = 'object'
+    elif type == space.W_RESOURCE:
+        type_name = 'resource'
     return space.str(type_name)
 
 #TODO: is_callable
@@ -89,15 +98,29 @@ def is_null(context, params):
     result = (params[0].deref().get_type() == space.W_NULL)
     return space.bool(result)
 
-#TODO: is_numeric
-#TODO: is_object
+@builtin_function()
+def is_numeric(context, params):
+    type = params[0].deref().get_type()
+    if type == space.W_INT or type == space.W_FLOAT:
+        return space.bool(True)
+    if type == space.W_STR:
+        return params[0].deref().is_convertible_to_number_strict()
+    return space.bool(False)
+
+@builtin_function()
+def is_object(context, params):
+    result = (params[0].deref().get_type() == space.W_OBJECT)
+    return space.bool(result)
 
 @builtin_function()
 def is_real(context, params):
     result = (params[0].deref().get_type() == space.W_FLOAT)
     return space.bool(result)
 
-#TODO: is_resource
+@builtin_function()
+def is_resource(context, params):
+    result = (params[0].deref().get_type() == space.W_RESOURCE)
+    return space.bool(result)
 
 @builtin_function()
 def is_scalar(context, params):
@@ -107,13 +130,36 @@ def is_scalar(context, params):
         return space.bool(True)
     return space.bool(False)
 
-
 @builtin_function()
 def is_string(context, params):
     result = (params[0].deref().get_type() == space.W_STR)
     return space.bool(result)
 
-#TODO: print_r
+@builtin_function(args=[MIXED], optional_args=[SCALAR])
+def print_r(context, params):
+    #TODO: array
+    #TODO: object
+    #TODO: resource
+    w_expression = params[0].deref()
+    if len(params) > 1:
+        to_variable = params[1].deref().is_true()
+    else:
+        to_variable = False
+    if w_expression.type == space.W_STR:
+        return _handle_output(context, w_expression, to_variable)
+    elif w_expression.type == space.W_INT \
+            or w_expression.type == space.W_FLOAT \
+            or w_expression.type == space.W_BOOL \
+            or w_expression.type == space.W_NULL:
+        return _handle_output(context, w_expression.as_string(), to_variable)
+    return space.bool(True)
+
+def _handle_output(context, w_value, to_variable):
+    if not to_variable:
+        context.print_output(w_value.str_w())
+        return space.bool(True)
+    return w_value
+
 #TODO: serialize
 #TODO: settype
 #TODO: strval

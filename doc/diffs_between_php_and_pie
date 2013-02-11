@@ -1,0 +1,3 @@
+print_r(): (http://www.php.net/manual/en/function.print-r.php)
+  When the return parameter is used, this function DOESN'T USER internal output buffering so it CAN be used inside an ob_start() callback function
+

@@ -10,8 +10,8 @@ __author__ = 'sery0ga'
 
 class ObjSpace(object):
 
-    (W_INT, W_FLOAT, W_STR, W_BOOL, W_NULL) = (
-        'int', 'float', 'string', 'bool', 'null')
+    (W_INT, W_FLOAT, W_STR, W_BOOL, W_NULL, W_ARRAY, W_OBJECT, W_RESOURCE) = (
+        'int', 'float', 'string', 'bool', 'null', 'array', 'object', 'resource')
 
     def int(self, value):
         return W_IntObject(value)
@@ -180,6 +180,7 @@ def _new_comparison_op(name):
             try:
                 if w_left.type == self.W_NULL:
                     return getattr(w_left.as_string(), name)(w_right)
+                #TODO: use is_convertible_to_number_strict
                 left_number = w_left.as_number_strict()
                 right_number = w_right.as_number_strict()
                 if self._is_any_float(left_number.type, right_number.type):
