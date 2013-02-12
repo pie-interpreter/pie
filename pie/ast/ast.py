@@ -8,6 +8,8 @@ from pie.parsing import parsing
 def build(source):
     parse_tree = parsing.parse(source)
     astree = build_ast(parse_tree)
+    print astree
+    exit()
     return astree
 
 
@@ -221,6 +223,27 @@ class AstBuilder(RPythonVisitor):
         value = self.transform(node.children[1])
 
         return Cast(symbol, value)
+
+    def visit_array_dereferencing_expression(self, node):
+        return self.visit_array_dereferencing(node)
+
+    def visit_array_dereferencing(self, node):
+        children_count = len(node.children)
+        assert children_count >= 2
+
+        variable = self.transform(node.children[0])
+
+        indexes = []
+        for index in range(1, children_count):
+            indexes.append(self.transform(node.children[index]))
+
+        return ArrayDereferencing(variable, indexes)
+
+    def visit_array_index(self, node):
+        if len(node.children) == 1:
+            return ConstantUndefined()
+
+        return self.get_second_child(node)
 
     def visit_variable_identifier(self, node):
         return Variable(self.get_single_child(node))

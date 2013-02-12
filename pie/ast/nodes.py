@@ -250,7 +250,7 @@ class ReferenceAssignment(AstNodeWithResult):
         self.source = source
 
     def repr(self):
-        return "ReferenceAssignment(%s =& %s)" & (self.target, self.source)
+        return "ReferenceAssignment(%s =& %s)" % (self.target, self.source)
 
 
 class TernaryOperator(AstNodeWithResult):
@@ -301,6 +301,21 @@ class Cast(AstNodeWithResult):
 
     def repr(self):
         return "Cast((%s) %s)" % (self.symbol, self.value.repr())
+
+
+class ArrayDereferencing(AstNodeWithResult):
+
+    def __init__(self, var_expression, indexes):
+        self.var_expression = var_expression
+        self.indexes = indexes
+
+    def repr(self):
+        representations = []
+        for item in self.indexes:
+            representations.append('[' + item.__repr__() + ']')
+
+        return "ArrayDereferencing(%s %s)" % (
+            self.var_expression.repr(), ''.join(representations))
 
 
 class Variable(AstNodeWithResult):
