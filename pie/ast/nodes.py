@@ -303,6 +303,25 @@ class Cast(AstNodeWithResult):
         return "Cast((%s) %s)" % (self.symbol, self.value.repr())
 
 
+class VariableExpression(AstNodeWithResult):
+    """Usual variable expression has a name of the variable
+    or array index object on the stack after compiling """
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "VariableExpression(%s)" % self.value.repr()
+
+
+class VariableValueExpression(VariableExpression):
+    """Value variable expression has a value of the variable
+    on the stack after compiling"""
+
+    def repr(self):
+        return "VariableValueExpression(%s)" % self.value.repr()
+
+
 class ArrayDereferencing(AstNodeWithResult):
 
     def __init__(self, var_expression, indexes):

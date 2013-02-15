@@ -8,8 +8,6 @@ from pie.parsing import parsing
 def build(source):
     parse_tree = parsing.parse(source)
     astree = build_ast(parse_tree)
-    print astree
-    exit()
     return astree
 
 
@@ -206,7 +204,7 @@ class AstBuilder(RPythonVisitor):
 
     def visit_incdec_expression(self, node):
         assert len(node.children) == 2
-        if node.children[0].symbol == "variable_identifier":
+        if node.children[0].symbol == "variable_expression":
             operation_type = IncrementDecrement.POST
             operator = node.children[1].token.source
             variable = self.transform(node.children[0])
@@ -223,6 +221,12 @@ class AstBuilder(RPythonVisitor):
         value = self.transform(node.children[1])
 
         return Cast(symbol, value)
+
+    def visit_variable_expression(self, node):
+        return VariableExpression(self.get_single_child(node))
+
+    def visit_variable_value_expression(self, node):
+        return VariableValueExpression(self.get_single_child(node))
 
     def visit_array_dereferencing_expression(self, node):
         return self.visit_array_dereferencing(node)

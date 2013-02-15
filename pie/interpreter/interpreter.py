@@ -187,12 +187,14 @@ class Interpreter(object):
         self.frame.stack.append(w_value)
 
     def LOAD_VAR(self, var_index):
-        var_name = self.bytecode.names[var_index]
+        var_name = self.frame.pop_name()
         w_value = self.frame.get_variable(var_name, self.context)
         self.frame.stack.append(w_value)
 
     def STORE_VAR(self, value):
-        raise InternalError("Not implemented")
+        var_name = self.frame.pop_name()
+        w_value = self.frame.stack[-1]  # we need to leave value on the stack
+        self.frame.set_variable(var_name, w_value)
 
     def LOAD_CONST(self, value):
         self.frame.stack.append(self.bytecode.consts[value].copy())

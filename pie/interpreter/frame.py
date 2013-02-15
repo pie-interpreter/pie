@@ -25,7 +25,7 @@ class Frame:
             self.variables[name] = space.variable(w_value.deref())
 
     def pop_name(self):
-        return self.stack.pop().str_w()
+        return self.stack.pop().deref().as_string().str_w()
 
     def pop_and_get(self, context):
         return self.get_variable(self.pop_name(), context)

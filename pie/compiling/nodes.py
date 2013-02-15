@@ -105,8 +105,7 @@ class __extend__(nodes.Isset):
 
     def compile_node(self, builder):
         for statement in self.list:
-            index = builder.register_name(_get_variable_name(statement))
-            builder.emit('LOAD_NAME', index)
+            statement.compile(builder)
 
         builder.emit('ISSET', len(self.list))
 
@@ -115,8 +114,7 @@ class __extend__(nodes.Unset):
 
     def compile_node(self, builder):
         for statement in self.list:
-            index = builder.register_name(_get_variable_name(statement))
-            builder.emit('LOAD_NAME', index)
+            statement.compile(builder)
 
         builder.emit('UNSET', len(self.list))
 
@@ -124,12 +122,10 @@ class __extend__(nodes.Unset):
 class __extend__(nodes.Empty):
 
     def compile_node(self, builder):
-        if isinstance(self.expression, nodes.Variable):
-            index = builder.register_name(_get_variable_name(self.expression))
-            builder.emit('LOAD_NAME', index)
+        self.expression.compile(builder)
+        if isinstance(self.expression, nodes.VariableExpression):
             builder.emit('EMPTY_VAR')
         else:
-            self.expression.compile(builder)
             builder.emit('EMPTY_RESULT')
 
 
@@ -208,18 +204,18 @@ class __extend__(nodes.Assignment):
     def compile_node(self, builder):
         # compiling value first, so result would be on the stack for us
         self.value.compile(builder)
-        index = builder.register_name(_get_variable_name(self.variable))
+        index = self.variable.get_variable_name_index(builder)
 
-        operation = self.get_modification_operation()
-        if operation:  # inplace operation
-            builder.emit('LOAD_NAME', index)
-            builder.emit(operation)
-        else:  # simple assign
+        if self.operator == '=' and index >= 0:
             builder.emit('STORE_VAR_FAST', index)
+        else:
+            operation = self.get_modification_operation()
+            self.variable.compile(builder)
+            builder.emit(operation)
 
     def get_modification_operation(self):
         operations = {
-            '=': '',
+            '=': 'STORE_VAR',
             '+=': 'INPLACE_ADD',
             '-=': 'INPLACE_SUBSTRACT',
             '.=': 'INPLACE_CONCAT',
@@ -235,9 +231,7 @@ class __extend__(nodes.ReferenceAssignment):
 
     def compile_node(self, builder):
         self.source.compile(builder)
-
-        index = builder.register_name(_get_variable_name(self.target))
-        builder.emit('LOAD_NAME', index)
+        self.target.compile(builder)
         builder.emit('MAKE_REFERENCE')
 
 
@@ -275,9 +269,7 @@ class __extend__(nodes.IncrementDecrement):
 
     def compile_node(self, builder):
         # registering var name in builder
-        index = builder.register_name(_get_variable_name(self.variable))
-
-        builder.emit('LOAD_NAME', index)
+        self.variable.compile(builder)
         builder.emit(self.get_operation())
 
     def get_operation(self):
@@ -315,11 +307,36 @@ class __extend__(nodes.Cast):
         return operations[self.symbol]
 
 
+class __extend__(nodes.VariableExpression):
+
+    def compile_node(self, builder):
+        self.value.compile(builder)
+
+    def get_variable_name_index(self, builder):
+        if isinstance(self.value, nodes.Variable):
+            identifier = self.value.name
+            return builder.register_name(identifier.value)
+
+        return -1
+
+
+class __extend__(nodes.VariableValueExpression):
+
+    def compile_node(self, builder):
+        index = self.get_variable_name_index(builder)
+        if index >= 0:
+            builder.emit('LOAD_VAR_FAST', index)
+        else:
+            nodes.VariableExpression.compile_node(builder)
+            builder.emit('LOAD_VAR')
+
+
 class __extend__(nodes.Variable):
 
     def compile_node(self, builder):
-        index = builder.register_name(_get_variable_name(self))
-        builder.emit('LOAD_VAR_FAST', index)
+        identifier = self.name
+        index = builder.register_name(identifier.value)
+        builder.emit('LOAD_NAME', index)
 
 
 class __extend__(nodes.FunctionCall):
@@ -377,7 +394,8 @@ class __extend__(nodes.Argument):
             self._get_argument_default_value())
 
     def _get_argument_name(self):
-        return _get_variable_name(self.variable)
+        identifier = self.variable.name
+        return identifier.value
 
     def _get_argument_type(self):
         return UserFunction.VALUE
@@ -721,11 +739,3 @@ class __extend__(nodes.ConstantDoubleQuotedString):
 
     def calculate_const_value(self):
         self.const_value = util.process_double_quoted_string(self.value)
-
-
-def _get_variable_name(var):
-    assert isinstance(var, nodes.Variable)
-    identifier = var.name
-    assert isinstance(identifier, nodes.Identifier)
-
-    return identifier.value
