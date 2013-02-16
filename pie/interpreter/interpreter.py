@@ -110,6 +110,9 @@ class Interpreter(object):
             self.frame.variables[ref_name] = w_variable
             self.frame.stack.append(w_variable.deref())
 
+    def GET_INDEX(self, value):
+        raise InternalError("Not implemented")
+
     def NOT(self, value):
         w_object = self.frame.stack.pop()
         result = not w_object.deref().is_true()
@@ -277,8 +280,8 @@ class Interpreter(object):
 
         self.frame.stack.append(space.array(values))
 
-        print self.frame.stack
-        exit()
+    def GET_INDEXES(self, indexes_len):
+        raise InternalError("Not implemented")
 
 
 def _new_binary_op(name, space_name):

@@ -228,7 +228,7 @@ construct_empty: T_EMPTY ["("] variable_expression [")"]
                | T_EMPTY ["("] expression [")"];
 
 construct_array: T_ARRAY ["("] >construct_array_values< [")"]
-              | "[" >construct_array_values<? ["]"];
+              | "[" >construct_array_values< ["]"];
 construct_array_values: construct_array_value [","] >construct_array_values<
                       | construct_array_value [","]?;
 construct_array_value: expression ["=>"] expression

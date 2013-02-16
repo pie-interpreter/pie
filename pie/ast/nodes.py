@@ -44,11 +44,11 @@ class Item(AstNode):
     Nodes, subclassed from this one can be in ast.
     """
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, str_value):
+        self.str_value = str_value
 
     def repr(self):
-        return "Item: %s" % self.value
+        return "Item: %s" % self.str_value
 
 
 class ItemsList(AstNode):
@@ -187,12 +187,13 @@ class ArrayDeclaration(AstNodeWithResult):
 
 class ArrayValue(AstNode):
 
-    def __init__(self, key, value):
+    def __init__(self, key, array_value):
         self.key = key
-        self.value = value
+        self.array_value = array_value
 
     def repr(self):
-        return "ArrayValue(%s => %s)" % (self.key.repr(), self.value.repr())
+        return "ArrayValue(%s => %s)" % (
+            self.key.repr(), self.array_value.repr())
 
 
 class BinaryOperator(AstNodeWithResult):
@@ -324,17 +325,17 @@ class VariableValueExpression(VariableExpression):
 
 class ArrayDereferencing(AstNodeWithResult):
 
-    def __init__(self, var_expression, indexes):
-        self.var_expression = var_expression
+    def __init__(self, variable, indexes):
+        self.variable = variable
         self.indexes = indexes
 
     def repr(self):
         representations = []
         for item in self.indexes:
-            representations.append('[' + item.__repr__() + ']')
+            representations.append('[' + item.repr() + ']')
 
         return "ArrayDereferencing(%s %s)" % (
-            self.var_expression.repr(), ''.join(representations))
+            self.variable.repr(), ''.join(representations))
 
 
 class Variable(AstNodeWithResult):
@@ -617,4 +618,4 @@ class ConstantUndefined(Constant):
 class Identifier(Item):
 
     def repr(self):
-        return "Identifier: %s" % self.value
+        return "Identifier: %s" % self.str_value

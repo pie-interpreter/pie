@@ -134,7 +134,7 @@ class __extend__(nodes.ArrayDeclaration):
     def compile_node(self, builder):
         for value in self.values:
             value.key.compile_node(builder)
-            value.value.compile_node(builder)
+            value.array_value.compile_node(builder)
 
         builder.emit('MAKE_ARRAY', len(self.values) * 2)
 
@@ -315,7 +315,7 @@ class __extend__(nodes.VariableExpression):
     def get_variable_name_index(self, builder):
         if isinstance(self.value, nodes.Variable):
             identifier = self.value.name
-            return builder.register_name(identifier.value)
+            return builder.register_name(identifier.str_value)
 
         return -1
 
@@ -327,15 +327,29 @@ class __extend__(nodes.VariableValueExpression):
         if index >= 0:
             builder.emit('LOAD_VAR_FAST', index)
         else:
-            nodes.VariableExpression.compile_node(builder)
+            nodes.VariableExpression.compile_node(self, builder)
             builder.emit('LOAD_VAR')
+
+
+class __extend__(nodes.ArrayDereferencing):
+
+    def compile_node(self, builder):
+        indexes_len = len(self.indexes)
+        for index in self.indexes:
+            index.compile(builder)
+
+        self.variable.compile(builder)
+        if indexes_len == 1:
+            builder.emit('GET_INDEX')
+        else:
+            builder.emit('GET_INDEXES', indexes_len)
 
 
 class __extend__(nodes.Variable):
 
     def compile_node(self, builder):
         identifier = self.name
-        index = builder.register_name(identifier.value)
+        index = builder.register_name(identifier.str_value)
         builder.emit('LOAD_NAME', index)
 
 
@@ -347,7 +361,7 @@ class __extend__(nodes.FunctionCall):
 
         name = self.name
         if isinstance(name, nodes.Identifier):
-            index = builder.register_name(name.value)
+            index = builder.register_name(name.str_value)
             builder.emit("LOAD_NAME", index)
         else:
             name.compile(builder)
@@ -373,10 +387,8 @@ class __extend__(nodes.FunctionDeclaration):
             return_type = UserFunction.REFERENCE
 
         identifier = self.name
-        assert isinstance(identifier, nodes.Identifier)
-
         function = UserFunction(
-            identifier.value, return_type, bytecode, arguments, self.line)
+            identifier.str_value, return_type, bytecode, arguments, self.line)
 
         if self.top_level:
             builder.register_declared_function(function)
@@ -395,7 +407,7 @@ class __extend__(nodes.Argument):
 
     def _get_argument_name(self):
         identifier = self.variable.name
-        return identifier.value
+        return identifier.str_value
 
     def _get_argument_type(self):
         return UserFunction.VALUE
@@ -688,9 +700,9 @@ class __extend__(nodes.ConstantArray):
         self.all_values = []
         for value in self.values:
             value.key.calculate_const_value()
-            value.value.calculate_const_value()
+            value.array_value.calculate_const_value()
             self.all_values.append(value.key)
-            self.all_values.append(value.value)
+            self.all_values.append(value.array_value)
 
 
 class __extend__(nodes.ConstantNull):

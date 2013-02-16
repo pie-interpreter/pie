@@ -2,6 +2,7 @@
 
 import py
 from pie.objspace import space
+from pie.types import PHPTypes
 from pie.interpreter.context import shared_context
 from pie.interpreter.errors.fatalerrors import NonVariablePassedByReference
 from pie.interpreter.errors.warnings import NotEnoughParameters, WrongParameterType
@@ -62,15 +63,15 @@ def builtin_function(args=[], optional_args=[], name=None):
 
                 modded_arg_type = arg_type % REF_DIVIDER
                 if modded_arg_type == INT:
-                    body.append('    assertInt(params[%s])' % index)
+                    body.append('    assert_int(params[%s])' % index)
                 elif modded_arg_type == FLOAT:
-                    body.append('    assertFloat(params[%s])' % index)
+                    body.append('    assert_float(params[%s])' % index)
                 elif modded_arg_type == BOOL:
-                    body.append('    assertBool(params[%s])' % index)
+                    body.append('    assert_bool(params[%s])' % index)
                 elif modded_arg_type == STRING:
-                    body.append('    assertString(params[%s])' % index)
+                    body.append('    assert_string(params[%s])' % index)
                 elif modded_arg_type == SCALAR:
-                    body.append('    assertScalar(params[%s])' % index)
+                    body.append('    assert_scalar(params[%s])' % index)
                 else:
                     raise InternalError(
                         'Invalid argument type in core function %s' % function_name)
@@ -91,11 +92,11 @@ def builtin_function(args=[], optional_args=[], name=None):
                 'NonVariablePassedByReference': NonVariablePassedByReference,
                 'WrongParameterType': WrongParameterType,
                 'TypeAssertionError': TypeAssertionError,
-                'assertInt': assertInt,
-                'assertFloat': assertFloat,
-                'assertBool': assertBool,
-                'assertString': assertString,
-                'assertScalar': assertScalar,
+                'assert_int': assert_int,
+                'assert_float': assert_float,
+                'assert_bool': assert_bool,
+                'assert_string': assert_string,
+                'assert_scalar': assert_scalar,
             }
             try:
                 exec py.code.Source(source).compile() in compile_context
@@ -121,37 +122,37 @@ class TypeAssertionError(Exception):
         self.given = given
 
 
-def assertInt(w_value):
-    if w_value.type == space.W_INT:
+def assert_int(w_value):
+    if w_value.type == PHPTypes.w_int:
         return
 
-    raise TypeAssertionError(space.W_INT, w_value.type)
+    raise TypeAssertionError('int', w_value.type)
 
 
-def assertFloat(w_value):
-    if w_value.type == space.W_FLOAT:
+def assert_float(w_value):
+    if w_value.type == PHPTypes.w_float:
         return
 
-    raise TypeAssertionError(space.W_FLOAT, w_value.type)
+    raise TypeAssertionError('float', w_value.type)
 
 
-def assertBool(w_value):
-    if w_value.type == space.W_BOOL:
+def assert_bool(w_value):
+    if w_value.type == PHPTypes.w_bool:
         return
 
-    raise TypeAssertionError(space.W_BOOL, w_value.type)
+    raise TypeAssertionError('bool', w_value.type)
 
 
-def assertString(w_value):
-    if w_value.type == space.W_STR:
+def assert_string(w_value):
+    if w_value.type == PHPTypes.w_string:
         return
 
-    raise TypeAssertionError(space.W_STR, w_value.type)
+    raise TypeAssertionError('string', w_value.type)
 
 
-def assertScalar(w_value):
-    types = [space.W_INT, space.W_FLOAT, space.W_BOOL, space.W_STR]
+def assert_scalar(w_value):
+    types = [PHPTypes.w_int, PHPTypes.w_float, PHPTypes.w_bool, PHPTypes.w_string]
     if w_value.type in types:
         return
 
-    raise TypeAssertionError(' or '.join(types), w_value.type)
+    raise TypeAssertionError('int or float or bool or string', w_value.type)

@@ -109,7 +109,8 @@ class AstBuilder(RPythonVisitor):
 
         if children_count == 1:
             return ArrayValue(
-                ConstantUndefined(), self.transform(node.children[0]))
+                ConstantUndefined(),
+                self.transform(node.children[0]))
         else:
             return ArrayValue(
                 self.transform(node.children[0]),
