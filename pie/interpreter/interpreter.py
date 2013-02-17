@@ -119,8 +119,9 @@ class Interpreter(object):
         self.frame.stack.append(space.bool(result))
 
     def CAST_TO_ARRAY(self, value):
-        w_object = self.frame.stack.pop()
-        self.frame.stack.append(w_object.as_array())
+        raise InternalError("Not implemented")
+        # w_object = self.frame.stack.pop()
+        # self.frame.stack.append(w_object.as_array())
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()
@@ -256,12 +257,11 @@ class Interpreter(object):
         stack = self.frame.stack
         for i in range(names_count):
             var_name = stack.pop().str_w()
-            if not var_name in self.frame.variables:
+            if not var_name in self.frame.variables \
+                or self.frame.variables[var_name].deref().is_null():
                 stack.append(space.bool(False))
                 return
-            if self.frame.variables[var_name].deref().is_null():
-                stack.append(space.bool(False))
-                return
+
         stack.append(space.bool(True))
 
     def UNSET(self, names_count):
@@ -274,11 +274,12 @@ class Interpreter(object):
                 del self.frame.variables[var_name]
 
     def MAKE_ARRAY(self, values_count):
-        values = []
-        for _ in range(values_count):
-            values.insert(0, self.frame.stack.pop())
+        raise InternalError("Not implemented")
+        # values = []
+        # for _ in range(values_count):
+        #     values.insert(0, self.frame.stack.pop())
 
-        self.frame.stack.append(space.array(values))
+        # self.frame.stack.append(space.array(values))
 
     def GET_INDEXES(self, indexes_len):
         raise InternalError("Not implemented")

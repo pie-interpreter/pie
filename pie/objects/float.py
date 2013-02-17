@@ -4,12 +4,13 @@ from pie.types import PHPTypes
 
 
 class W_FloatObject(W_Number):
+
     _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_float
 
     def __init__(self, value):
         self.value = value
         self.nan = False
-        self.type = PHPTypes.w_float
 
     def __repr__(self):
         return "W_FloatObject(%s)" % self.value
@@ -22,12 +23,6 @@ class W_FloatObject(W_Number):
 
     def float_w(self):
         return self.value
-
-
-    def as_array(self):
-        from pie.objects.array import W_ArrayObject
-        array = W_ArrayObject()
-        return array.set(0, self.value)
 
     def as_bool(self):
         from pie.objects.bool import W_BoolObject

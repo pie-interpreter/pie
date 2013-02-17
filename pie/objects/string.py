@@ -51,11 +51,6 @@ class W_StringObject(W_Type):
         self.make_integral()
         return self.strategy.str_w(self)
 
-    def as_array(self):
-        from pie.objects.array import W_ArrayObject
-        array = W_ArrayObject()
-        return array.set(0, self.str_w())
-
     def as_bool(self):
         self.make_integral()
         if not self.is_true():

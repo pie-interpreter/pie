@@ -1,16 +1,16 @@
 from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
-from pie.objects.array import W_ArrayObject
 from pie.types import PHPTypes
+
 
 class W_BoolObject(W_Type):
 
     _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_bool
 
     def __init__(self, value):
         self.value = bool(value)
-        self.type = PHPTypes.w_bool
 
     def __repr__(self):
         return "W_BoolObject(%s)" % self.value
@@ -20,10 +20,6 @@ class W_BoolObject(W_Type):
 
     def is_true(self):
         return self.value
-
-    def as_array(self):
-        array = W_ArrayObject()
-        array.set(0, self.value)
 
     def as_bool(self):
         return self
@@ -42,7 +38,6 @@ class W_BoolObject(W_Type):
         if self.value:
             return W_StringObject('1')
         return W_StringObject('')
-
 
     def less_than(self, object):
         assert isinstance(object, W_BoolObject)
