@@ -2,9 +2,8 @@
 
 from pie.ast import ast
 from pie.compiling.bytecode import Bytecode
-from pie.error import CompilerError
 from pie.opcodes import get_opcode_index
-from pie.objspace import space
+from pie.interpreter.errors.fatalerrors import IllegalBreakContinueLevel
 import pie.compiling.nodes
 
 
@@ -28,15 +27,15 @@ class BytecodeBuilder(object):
         self.code = []
         self.consts = []
         self.names = []
-        self.functions = {}
+        self.functions = []
+        self.declared_functions = []
 
         # caching lists
-        self.int_consts_cache = {}
-        self.float_consts_cache = {}
-        self.string_consts_cache = {}
-        self.bool_consts_cache = {}
+        self.consts_cache = {
+            'int': {}, 'string': {}, 'float': {},
+            'bool': {}, 'null': {}, 'array': {}, 'undefined': {}
+        }
         self.names_cache = {}
-        self.null_const_index = -1
 
         # lists to keep stack of loops
         self.break_positions = []
@@ -46,9 +45,6 @@ class BytecodeBuilder(object):
         self.filename = ""
         self.line = 0
         self.opcode_lines = {}
-
-    def set_line(self, line):
-        self.line = line
 
     def emit(self, opcode_name, arg=-1):
         current_position = self.get_current_position()
@@ -78,55 +74,23 @@ class BytecodeBuilder(object):
         bytecode.consts = self.consts
         bytecode.names = self.names
         bytecode.functions = self.functions
+        bytecode.declared_functions = self.declared_functions
 
         bytecode.filename = self.filename
         bytecode.opcode_lines = self.opcode_lines
 
         return bytecode
 
-    def register_int_const(self, value):
+    def register_const(self, const_object):
+        type_name = const_object.type_name
+        str_value = const_object.get_str_value()
         try:
-            return self.int_consts_cache[value]
+            return self.consts_cache[type_name][str_value]
         except KeyError:
-            constants_count = len(self.consts)
-            self.consts.append(space.int(value))
-            self.int_consts_cache[value] = constants_count
-            return constants_count
-
-    def register_float_const(self, value):
-        try:
-            return self.float_consts_cache[value]
-        except KeyError:
-            constants_count = len(self.consts)
-            self.consts.append(space.float(value))
-            self.float_consts_cache[value] = constants_count
-            return constants_count
-
-    def register_bool_const(self, value):
-        try:
-            return self.bool_consts_cache[value]
-        except KeyError:
-            constants_count = len(self.consts)
-            self.consts.append(space.bool(value))
-            self.bool_consts_cache[value] = constants_count
-            return constants_count
-
-    def register_string_const(self, value):
-        try:
-            return self.string_consts_cache[value]
-        except KeyError:
-            constants_count = len(self.consts)
-            self.consts.append(space.str(value))
-            self.string_consts_cache[value] = constants_count
-            return constants_count
-
-    def register_null_const(self):
-        if self.null_const_index == -1:
-            constants_count = len(self.consts)
-            self.consts.append(space.null())
-            self.null_const_index = constants_count
-
-        return self.null_const_index
+            consts_count = len(self.consts)
+            self.consts.append(const_object.get_compiled_value())
+            self.consts_cache[type_name][str_value] = consts_count
+            return consts_count
 
     def register_name(self, name):
         try:
@@ -137,12 +101,13 @@ class BytecodeBuilder(object):
             self.names_cache[name] = names_count
             return names_count
 
-    def register_function(self, name, arguments, bytecode, line):
-        name = name.lower()
-        if name in self.functions:
-            raise CompilerError("Function %s already declared" % name)
+    def register_function(self, function):
+        functions_count = len(self.functions)
+        self.functions.append(function)
+        return functions_count
 
-        self.functions[name] = Function(arguments, bytecode, line)
+    def register_declared_function(self, function):
+        self.declared_functions.append(function)
 
     def get_current_position(self):
         " Get position, at which next opcode will be placed "
@@ -177,20 +142,12 @@ class BytecodeBuilder(object):
 
     def add_break_position_to_patch(self, level, position):
         if len(self.break_positions) < level:
-            raise CompilerError("Cannot break %s levels" % level)
+            raise IllegalBreakContinueLevel(None, level)
 
-        self.break_positions[-1 * level].append(position)
+        self.break_positions[-level].append(position)
 
     def add_continue_position_to_patch(self, level, position):
         if len(self.continue_positions) < level:
-            raise CompilerError("Cannot continue %s levels" % level)
+            raise IllegalBreakContinueLevel(None, level)
 
-        self.continue_positions[-1 * level].append(position)
-
-
-class Function(object):
-
-    def __init__(self, arguments, bytecode, line_declared):
-        self.arguments = arguments
-        self.bytecode = bytecode
-        self.line_declared = line_declared
+        self.continue_positions[-level].append(position)

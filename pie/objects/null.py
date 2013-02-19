@@ -2,14 +2,14 @@ from pie.objects.base import W_Type
 from pie.objspace import space
 from pie.types import PHPTypes
 
-__author__ = 'sery0ga'
 
 class W_NullObject(W_Type):
 
     _immutable_fields_ = ['type']
+    type = PHPTypes.w_null
 
-    def __init__(self):
-        self.type = PHPTypes.w_null
+    def __repr__(self):
+        return "W_NullObject()"
 
     def copy(self):
         return self

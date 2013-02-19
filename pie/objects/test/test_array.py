@@ -3,6 +3,7 @@ import unittest
 from pie.objspace import space
 from pie.objects.array import IllegalOffsetType
 
+
 class TestArray(unittest.TestCase):
 
     def setUp(self):

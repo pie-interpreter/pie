@@ -3,14 +3,11 @@ import sys
 import tempfile
 import unittest
 
-from rpython.rlib.parsing.parsing import ParseError
-
-from pie.error import PieError, LexerError
 from pie.interpreter.frame import Frame
 from pie.interpreter.sourcecode import SourceCode
-from pie.launcher.config import config
 from pie.interpreter.context import Context
 from pie.test.parser import Parser
+from pie.interpreter.errors.base import PieError
 
 __author__ = 'sery0ga'
 
@@ -20,16 +17,20 @@ class TestPHPLanguageCoverage(unittest.TestCase):
     parser = Parser()
     output_file = tempfile.TemporaryFile()
     stdout_no = os.dup(sys.stdout.fileno())
+    stderr_no = os.dup(sys.stderr.fileno())
 
     def setUp(self):
         self.current_position = self.output_file.tell()
 
     def redirect_output(self):
         os.dup2(self.output_file.fileno(), sys.stdout.fileno())
+        os.dup2(self.output_file.fileno(), sys.stderr.fileno())
 
     def restore_output(self):
         sys.stdout.flush()
+        sys.stderr.flush()
         os.dup2(self.stdout_no, sys.stdout.fileno())
+        os.dup2(self.stderr_no, sys.stderr.fileno())
 
     def _check_test_result(self, test, actual_result):
         if test.check_parts_of_result:
@@ -41,7 +42,8 @@ class TestPHPLanguageCoverage(unittest.TestCase):
                 equal = True
                 for part in expected_parts:
                     if part not in actual:
-                        part_not_found = "Part >>%s<< not found in %s" % (part, actual)
+                        part_not_found = "Part >>%s<< not found in %s" \
+                            % (part, actual)
                         equal = False
                         break
                 if not equal:
@@ -52,6 +54,7 @@ class TestPHPLanguageCoverage(unittest.TestCase):
             self.assertListEqual(actual_result, test.result)
         else:
             self.assertListNotEqual(actual_result, test.result)
+
 
 def fill_test_class_with_tests(test_to_run=[], with_php_source=False):
     """
@@ -112,20 +115,16 @@ def _add_test(filename, test_name):
         self.redirect_output()
 
         try:
-            source.raw_compile()
             if not test.compile_only:
-                context = Context(filename, config)
+                context = Context(filename)
                 source.interpret(context, Frame())
-            self.restore_output()
         except PieError as e:
+            os.write(2, e.get_message())
+        except Exception as e:
             self.restore_output()
-        except LexerError as e:
-            self.restore_output()
-            self.fail("LexerError\n\n" + e.nice_error_message(source.filename))
-        except ParseError as e:
-            self.restore_output()
-            self.fail("ParseError\n\n" + e.nice_error_message(source.filename,
-                                                              source.content))
+            self.fail(e)
+
+        self.restore_output()
 
         if test.has_result and not test.compile_only:
             # rewind file pointer and read content

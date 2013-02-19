@@ -1,6 +1,7 @@
+""" Module, with all ast nodes """
+
 from rpython.tool.pairtype import extendabletype
 
-""" Module, with all ast nodes """
 
 class AstNode:
     """ Base class for all nodes in ast """
@@ -43,11 +44,11 @@ class Item(AstNode):
     Nodes, subclassed from this one can be in ast.
     """
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, str_value):
+        self.str_value = str_value
 
     def repr(self):
-        return "Item: %s" % self.value
+        return "Item: %s" % self.str_value
 
 
 class ItemsList(AstNode):
@@ -168,11 +169,31 @@ class Unset(ItemsList):
 
 class Empty(AstNodeWithResult):
 
-        def __init__(self, expression):
-            self.expression = expression
+    def __init__(self, expression):
+        self.expression = expression
 
-        def repr(self):
-            return "Empty(%s)" % self.expression.repr()
+    def repr(self):
+        return "Empty(%s)" % self.expression.repr()
+
+
+class ArrayDeclaration(AstNodeWithResult):
+
+    def __init__(self, values):
+        self.values = values
+
+    def repr(self):
+        return "ArrayDeclaration(%s)" % self.get_list_repr(self.values)
+
+
+class ArrayValue(AstNode):
+
+    def __init__(self, key, array_value):
+        self.key = key
+        self.array_value = array_value
+
+    def repr(self):
+        return "ArrayValue(%s => %s)" % (
+            self.key.repr(), self.array_value.repr())
 
 
 class BinaryOperator(AstNodeWithResult):
@@ -230,7 +251,7 @@ class ReferenceAssignment(AstNodeWithResult):
         self.source = source
 
     def repr(self):
-        return "ReferenceAssignment(%s =& %s)" & (self.target, self.source)
+        return "ReferenceAssignment(%s =& %s)" % (self.target, self.source)
 
 
 class TernaryOperator(AstNodeWithResult):
@@ -283,6 +304,40 @@ class Cast(AstNodeWithResult):
         return "Cast((%s) %s)" % (self.symbol, self.value.repr())
 
 
+class VariableExpression(AstNodeWithResult):
+    """Usual variable expression has a name of the variable
+    or array index object on the stack after compiling """
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "VariableExpression(%s)" % self.value.repr()
+
+
+class VariableValueExpression(VariableExpression):
+    """Value variable expression has a value of the variable
+    on the stack after compiling"""
+
+    def repr(self):
+        return "VariableValueExpression(%s)" % self.value.repr()
+
+
+class ArrayDereferencing(AstNodeWithResult):
+
+    def __init__(self, variable, indexes):
+        self.variable = variable
+        self.indexes = indexes
+
+    def repr(self):
+        representations = []
+        for item in self.indexes:
+            representations.append('[' + item.repr() + ']')
+
+        return "ArrayDereferencing(%s %s)" % (
+            self.variable.repr(), ''.join(representations))
+
+
 class Variable(AstNodeWithResult):
 
     def __init__(self, name):
@@ -305,16 +360,78 @@ class FunctionCall(AstNodeWithResult):
 
 class FunctionDeclaration(AstNode):
 
-    def __init__(self, name, arguments, body):
+    def __init__(self, name, is_returning_reference, arguments, body):
         self.name = name
+        self.is_returning_reference = is_returning_reference
         self.arguments = arguments
         self.body = body
+        self.top_level = False
 
     def repr(self):
-        return "FunctionDeclaration(%s(%s){%s})" \
-            % (self.name,
-               self.get_list_repr(self.arguments),
-               self.body.repr())
+        if self.is_returning_reference:
+            reference_symbol = '&'
+        else:
+            reference_symbol = ''
+
+        return "FunctionDeclaration%s(%s(%s){%s})" \
+            % (reference_symbol,
+                self.name.repr(),
+                self.get_list_repr(self.arguments),
+                self.body.repr())
+
+
+class Argument(AstNode):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for argument nodes
+    """
+
+
+class ArgumentWithDefaultValue(Argument):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for argument nodes
+    """
+
+
+class ArgumentVariable(Argument):
+
+    def __init__(self, variable):
+        self.variable = variable
+
+    def repr(self):
+        return "ArgumentVariable(%s)" % self.variable
+
+
+class ArgumentReference(Argument):
+
+    def __init__(self, variable):
+        self.variable = variable
+
+    def repr(self):
+        return "ArgumentReference(%s)" % self.variable
+
+
+class ArgumentVariableWithDefaultValue(ArgumentWithDefaultValue):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "ArgumentVariableWithDefaultValue(%s, %s)" \
+            % (self.variable, self.value)
+
+
+class ArgumentReferenceWithDefaultValue(ArgumentWithDefaultValue):
+
+    def __init__(self, variable, value):
+        self.variable = variable
+        self.value = value
+
+    def repr(self):
+        return "ArgumentReferenceWithDefaultValue(%s, %s)" \
+            % (self.variable, self.value)
 
 
 class If(AstNode):
@@ -397,7 +514,14 @@ class SwitchDefault(AstNode):
         return "SwitchDefault(%s)" % (self.body.repr())
 
 
-class ConstantInt(AstNodeWithResult):
+class Constant(AstNodeWithResult):
+    """
+    Helper class for making code more rpythonic,
+    defines interface for constants compiling
+    """
+
+
+class ConstantInt(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -428,7 +552,7 @@ class ConstantIntHex(ConstantInt):
         return "ConstantIntHex(%s%s)" % (self.sign, self.value)
 
 
-class ConstantFloat(AstNodeWithResult):
+class ConstantFloat(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -438,7 +562,7 @@ class ConstantFloat(AstNodeWithResult):
         return "ConstantFloat(%s%s)" % (self.sign, self.value)
 
 
-class ConstantString(AstNodeWithResult):
+class ConstantString(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -461,7 +585,7 @@ class ConstantDoubleQuotedString(ConstantString):
         return "ConstantDoubleQuotedString(\"%s\")" % (self.value)
 
 
-class ConstantBool(AstNodeWithResult):
+class ConstantBool(Constant):
 
     def __init__(self, value):
         self.value = value
@@ -470,13 +594,28 @@ class ConstantBool(AstNodeWithResult):
         return "ConstantBool(\"%s\")" % (self.value)
 
 
-class ConstantNull(AstNodeWithResult):
+class ConstantArray(Constant):
+
+    def __init__(self, values):
+        self.values = values
+
+    def repr(self):
+        return "ConstantArray(%s)" % self.get_list_repr(self.values)
+
+
+class ConstantNull(Constant):
 
     def repr(self):
         return "ConstantNull()"
 
 
+class ConstantUndefined(Constant):
+
+    def repr(self):
+        return "ConstantUndefined()"
+
+
 class Identifier(Item):
 
     def repr(self):
-        return "Identifier: %s" % self.value
+        return "Identifier: %s" % self.str_value

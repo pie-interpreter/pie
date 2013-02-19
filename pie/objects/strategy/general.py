@@ -1,7 +1,7 @@
 from rpython.rlib.rerased import new_erasing_pair
 
 from pie.objects.strategy.base import GeneralStringStrategy, get_string_strategy
-from pie.error import InterpreterError
+from pie.interpreter.errors.base import InternalError
 
 __author__ = 'sery0ga'
 
@@ -37,10 +37,10 @@ class ConstantStringStrategy(GeneralStringStrategy):
         return self.unerase(w_string.storage)[item]
 
     def setitem(self, w_string, item, value):
-        raise InterpreterError("You cannot modify constant string")
+        raise InternalError("You cannot modify constant string")
 
     def append(self, w_string, value):
-        raise InterpreterError("You cannot modify constant string")
+        raise InternalError("You cannot modify constant string")
 
     def equal(self, w_obj, w_other):
         return self.unerase(w_obj.storage) == self.unerase(w_other.storage)
@@ -113,4 +113,3 @@ class MutableStringStrategy(GeneralStringStrategy):
         s = self.unerase(w_string.storage)
         for i, c in enumerate(s):
             target_list[start + i] = c
-

@@ -1,3 +1,8 @@
+from pie.objects.base import W_Undefined
+from pie.objects.null import W_NullObject
+from pie.objects.bool import W_BoolObject
+from pie.objects.float import W_FloatObject
+from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
 from pie.objects.variable import W_Variable
 from pie.objects.base import W_Undefined
@@ -30,6 +35,9 @@ class ObjSpace(object):
     def array(self, value = []):
         from pie.objects.array import W_ArrayObject
         return W_ArrayObject(value)
+
+    def undefined(self):
+        return W_Undefined()
 
     def undefined(self):
         return W_Undefined()
@@ -116,7 +124,8 @@ class ObjSpace(object):
         """ Use this function only in comparison operations (like '>' or '<=')
         """
         left_type = w_left.type
-        if self._is_any_number(left_type, w_right.type) and self._is_any_string(left_type, w_right.type):
+        if self._is_any_number(left_type, w_right.type) \
+            and self._is_any_string(left_type, w_right.type):
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -217,6 +226,7 @@ def _new_comparison_op(name):
             else:
                 return space.bool(False)
         raise NotImplementedError
+
     func.func_name = name
     return func
 

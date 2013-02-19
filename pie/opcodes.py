@@ -21,6 +21,7 @@ OPCODE = {
     9: 'EMPTY_VAR',  # check if var with name from the stack is empty
     10: 'EMPTY_RESULT',  # check if value on the stack is empty
     11: 'MAKE_REFERENCE',  # make a reference for variable on stack
+    12: 'GET_INDEX', # dereference one array value
 
     # unary operations
     # operate on variable, retrieved by name from stack
@@ -70,13 +71,14 @@ OPCODE = {
     71: 'STORE_VAR',
 
     # from here operations require argument
-    # in comment meaning of the argument is provideds
+    # meaning of the argument is provided in comment
 
     # loading/storing from bytecode pre-cached values
     128: 'LOAD_CONST',  # index of the constant to load
     129: 'LOAD_NAME',  # index of the name to load
     130: 'LOAD_VAR_FAST',  # index of the name of the variable to load
     131: 'STORE_VAR_FAST',  # index of the name of the varibale to store value to
+    132: 'DECLARE_FUNCTION',  # index of the function to declare
 
     # function calling by name, which is loaded from stack
     140: 'CALL_FUNCTION',  # number of arguments to load from stack
@@ -89,6 +91,8 @@ OPCODE = {
     # other common operations
     160: 'ISSET',  # number of var names on the stack to check set status
     161: 'UNSET',  # number of var names on the stack to unset
+    162: 'MAKE_ARRAY',  # number of values to read from the stack
+    163: 'GET_INDEXES', # number of indexes to read from the stack
 }
 
 OPCODE_INDEXES = {}

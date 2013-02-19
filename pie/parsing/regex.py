@@ -2,6 +2,7 @@ from rpython.rlib.parsing.regex import LexingOrExpression
 
 from pie.parsing.deterministic import PieNFA
 
+
 class PieLexingOrExpression(LexingOrExpression):
 
     def make_automaton(self):

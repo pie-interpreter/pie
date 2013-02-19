@@ -3,13 +3,15 @@ from pie.objects.base import W_Number
 from pie.objspace import space
 from pie.types import PHPTypes
 
+
 class W_FloatObject(W_Number):
+
     _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_float
 
     def __init__(self, value):
         self.value = value
         self.nan = False
-        self.type = PHPTypes.w_float
 
     def __repr__(self):
         return "W_FloatObject(%s)" % self.value
@@ -104,7 +106,6 @@ class W_FloatObject(W_Number):
     def dec(self):
         return W_FloatObject(self.value - 1)
 
-
     def plus(self, number):
         return W_FloatObject(self.value + number.value)
 
@@ -116,16 +117,18 @@ class W_FloatObject(W_Number):
 
     def divide(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
+
         return W_FloatObject(self.value / number.value)
 
     def mod(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
+
         divider = number.value
         if self.value < 0 and divider:
             divider *= -1
         elif self.value and divider < 0:
             divider *= -1
-        return W_FloatObject(self.value % divider)
 
+        return W_FloatObject(self.value % divider)

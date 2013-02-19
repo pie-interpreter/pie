@@ -1,13 +1,14 @@
-from pie.error import DivisionByZeroError
-from pie.objects.base import W_Number
+from pie.objects.base import W_Number, DivisionByZeroError
 from pie.types import PHPTypes
 
+
 class W_IntObject(W_Number):
+
     _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_int
 
     def __init__(self, value):
         self.value = value
-        self.type = PHPTypes.w_int
 
     def __repr__(self):
         return "W_IntObject(%s)" % self.value
@@ -23,12 +24,6 @@ class W_IntObject(W_Number):
 
     def int_w(self):
         return self.value
-
-
-    def as_array(self):
-        from pie.objects.array import W_ArrayObject
-        array = W_ArrayObject()
-        return array.set(0, self.value)
 
     def as_bool(self):
         from pie.objects.bool import W_BoolObject
@@ -102,7 +97,6 @@ class W_IntObject(W_Number):
     def dec(self):
         return W_IntObject(self.value - 1)
 
-
     def plus(self, number):
         return W_IntObject(self.value + number.value)
 
@@ -114,7 +108,7 @@ class W_IntObject(W_Number):
 
     def divide(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
         # if the numbers are evenly divisible, we should return int
         if not self.value % number.value:
             return W_IntObject(self.value / number.value)
@@ -123,7 +117,7 @@ class W_IntObject(W_Number):
 
     def mod(self, number):
         if not number.value:
-            raise DivisionByZeroError
+            raise DivisionByZeroError()
         divider = number.value
         if self.value < 0 and divider > 0:
             divider *= -1

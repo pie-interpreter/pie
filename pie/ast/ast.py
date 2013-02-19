@@ -1,5 +1,4 @@
-" Module, providing ast building tools "
-
+""" Module, providing ast building tools """
 from rpython.rlib.parsing.tree import RPythonVisitor
 
 from pie.ast.nodes import *
@@ -94,6 +93,29 @@ class AstBuilder(RPythonVisitor):
     def visit_construct_empty(self, node):
         return Empty(self.get_second_child(node))
 
+    def visit_construct_array(self, node):
+        children_count = len(node.children)
+        assert children_count > 0
+
+        values = []
+        for index in range(1, children_count):
+            values.append(self.transform(node.children[index]))
+
+        return ArrayDeclaration(values)
+
+    def visit_construct_array_value(self, node):
+        children_count = len(node.children)
+        assert children_count in [1, 2]
+
+        if children_count == 1:
+            return ArrayValue(
+                ConstantUndefined(),
+                self.transform(node.children[0]))
+        else:
+            return ArrayValue(
+                self.transform(node.children[0]),
+                self.transform(node.children[1]))
+
     def visit_logical_xor_expression(self, node):
         children_count = len(node.children)
         assert children_count >= 2
@@ -183,7 +205,7 @@ class AstBuilder(RPythonVisitor):
 
     def visit_incdec_expression(self, node):
         assert len(node.children) == 2
-        if node.children[0].symbol == "variable_identifier":
+        if node.children[0].symbol == "variable_expression":
             operation_type = IncrementDecrement.POST
             operator = node.children[1].token.source
             variable = self.transform(node.children[0])
@@ -201,6 +223,33 @@ class AstBuilder(RPythonVisitor):
 
         return Cast(symbol, value)
 
+    def visit_variable_expression(self, node):
+        return VariableExpression(self.get_single_child(node))
+
+    def visit_variable_value_expression(self, node):
+        return VariableValueExpression(self.get_single_child(node))
+
+    def visit_array_dereferencing_expression(self, node):
+        return self.visit_array_dereferencing(node)
+
+    def visit_array_dereferencing(self, node):
+        children_count = len(node.children)
+        assert children_count >= 2
+
+        variable = self.transform(node.children[0])
+
+        indexes = []
+        for index in range(1, children_count):
+            indexes.append(self.transform(node.children[index]))
+
+        return ArrayDereferencing(variable, indexes)
+
+    def visit_array_index(self, node):
+        if len(node.children) == 1:
+            return ConstantUndefined()
+
+        return self.get_second_child(node)
+
     def visit_variable_identifier(self, node):
         return Variable(self.get_single_child(node))
 
@@ -216,26 +265,54 @@ class AstBuilder(RPythonVisitor):
 
         return FunctionCall(name, parameters.list)
 
+    def visit_top_level_function_declaration(self, node):
+        function = self.visit_function_declaration(node)
+        function.top_level = True
+        return function
+
     def visit_function_declaration(self, node):
         children_count = len(node.children)
-        assert children_count in [2, 3, 4]
+        assert children_count in [2, 3, 4, 5]
 
-        name = self.transform(node.children[1])
-        # function declaration can have arguments list or/and function body
-        # missing, we need to check which is which
-        if children_count > 2 \
-                and node.children[2].symbol == "function_arguments_list":
-            arguments = self.transform(node.children[2])
-        else:
-            arguments = ItemsList()
+        parts_index = 1  # index 0 is "function" token
+        is_returning_reference = False
+        if node.children[1].token.source == '&':
+            is_returning_reference = True
+            parts_index += 1
 
-        if children_count > 3 \
-                or node.children[2].symbol == "statements_block":
-            body = self.transform(node.children[-1])
-        else:
-            body = EmptyStatement()
+        name = self.transform(node.children[parts_index])
+        arguments = ItemsList()
+        body = EmptyStatement()
 
-        return FunctionDeclaration(name, arguments.list, body)
+        for index in range(parts_index + 1, children_count):
+            child = node.children[index]
+            if child.symbol == 'function_arguments_list':
+                arguments = self.transform(child)
+            elif child.symbol == 'statements_block':
+                body = self.transform(child)
+
+        return FunctionDeclaration(
+            name, is_returning_reference,
+            arguments.list, body
+        )
+
+    def visit_function_argument_variable(self, node):
+        return ArgumentVariable(self.get_single_child(node))
+
+    def visit_function_argument_reference(self, node):
+        return ArgumentReference(self.get_single_child(node))
+
+    def visit_function_argument_variable_with_default_value(self, node):
+        assert len(node.children) == 2
+        return ArgumentVariableWithDefaultValue(
+            self.transform(node.children[0]),
+            self.transform(node.children[1]))
+
+    def visit_function_argument_reference_with_default_value(self, node):
+        assert len(node.children) == 2
+        return ArgumentReferenceWithDefaultValue(
+            self.transform(node.children[0]),
+            self.transform(node.children[1]))
 
     def visit_if(self, node):
         children_count = len(node.children)
@@ -365,6 +442,19 @@ class AstBuilder(RPythonVisitor):
         float_constant.sign = sign
 
         return float_constant
+
+    def visit_array_type(self, node):
+        children_count = len(node.children)
+        assert children_count > 0
+
+        values = []
+        for index in range(1, children_count):
+            values.append(self.transform(node.children[index]))
+
+        return ConstantArray(values)
+
+    def visit_array_type_value(self, node):
+        return self.visit_construct_array_value(node)
 
     def visit_INT_BIN(self, node):
         return ConstantIntBin(node.token.source)
