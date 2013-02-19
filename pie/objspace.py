@@ -187,6 +187,7 @@ def _new_comparison_op(name):
             try:
                 if w_left.type == PHPTypes.w_null:
                     return getattr(w_left.as_string(), name)(w_right)
+                #TODO: use is_convertible_to_number_strict
                 left_number = w_left.as_number_strict()
                 right_number = w_right.as_number_strict()
                 if self._is_any_float(left_number.type, right_number.type):

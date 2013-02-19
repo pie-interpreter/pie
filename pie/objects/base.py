@@ -17,6 +17,7 @@ class W_Root(object):
 class W_Type(W_Root):
     """ Base type class representing each type in PHP and common operations
     """
+    type = 'unknown type'
 
     def as_bool(self):
         raise NotImplementedError
@@ -38,6 +39,9 @@ class W_Type(W_Root):
 
     def deref(self):
         return self
+
+    def get_type(self):
+        return self.type
 
     def is_null(self):
         return False

@@ -11,9 +11,9 @@ from pie.interpreter.functions.base import AbstractFunction
 
 
 REF_DIVIDER = 10
-INT, FLOAT, BOOL, STRING, SCALAR = range(5)
-REF_INT, REF_FLOAT, REF_BOOL, REF_STRING, REF_SCALAR =\
-    range(REF_DIVIDER, REF_DIVIDER + 5)
+INT, FLOAT, BOOL, STRING, SCALAR, MIXED = range(6)
+REF_INT, REF_FLOAT, REF_BOOL, REF_STRING, REF_SCALAR, REF_MIXED =\
+    range(REF_DIVIDER, REF_DIVIDER + 6)
 
 
 class BuiltinFunction(AbstractFunction):
@@ -72,6 +72,8 @@ def builtin_function(args=[], optional_args=[], name=None):
                     body.append('    assert_string(params[%s])' % index)
                 elif modded_arg_type == SCALAR:
                     body.append('    assert_scalar(params[%s])' % index)
+                elif modded_arg_type == MIXED:
+                    pass  # mixed does not require type validation
                 else:
                     raise InternalError(
                         'Invalid argument type in core function %s' % function_name)

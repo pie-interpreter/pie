@@ -15,11 +15,11 @@ __author__ = 'sery0ga'
 class TestPHPLanguageCoverage(unittest.TestCase):
 
     parser = Parser()
-    output_file = tempfile.TemporaryFile()
     stdout_no = os.dup(sys.stdout.fileno())
     stderr_no = os.dup(sys.stderr.fileno())
 
     def setUp(self):
+        self.output_file = tempfile.TemporaryFile()
         self.current_position = self.output_file.tell()
 
     def redirect_output(self):

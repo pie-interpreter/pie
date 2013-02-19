@@ -86,6 +86,13 @@ class W_StringObject(W_Type):
     def as_string(self):
         return self
 
+    def is_convertible_to_number_strict(self):
+        try:
+            self.as_number_strict()
+            return space.bool(True)
+        except NotConvertibleToNumber:
+            return space.bool(False)
+
     def equal(self, w_object):
         if self is w_object:
             return space.bool(True)
