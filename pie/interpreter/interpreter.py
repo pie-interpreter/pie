@@ -268,18 +268,18 @@ class Interpreter(object):
         #TODO: add reference support
         #TODO: add global variable support
         #TODO: add static variable support
+        #TODO: add array support
         for i in range(names_count):
             var_name = self.frame.pop_name()
             if var_name in self.frame.variables:
                 del self.frame.variables[var_name]
 
     def MAKE_ARRAY(self, values_count):
-        raise InternalError("Not implemented")
-        # values = []
-        # for _ in range(values_count):
-        #     values.insert(0, self.frame.stack.pop())
+        values = []
+        for _ in range(values_count):
+            values.insert(0, self.frame.stack.pop())
 
-        # self.frame.stack.append(space.array(values))
+        self.frame.stack.append(space.array(values))
 
     def GET_INDEXES(self, indexes_len):
         raise InternalError("Not implemented")

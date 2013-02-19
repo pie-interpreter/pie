@@ -15,8 +15,8 @@ class TestArray(unittest.TestCase):
                 space.bool(False), space.int(2),
                 space.bool(True), space.int(3)]
         actual = space.array(raw)
-        expected = {3: space.int(1), -1: space.int(2),
-                    0: space.int(2), 1: space.int(3)}
+        expected = {'3': space.int(1), '-1': space.int(2),
+                    '0': space.int(2), '1': space.int(3)}
         self.assertEqual(expected, actual.storage)
 
     def test_array_creation_null_string_branch(self):
@@ -28,8 +28,8 @@ class TestArray(unittest.TestCase):
                 space.str("-09"), space.int(7)]
         actual = space.array(raw)
         expected = {"test": space.int(1), "08": space.int(2),
-                    99: space.int(3), "": space.int(4),
-                    -5: space.int(5), "-09": space.int(7)}
+                    '99': space.int(3), "": space.int(4),
+                    '-5': space.int(5), "-09": space.int(7)}
         self.assertEqual(expected, actual.storage)
 
     def test_array_creation_one_key(self):
@@ -38,7 +38,7 @@ class TestArray(unittest.TestCase):
                 space.float(1.5), space.int(3),
                 space.bool(True), space.int(4)]
         actual = space.array(raw)
-        expected = {1: space.int(4)}
+        expected = {'1': space.int(4)}
         self.assertEqual(expected, actual.storage)
 
     def test_array_creation_with_no_keys(self):
@@ -49,16 +49,16 @@ class TestArray(unittest.TestCase):
                 space.int(3), space.int(5),
                 space.undefined(), space.int(6)]
         actual = space.array(raw)
-        expected = {0: space.int(1), 1: space.int(2),
-                    6: space.int(3), 7: space.int(4),
-                    3: space.int(5), 8: space.int(6)}
+        expected = {'0': space.int(1), '1': space.int(2),
+                    '6': space.int(3), '7': space.int(4),
+                    '3': space.int(5), '8': space.int(6)}
         self.assertEqual(expected, actual.storage)
         raw = [space.str("6"), space.int(3),
                 space.str("3"), space.int(5),
                 space.undefined(), space.int(6)]
         actual = space.array(raw)
-        expected = {6: space.int(3), 3: space.int(5),
-                    7: space.int(6)}
+        expected = {'6': space.int(3), '3': space.int(5),
+                    '7': space.int(6)}
         self.assertEqual(expected, actual.storage)
 
     def test_is_true(self):

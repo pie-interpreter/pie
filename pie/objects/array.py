@@ -31,7 +31,11 @@ class W_ArrayObject(W_Type):
         return "W_ArrayObject(%s)" % self.storage
 
     def copy(self):
-        assert NotImplementedError
+        raw_data = []
+        for key, value in self.storage:
+            raw_data.append(space.str(key))
+            raw_data.append(value)
+        return space.array(raw_data)
 
     def is_true(self):
         if not self.storage:
@@ -148,13 +152,16 @@ class W_ArrayObject(W_Type):
         return space.bool(True)
 
     def _convert_index(self, w_index):
+        # Right now all indexes are strings because
+        #  we cannot translate otherwise.
+        #TODO: change such behaviour as soon as internal represent. is implement
         if w_index.type == PHPTypes.w_float or \
             w_index.type == PHPTypes.w_int or \
             w_index.type == PHPTypes.w_bool:
             key = w_index.as_int().int_w()
             if key >= self.last_index:
                 self.last_index_changed = True
-            return key
+            return str(key)
         elif w_index.type == PHPTypes.w_string:
             key = w_index.str_w()
             if (len(key) > 1 and key[0] == '0') \
@@ -164,6 +171,7 @@ class W_ArrayObject(W_Type):
                 key = int(key)
                 if key >= self.last_index:
                     self.last_index_changed = True
+                return str(key)
             except ValueError:
                 pass
             return key
@@ -172,11 +180,12 @@ class W_ArrayObject(W_Type):
         elif w_index.type == PHPTypes.w_undefined:
             key = self.last_index
             self.last_index_changed = True
-            return key
+            return str(key)
         else:
             raise IllegalOffsetType
 
     def _update_last_index(self, index):
-        assert isinstance(index, int)
+        if isinstance(index, str):
+            index = int(index)
         self.last_index = index + 1
         self.last_index_changed = False

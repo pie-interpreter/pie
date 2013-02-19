@@ -1,5 +1,4 @@
-from pie.error import DivisionByZeroError
-from pie.objects.base import W_Number
+from pie.objects.base import W_Number, DivisionByZeroError
 from pie.objspace import space
 from pie.types import PHPTypes
 

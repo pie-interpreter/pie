@@ -1,11 +1,5 @@
-from pie.objects.base import W_Undefined
-from pie.objects.null import W_NullObject
-from pie.objects.bool import W_BoolObject
-from pie.objects.float import W_FloatObject
-from pie.objects.string import W_StringObject, NotConvertibleToNumber
 from pie.objects.int import W_IntObject
 from pie.objects.variable import W_Variable
-from pie.objects.base import W_Undefined
 from pie.types import PHPTypes
 
 __author__ = 'sery0ga'
@@ -37,9 +31,7 @@ class ObjSpace(object):
         return W_ArrayObject(value)
 
     def undefined(self):
-        return W_Undefined()
-
-    def undefined(self):
+        from pie.objects.base import W_Undefined
         return W_Undefined()
 
     def variable(self, w_object):
