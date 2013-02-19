@@ -32,7 +32,8 @@ class BytecodeBuilder(object):
 
         # caching lists
         self.consts_cache = {
-            'int': {}, 'string': {}, 'float': {}, 'bool': {}, 'null': {}
+            'int': {}, 'string': {}, 'float': {},
+            'bool': {}, 'null': {}, 'array': {}, 'undefined': {}
         }
         self.names_cache = {}
 

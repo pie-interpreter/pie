@@ -1,9 +1,12 @@
 from pie.objects.base import W_Number, DivisionByZeroError
 from pie.objects.int import W_IntObject
+from pie.types import PHPTypes
 
 
 class W_FloatObject(W_Number):
-    _immutable_fields_ = ['value']
+
+    _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_float
 
     def __init__(self, value):
         self.value = value

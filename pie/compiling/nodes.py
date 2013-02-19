@@ -12,6 +12,9 @@ class __extend__(nodes.AstNode):
         builder.line = self.line
         self.compile_node(builder)
 
+    def compile_name(self, builder):
+        raise NotImplementedError
+
 
 class __extend__(nodes.EmptyStatement):
 
@@ -105,8 +108,7 @@ class __extend__(nodes.Isset):
 
     def compile_node(self, builder):
         for statement in self.list:
-            index = builder.register_name(_get_variable_name(statement))
-            builder.emit('LOAD_NAME', index)
+            statement.compile(builder)
 
         builder.emit('ISSET', len(self.list))
 
@@ -115,8 +117,7 @@ class __extend__(nodes.Unset):
 
     def compile_node(self, builder):
         for statement in self.list:
-            index = builder.register_name(_get_variable_name(statement))
-            builder.emit('LOAD_NAME', index)
+            statement.compile(builder)
 
         builder.emit('UNSET', len(self.list))
 
@@ -124,13 +125,21 @@ class __extend__(nodes.Unset):
 class __extend__(nodes.Empty):
 
     def compile_node(self, builder):
-        if isinstance(self.expression, nodes.Variable):
-            index = builder.register_name(_get_variable_name(self.expression))
-            builder.emit('LOAD_NAME', index)
+        self.expression.compile(builder)
+        if isinstance(self.expression, nodes.VariableExpression):
             builder.emit('EMPTY_VAR')
         else:
-            self.expression.compile(builder)
             builder.emit('EMPTY_RESULT')
+
+
+class __extend__(nodes.ArrayDeclaration):
+
+    def compile_node(self, builder):
+        for value in self.values:
+            value.key.compile_node(builder)
+            value.array_value.compile_node(builder)
+
+        builder.emit('MAKE_ARRAY', len(self.values) * 2)
 
 
 class __extend__(nodes.BinaryOperator):
@@ -198,14 +207,14 @@ class __extend__(nodes.Assignment):
     def compile_node(self, builder):
         # compiling value first, so result would be on the stack for us
         self.value.compile(builder)
-        index = builder.register_name(_get_variable_name(self.variable))
 
         operation = self.get_modification_operation()
-        if operation:  # inplace operation
-            builder.emit('LOAD_NAME', index)
+        if not operation:
+            self.variable.compile_mode = nodes.VariableExpression.STORE
+            self.variable.compile_node(builder)
+        else:
+            self.variable.compile(builder)
             builder.emit(operation)
-        else:  # simple assign
-            builder.emit('STORE_VAR_FAST', index)
 
     def get_modification_operation(self):
         operations = {
@@ -225,9 +234,7 @@ class __extend__(nodes.ReferenceAssignment):
 
     def compile_node(self, builder):
         self.source.compile(builder)
-
-        index = builder.register_name(_get_variable_name(self.target))
-        builder.emit('LOAD_NAME', index)
+        self.target.compile(builder)
         builder.emit('MAKE_REFERENCE')
 
 
@@ -264,10 +271,7 @@ class __extend__(nodes.Not):
 class __extend__(nodes.IncrementDecrement):
 
     def compile_node(self, builder):
-        # registering var name in builder
-        index = builder.register_name(_get_variable_name(self.variable))
-
-        builder.emit('LOAD_NAME', index)
+        self.variable.compile(builder)
         builder.emit(self.get_operation())
 
     def get_operation(self):
@@ -305,11 +309,44 @@ class __extend__(nodes.Cast):
         return operations[self.symbol]
 
 
+class __extend__(nodes.VariableExpression):
+
+    def compile_node(self, builder):
+        self.value.compile_mode = self.compile_mode
+        self.value.compile(builder)
+
+
+class __extend__(nodes.ArrayDereferencing):
+
+    def compile_node(self, builder):
+        "Array dereferencing behaves the same for all operations"
+        indexes_len = len(self.indexes)
+        for index in self.indexes:
+            index.compile(builder)
+
+        self.variable.compile_mode = nodes.VariableExpression.NAME
+        self.variable.compile(builder)
+        if indexes_len == 1:
+            builder.emit('GET_INDEX')
+        else:
+            builder.emit('GET_INDEXES', indexes_len)
+
+        if self.compile_mode == nodes.VariableExpression.STORE:
+            builder.emit('STORE_VAR')
+
+
 class __extend__(nodes.Variable):
 
     def compile_node(self, builder):
-        index = builder.register_name(_get_variable_name(self))
-        builder.emit('LOAD_VAR_FAST', index)
+        if self.compile_mode == nodes.VariableExpression.STORE:
+            builder.emit('STORE_VAR_FAST', self._register_self(builder))
+        elif self.compile_mode == nodes.VariableExpression.LOAD:
+            builder.emit('LOAD_VAR_FAST', self._register_self(builder))
+        else:
+            builder.emit('LOAD_NAME', self._register_self(builder))
+
+    def _register_self(self, builder):
+        return builder.register_name(self.name.str_value)
 
 
 class __extend__(nodes.FunctionCall):
@@ -320,7 +357,7 @@ class __extend__(nodes.FunctionCall):
 
         name = self.name
         if isinstance(name, nodes.Identifier):
-            index = builder.register_name(name.value)
+            index = builder.register_name(name.str_value)
             builder.emit("LOAD_NAME", index)
         else:
             name.compile(builder)
@@ -346,10 +383,8 @@ class __extend__(nodes.FunctionDeclaration):
             return_type = UserFunction.REFERENCE
 
         identifier = self.name
-        assert isinstance(identifier, nodes.Identifier)
-
         function = UserFunction(
-            identifier.value, return_type, bytecode, arguments, self.line)
+            identifier.str_value, return_type, bytecode, arguments, self.line)
 
         if self.top_level:
             builder.register_declared_function(function)
@@ -367,7 +402,8 @@ class __extend__(nodes.Argument):
             self._get_argument_default_value())
 
     def _get_argument_name(self):
-        return _get_variable_name(self.variable)
+        identifier = self.variable.name
+        return identifier.str_value
 
     def _get_argument_type(self):
         return UserFunction.VALUE
@@ -637,6 +673,34 @@ class __extend__(nodes.ConstantBool):
         return space.bool(self.value)
 
 
+class __extend__(nodes.ConstantArray):
+
+    type_name = 'array'
+
+    def get_str_value(self):
+        string_values = []
+        for value in self.all_values:
+            value.calculate_const_value()
+            string_values.append(value.get_str_value())
+
+        return ''.join(['[', ''.join(string_values), ']'])
+
+    def get_compiled_value(self):
+        array_values = []
+        for value in self.all_values:
+            array_values.append(value.get_compiled_value())
+
+        return space.array(array_values)
+
+    def calculate_const_value(self):
+        self.all_values = []
+        for value in self.values:
+            value.key.calculate_const_value()
+            value.array_value.calculate_const_value()
+            self.all_values.append(value.key)
+            self.all_values.append(value.array_value)
+
+
 class __extend__(nodes.ConstantNull):
 
     type_name = 'null'
@@ -646,6 +710,17 @@ class __extend__(nodes.ConstantNull):
 
     def get_compiled_value(self):
         return space.null()
+
+
+class __extend__(nodes.ConstantUndefined):
+
+    type_name = 'undefined'
+
+    def get_str_value(self):
+        return 'undefined'
+
+    def get_compiled_value(self):
+        return space.undefined()
 
 
 class __extend__(nodes.ConstantString):
@@ -672,11 +747,3 @@ class __extend__(nodes.ConstantDoubleQuotedString):
 
     def calculate_const_value(self):
         self.const_value = util.process_double_quoted_string(self.value)
-
-
-def _get_variable_name(var):
-    assert isinstance(var, nodes.Variable)
-    identifier = var.name
-    assert isinstance(identifier, nodes.Identifier)
-
-    return identifier.value

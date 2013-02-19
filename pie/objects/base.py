@@ -1,9 +1,13 @@
+from pie.types import PHPTypes
 
 
 class W_Root(object):
     """ The base class for everything that can be represented as a first-class
     object at applevel
     """
+
+    type = PHPTypes.w_undefined
+
     def copy(self):
         raise NotImplementedError
 
@@ -17,7 +21,6 @@ class W_Root(object):
 class W_Type(W_Root):
     """ Base type class representing each type in PHP and common operations
     """
-    type = 'unknown type'
 
     def as_bool(self):
         raise NotImplementedError
@@ -91,3 +94,14 @@ class W_Number(W_Type):
 
 class DivisionByZeroError(Exception):
     pass
+
+
+class W_Undefined(W_Type):
+
+    type = PHPTypes.w_undefined
+
+    def __repr__(self):
+        return "W_Undefined()"
+
+    def copy(self):
+        return self

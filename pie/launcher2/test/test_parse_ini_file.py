@@ -5,6 +5,7 @@ from rpython.rlib.parsing.parsing import ParseError
 from pie.launcher.config import config
 from pie.utils.ini import raw_parse_ini_file
 
+
 class TestParseIniFile(unittest.TestCase):
     def setUp(self):
         # We need this to block annoying PHP behaviour

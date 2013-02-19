@@ -15,6 +15,7 @@ echo '"string": '.(boolval("string") ? 'true' : 'false')."\n";
 //echo '[]:       '.(boolval([]) ? 'true' : 'false')."\n";
 //echo 'stdClass: '.(boolval(new stdClass) ? 'true' : 'false')."\n";
 ?>
+--EXPECT--
 0:        false
 42:       true
 0.0:      false

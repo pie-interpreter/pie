@@ -1,14 +1,20 @@
 from pie.objects.base import W_Number, DivisionByZeroError
+from pie.types import PHPTypes
 
 
 class W_IntObject(W_Number):
-    _immutable_fields_ = ['value']
+
+    _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_int
 
     def __init__(self, value):
         self.value = value
 
     def __repr__(self):
         return "W_IntObject(%s)" % self.value
+
+    def __eq__(self, other):
+        return self.value == other.value
 
     def copy(self):
         return W_IntObject(self.value)

@@ -17,123 +17,145 @@ function.
 from pie.interpreter.functions.builtin import builtin_function
 from pie.interpreter.functions.builtin import SCALAR, MIXED
 from pie.objspace import space
+from pie.types import PHPTypes
+
 
 @builtin_function()
 def boolval(context, params):
     return params[0].deref().as_bool()
 
+
 @builtin_function()
 def doubleval(context, params):
     return params[0].deref().as_float()
+
 
 @builtin_function()
 def floatval(context, params):
     return params[0].deref().as_float()
 
+
 #TODO: get_defined_vars
 #TODO: get_resource_type
+
 
 @builtin_function()
 def gettype(context, params):
     type = params[0].deref().get_type()
     type_name = 'unknown type'
-    if type == space.W_INT:
+    if type == PHPTypes.w_int:
         type_name = 'integer'
-    elif type == space.W_FLOAT:
+    elif type == PHPTypes.w_float:
         type_name = 'double'
-    elif type == space.W_STR:
+    elif type == PHPTypes.w_string:
         type_name = 'string'
-    elif type == space.W_BOOL:
+    elif type == PHPTypes.w_bool:
         type_name = 'boolean'
-    elif type == space.W_NULL:
+    elif type == PHPTypes.w_null:
         type_name = 'NULL'
-    elif type == space.W_ARRAY:
+    elif type == PHPTypes.w_array:
         type_name = 'array'
-    elif type == space.W_OBJECT:
+    elif type == PHPTypes.w_object:
         type_name = 'object'
-    elif type == space.W_RESOURCE:
+    elif type == PHPTypes.w_resource:
         type_name = 'resource'
+
     return space.str(type_name)
 
 #TODO: is_callable
 #TODO: intval
 
+
 @builtin_function()
 def is_array(context, params):
-    result = (params[0].deref().get_type() == space.W_ARRAY)
+    result = (params[0].deref().get_type() == PHPTypes.w_array)
     return space.bool(result)
+
 
 @builtin_function()
 def is_bool(context, params):
-    result = (params[0].deref().get_type() == space.W_BOOL)
+    result = (params[0].deref().get_type() == PHPTypes.w_bool)
     return space.bool(result)
+
 
 @builtin_function()
 def is_double(context, params):
-    result = (params[0].deref().get_type() == space.W_FLOAT)
+    result = (params[0].deref().get_type() == PHPTypes.w_float)
     return space.bool(result)
+
 
 @builtin_function()
 def is_float(context, params):
-    result = (params[0].deref().get_type() == space.W_FLOAT)
+    result = (params[0].deref().get_type() == PHPTypes.w_float)
     return space.bool(result)
+
 
 @builtin_function()
 def is_int(context, params):
-    result = (params[0].deref().get_type() == space.W_INT)
+    result = (params[0].deref().get_type() == PHPTypes.w_int)
     return space.bool(result)
+
 
 @builtin_function()
 def is_integer(context, params):
-    result = (params[0].deref().get_type() == space.W_INT)
+    result = (params[0].deref().get_type() == PHPTypes.w_int)
     return space.bool(result)
+
 
 @builtin_function()
 def is_long(context, params):
-    result = (params[0].deref().get_type() == space.W_INT)
+    result = (params[0].deref().get_type() == PHPTypes.w_int)
     return space.bool(result)
+
 
 @builtin_function()
 def is_null(context, params):
-    result = (params[0].deref().get_type() == space.W_NULL)
+    result = (params[0].deref().get_type() == PHPTypes.w_null)
     return space.bool(result)
+
 
 @builtin_function()
 def is_numeric(context, params):
     type = params[0].deref().get_type()
-    if type == space.W_INT or type == space.W_FLOAT:
+    if type == PHPTypes.w_int or type == PHPTypes.w_float:
         return space.bool(True)
-    if type == space.W_STR:
+    if type == PHPTypes.w_string:
         return params[0].deref().is_convertible_to_number_strict()
     return space.bool(False)
 
+
 @builtin_function()
 def is_object(context, params):
-    result = (params[0].deref().get_type() == space.W_OBJECT)
+    result = (params[0].deref().get_type() == PHPTypes.w_object)
     return space.bool(result)
+
 
 @builtin_function()
 def is_real(context, params):
-    result = (params[0].deref().get_type() == space.W_FLOAT)
+    result = (params[0].deref().get_type() == PHPTypes.w_float)
     return space.bool(result)
+
 
 @builtin_function()
 def is_resource(context, params):
-    result = (params[0].deref().get_type() == space.W_RESOURCE)
+    result = (params[0].deref().get_type() == PHPTypes.w_resource)
     return space.bool(result)
+
 
 @builtin_function()
 def is_scalar(context, params):
     type = params[0].deref().get_type()
-    if type == space.W_STR or type == space.W_INT or type == space.W_FLOAT \
-        or type == space.W_BOOL:
+    if type == PHPTypes.w_string or type == PHPTypes.w_int \
+        or type == PHPTypes.w_float or type == PHPTypes.w_bool:
         return space.bool(True)
     return space.bool(False)
 
+
 @builtin_function()
 def is_string(context, params):
-    result = (params[0].deref().get_type() == space.W_STR)
+    result = (params[0].deref().get_type() == PHPTypes.w_string)
     return space.bool(result)
+
 
 @builtin_function(args=[MIXED], optional_args=[SCALAR])
 def print_r(context, params):
@@ -145,14 +167,15 @@ def print_r(context, params):
         to_variable = params[1].deref().is_true()
     else:
         to_variable = False
-    if w_expression.type == space.W_STR:
+    if w_expression.type == PHPTypes.w_string:
         return _handle_output(context, w_expression, to_variable)
-    elif w_expression.type == space.W_INT \
-            or w_expression.type == space.W_FLOAT \
-            or w_expression.type == space.W_BOOL \
-            or w_expression.type == space.W_NULL:
+    elif w_expression.type == PHPTypes.w_int \
+            or w_expression.type == PHPTypes.w_float \
+            or w_expression.type == PHPTypes.w_bool \
+            or w_expression.type == PHPTypes.w_null:
         return _handle_output(context, w_expression.as_string(), to_variable)
     return space.bool(True)
+
 
 def _handle_output(context, w_value, to_variable):
     if not to_variable:
@@ -160,15 +183,18 @@ def _handle_output(context, w_value, to_variable):
         return space.bool(True)
     return w_value
 
+
 #TODO: serialize
 #TODO: settype
 #TODO: strval
 #TODO: unserialize
 
+
 @builtin_function()
 def var_dump(context, params):
     for param in params:
         var_dump_one_parameter(context, param.deref())
+
 
 def var_dump_one_parameter(context, param):
     #FIXME: correct float var_dump for 1.0e+4 < value < 1.0e+14. Uncomment in test
@@ -177,19 +203,20 @@ def var_dump_one_parameter(context, param):
     #TODO: object
     #TODO: unknown type (?)
     #TODO: add JIT support
-    if param.type == space.W_STR:
+    if param.type == PHPTypes.w_string:
         context.print_output("string(%d) \"%s\"\n" %
             (param.strlen(), param.str_w()))
-    elif param.type == space.W_INT:
+    elif param.type == PHPTypes.w_int:
         context.print_output("int(%d)\n" % param.int_w())
-    elif param.type == space.W_FLOAT:
+    elif param.type == PHPTypes.w_float:
         context.print_output("float(%s)\n" % param.float_w())
-    elif param.type == space.W_BOOL:
+    elif param.type == PHPTypes.w_bool:
         if param.is_true():
             context.print_output("bool(true)\n")
         else:
             context.print_output("bool(false)\n")
-    elif param.type == space.W_NULL:
+    elif param.type == PHPTypes.w_null:
         context.print_output("NULL\n")
+
 
 #TODO: var_export

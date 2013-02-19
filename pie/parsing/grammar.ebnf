@@ -12,6 +12,7 @@ T_INLINE_COMMENT: "/\*([^\*]|\*[^/])*\*?\*/";
 T_WHITESPACE: "\s";
 
 # original PHP tokens
+T_ARRAY: "array";
 T_ARRAY_CAST: "\([ \t]*(array)[ \t]*\)";
 T_BOOL_CAST: "\([ \t]*((bool)|(boolean))[ \t]*\)";
 T_BOOLEAN_AND: "&&";
@@ -154,8 +155,24 @@ float_type: ADDITIVE_OPERATOR FLOAT
 
 string_type: <SINGLE_QUOTED_STRING>
            | <DOUBLE_QUOTED_STRING>;
+
 bool_type: <TRUE>
          | <FALSE>;
+
+# array type here means constant arrays only, complicated arrays
+# declarations go into constructs
+array_type: T_ARRAY ["("] >array_type_values<? [")"]
+          | "[" >array_type_values<? ["]"];
+array_type_values: array_type_value [","] >array_type_values<
+                 | array_type_value [","]?;
+array_type_value: >array_type_key< ["=>"] constant_expression
+                | constant_expression;
+array_type_key: int_type
+              | bool_type
+              | float_type
+              | string_type
+              | NULL;
+
 
 
 # NOT FINISHED STATEMENTS
@@ -179,7 +196,8 @@ constructs_with_return_value: <construct_print>
                             | <construct_require>
                             | <construct_require_once>
                             | <construct_isset>
-                            | <construct_empty>;
+                            | <construct_empty>
+                            | <construct_array>;
 
 construct_print: T_PRINT expression;
 
@@ -206,7 +224,15 @@ construct_isset: T_ISSET ["("] comma_seperated_variables [")"];
 
 construct_unset: T_UNSET ["("] comma_seperated_variables [")"];
 
-construct_empty: T_EMPTY ["("] expression [")"];
+construct_empty: T_EMPTY ["("] variable_expression [")"]
+               | T_EMPTY ["("] expression [")"];
+
+construct_array: T_ARRAY ["("] >construct_array_values< [")"]
+              | "[" >construct_array_values< ["]"];
+construct_array_values: construct_array_value [","] >construct_array_values<
+                      | construct_array_value [","]?;
+construct_array_value: expression ["=>"] expression
+                     | expression;
 
 
 # expressions definition, based on priority of operators
@@ -234,7 +260,7 @@ assign_expression: <reference_assignment>
                  | variable_expression INPLACE_ASSIGN_OPERATOR assign_expression
                  | <ternary_expression>;
 
-reference_assignment: variable_expression [ASSIGN_OPERATOR] ["&"] variable_expression
+reference_assignment: variable_expression [ASSIGN_OPERATOR] ["&"] variable_value_expression
                     | variable_expression [ASSIGN_OPERATOR] ["&"] function_call;
 
 ternary_expression: boolean_or_expression ["?"] expression? [":"] expression
@@ -275,12 +301,12 @@ logical_not_expression: [LOGICAL_NOT_OPERATOR] logical_not_expression
 # increment/decrement and typecasting operations have same priority
 incdeccast_expression: <incdec_expression>
                      | <cast_expression>;
-incdec_expression: T_INC variable_identifier
-                 | T_DEC variable_identifier
-                 | variable_identifier T_INC
-                 | variable_identifier T_DEC;
+incdec_expression: T_INC variable_expression
+                 | T_DEC variable_expression
+                 | variable_expression T_INC
+                 | variable_expression T_DEC;
 cast_expression: >cast_token< incdeccast_expression
-               | <primary_expression>;
+               | <array_dereferencing_expression>;
 cast_token: T_ARRAY_CAST
           | T_BOOL_CAST
           | T_DOUBLE_CAST
@@ -289,23 +315,39 @@ cast_token: T_ARRAY_CAST
           | T_STRING_CAST
           | T_UNSET_CAST;
 
+array_dereferencing_expression: primary_expression >array_index_list<
+                              | <primary_expression>;
+
 primary_expression: ["("] <expression> [")"]
                   | <function_call>
-                  | <variable_expression>
+                  | <variable_value_expression>
                   | <constant_expression>
                   | <constructs_with_return_value>;
 
-variable_expression: <variable_identifier>;
+variable_expression: array_dereferencing
+                   | variable_specification;
+variable_value_expression: >variable_expression<;
+
+variable_specification: <variable_identifier>;
+
 variable_identifier: ["$"] IDENTIFIER;
+
+array_dereferencing: variable_specification >array_index_list<;
+array_index_list: array_index >array_index_list<
+                | array_index;
+array_index: "[" expression? ["]"];
+
+
 constant_expression: <int_type>
                    | <float_type>
                    | <string_type>
                    | <bool_type>
+                   | <array_type>
                    | <NULL>;
 
 function_call: >function_call_identifier< >function_parameters<;
 function_call_identifier: IDENTIFIER
-                        | variable_expression;
+                        | variable_value_expression;
 function_parameters: ["("] function_parameters_list? [")"];
 function_parameters_list: expression [","] >function_parameters_list<
                         | expression;

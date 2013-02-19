@@ -110,6 +110,9 @@ class Interpreter(object):
             self.frame.variables[ref_name] = w_variable
             self.frame.stack.append(w_variable.deref())
 
+    def GET_INDEX(self, value):
+        raise InternalError("Not implemented")
+
     def NOT(self, value):
         w_object = self.frame.stack.pop()
         result = not w_object.deref().is_true()
@@ -117,6 +120,8 @@ class Interpreter(object):
 
     def CAST_TO_ARRAY(self, value):
         raise InternalError("Not implemented")
+        # w_object = self.frame.stack.pop()
+        # self.frame.stack.append(w_object.as_array())
 
     def CAST_TO_BOOL(self, value):
         w_object = self.frame.stack.pop()
@@ -165,6 +170,11 @@ class Interpreter(object):
         w_value.set_value(w_value.deref().dec())
         self.frame.stack.append(w_old_value)
 
+    def CONCAT(self, value):
+        w_right = self.frame.stack.pop()
+        w_left = self.frame.stack.pop()
+        self.frame.stack.append(space.concat(w_left, w_right))
+
     def XOR(self, value):
         w_left = self.frame.stack.pop()
         w_right = self.frame.stack.pop()
@@ -181,12 +191,14 @@ class Interpreter(object):
         self.frame.stack.append(w_value)
 
     def LOAD_VAR(self, var_index):
-        var_name = self.bytecode.names[var_index]
+        var_name = self.frame.pop_name()
         w_value = self.frame.get_variable(var_name, self.context)
         self.frame.stack.append(w_value)
 
     def STORE_VAR(self, value):
-        raise InternalError("Not implemented")
+        var_name = self.frame.pop_name()
+        w_value = self.frame.stack[-1]  # we need to leave value on the stack
+        self.frame.set_variable(var_name, w_value)
 
     def LOAD_CONST(self, value):
         self.frame.stack.append(self.bytecode.consts[value].copy())
@@ -245,12 +257,11 @@ class Interpreter(object):
         stack = self.frame.stack
         for i in range(names_count):
             var_name = stack.pop().str_w()
-            if not var_name in self.frame.variables:
+            if not var_name in self.frame.variables \
+                or self.frame.variables[var_name].deref().is_null():
                 stack.append(space.bool(False))
                 return
-            if self.frame.variables[var_name].deref().is_null():
-                stack.append(space.bool(False))
-                return
+
         stack.append(space.bool(True))
 
     def UNSET(self, names_count):
@@ -262,10 +273,16 @@ class Interpreter(object):
             if var_name in self.frame.variables:
                 del self.frame.variables[var_name]
 
-    def CONCAT(self, value):
-        w_right = self.frame.stack.pop()
-        w_left = self.frame.stack.pop()
-        self.frame.stack.append(space.concat(w_left, w_right))
+    def MAKE_ARRAY(self, values_count):
+        raise InternalError("Not implemented")
+        # values = []
+        # for _ in range(values_count):
+        #     values.insert(0, self.frame.stack.pop())
+
+        # self.frame.stack.append(space.array(values))
+
+    def GET_INDEXES(self, indexes_len):
+        raise InternalError("Not implemented")
 
 
 def _new_binary_op(name, space_name):

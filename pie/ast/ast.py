@@ -1,8 +1,9 @@
-" Module, providing ast building tools "
+""" Module, providing ast building tools """
 from rpython.rlib.parsing.tree import RPythonVisitor
 
 from pie.ast.nodes import *
 from pie.parsing import parsing
+
 
 def build(source):
     parse_tree = parsing.parse(source)
@@ -91,6 +92,29 @@ class AstBuilder(RPythonVisitor):
 
     def visit_construct_empty(self, node):
         return Empty(self.get_second_child(node))
+
+    def visit_construct_array(self, node):
+        children_count = len(node.children)
+        assert children_count > 0
+
+        values = []
+        for index in range(1, children_count):
+            values.append(self.transform(node.children[index]))
+
+        return ArrayDeclaration(values)
+
+    def visit_construct_array_value(self, node):
+        children_count = len(node.children)
+        assert children_count in [1, 2]
+
+        if children_count == 1:
+            return ArrayValue(
+                ConstantUndefined(),
+                self.transform(node.children[0]))
+        else:
+            return ArrayValue(
+                self.transform(node.children[0]),
+                self.transform(node.children[1]))
 
     def visit_logical_xor_expression(self, node):
         children_count = len(node.children)
@@ -181,7 +205,7 @@ class AstBuilder(RPythonVisitor):
 
     def visit_incdec_expression(self, node):
         assert len(node.children) == 2
-        if node.children[0].symbol == "variable_identifier":
+        if node.children[0].symbol == "variable_expression":
             operation_type = IncrementDecrement.POST
             operator = node.children[1].token.source
             variable = self.transform(node.children[0])
@@ -198,6 +222,35 @@ class AstBuilder(RPythonVisitor):
         value = self.transform(node.children[1])
 
         return Cast(symbol, value)
+
+    def visit_variable_expression(self, node):
+        return VariableExpression(self.get_single_child(node))
+
+    def visit_variable_value_expression(self, node):
+        node = VariableExpression(self.get_single_child(node))
+        node.compile_mode = VariableExpression.LOAD
+        return node
+
+    def visit_array_dereferencing_expression(self, node):
+        return self.visit_array_dereferencing(node)
+
+    def visit_array_dereferencing(self, node):
+        children_count = len(node.children)
+        assert children_count >= 2
+
+        variable = self.transform(node.children[0])
+
+        indexes = []
+        for index in range(1, children_count):
+            indexes.append(self.transform(node.children[index]))
+
+        return ArrayDereferencing(variable, indexes)
+
+    def visit_array_index(self, node):
+        if len(node.children) == 1:
+            return ConstantUndefined()
+
+        return self.get_second_child(node)
 
     def visit_variable_identifier(self, node):
         return Variable(self.get_single_child(node))
@@ -391,6 +444,19 @@ class AstBuilder(RPythonVisitor):
         float_constant.sign = sign
 
         return float_constant
+
+    def visit_array_type(self, node):
+        children_count = len(node.children)
+        assert children_count > 0
+
+        values = []
+        for index in range(1, children_count):
+            values.append(self.transform(node.children[index]))
+
+        return ConstantArray(values)
+
+    def visit_array_type_value(self, node):
+        return self.visit_construct_array_value(node)
 
     def visit_INT_BIN(self, node):
         return ConstantIntBin(node.token.source)

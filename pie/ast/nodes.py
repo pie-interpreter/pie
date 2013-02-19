@@ -44,11 +44,11 @@ class Item(AstNode):
     Nodes, subclassed from this one can be in ast.
     """
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, str_value):
+        self.str_value = str_value
 
     def repr(self):
-        return "Item: %s" % self.value
+        return "Item: %s" % self.str_value
 
 
 class ItemsList(AstNode):
@@ -169,11 +169,31 @@ class Unset(ItemsList):
 
 class Empty(AstNodeWithResult):
 
-        def __init__(self, expression):
-            self.expression = expression
+    def __init__(self, expression):
+        self.expression = expression
 
-        def repr(self):
-            return "Empty(%s)" % self.expression.repr()
+    def repr(self):
+        return "Empty(%s)" % self.expression.repr()
+
+
+class ArrayDeclaration(AstNodeWithResult):
+
+    def __init__(self, values):
+        self.values = values
+
+    def repr(self):
+        return "ArrayDeclaration(%s)" % self.get_list_repr(self.values)
+
+
+class ArrayValue(AstNode):
+
+    def __init__(self, key, array_value):
+        self.key = key
+        self.array_value = array_value
+
+    def repr(self):
+        return "ArrayValue(%s => %s)" % (
+            self.key.repr(), self.array_value.repr())
 
 
 class BinaryOperator(AstNodeWithResult):
@@ -231,7 +251,7 @@ class ReferenceAssignment(AstNodeWithResult):
         self.source = source
 
     def repr(self):
-        return "ReferenceAssignment(%s =& %s)" & (self.target, self.source)
+        return "ReferenceAssignment(%s =& %s)" % (self.target, self.source)
 
 
 class TernaryOperator(AstNodeWithResult):
@@ -284,6 +304,36 @@ class Cast(AstNodeWithResult):
         return "Cast((%s) %s)" % (self.symbol, self.value.repr())
 
 
+class VariableExpression(AstNodeWithResult):
+    """ Compile mode of the variable defines it's behaviour, either of three is
+    possible: store value from the stack to the variable, load variable's value
+    to the stack or simple load name of the variable to the stack
+    """
+    (STORE, LOAD, NAME) = range(3)
+    compile_mode = NAME
+
+    def __init__(self, value):
+        self.value = value
+
+    def repr(self):
+        return "VariableExpression(%s)" % self.value.repr()
+
+
+class ArrayDereferencing(AstNodeWithResult):
+
+    def __init__(self, variable, indexes):
+        self.variable = variable
+        self.indexes = indexes
+
+    def repr(self):
+        representations = []
+        for item in self.indexes:
+            representations.append('[' + item.repr() + ']')
+
+        return "ArrayDereferencing(%s %s)" % (
+            self.variable.repr(), ''.join(representations))
+
+
 class Variable(AstNodeWithResult):
 
     def __init__(self, name):
@@ -321,7 +371,7 @@ class FunctionDeclaration(AstNode):
 
         return "FunctionDeclaration%s(%s(%s){%s})" \
             % (reference_symbol,
-                self.name,
+                self.name.repr(),
                 self.get_list_repr(self.arguments),
                 self.body.repr())
 
@@ -540,13 +590,28 @@ class ConstantBool(Constant):
         return "ConstantBool(\"%s\")" % (self.value)
 
 
+class ConstantArray(Constant):
+
+    def __init__(self, values):
+        self.values = values
+
+    def repr(self):
+        return "ConstantArray(%s)" % self.get_list_repr(self.values)
+
+
 class ConstantNull(Constant):
 
     def repr(self):
         return "ConstantNull()"
 
 
+class ConstantUndefined(Constant):
+
+    def repr(self):
+        return "ConstantUndefined()"
+
+
 class Identifier(Item):
 
     def repr(self):
-        return "Identifier: %s" % self.value
+        return "Identifier: %s" % self.str_value

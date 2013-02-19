@@ -1,11 +1,13 @@
 from pie.objects.base import W_Type
 from pie.objects.float import W_FloatObject
 from pie.objects.int import W_IntObject
+from pie.types import PHPTypes
 
 
 class W_BoolObject(W_Type):
 
-    _immutable_fields_ = ['value']
+    _immutable_fields_ = ['value', 'type']
+    type = PHPTypes.w_bool
 
     def __init__(self, value):
         self.value = bool(value)
@@ -36,7 +38,6 @@ class W_BoolObject(W_Type):
         if self.value:
             return W_StringObject('1')
         return W_StringObject('')
-
 
     def less_than(self, object):
         assert isinstance(object, W_BoolObject)
