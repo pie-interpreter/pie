@@ -10,7 +10,7 @@ class W_ArrayObject(W_Type):
     _immutable_fields = ['type']
     type = PHPTypes.w_array
 
-    def __init__(self, raw_data = []):
+    def __init__(self, raw_data=[]):
         self.storage = {}
         self.last_index = 0
         self.last_index_changed = False
