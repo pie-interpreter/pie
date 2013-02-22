@@ -29,6 +29,12 @@ $a = 51;
 $b = "yes";
 $c = 42.5;
 var_dump($a, $b, $c);
+// arrays
+echo "++++++++++++++++++++++++++++++++++++\n";
+var_dump(array());
+var_dump(array(1,2,3));
+var_dump(array("3" => 3.23, 4 => 135));
+var_dump(array(1,"string", array(5 => array(), "menu" => "dish")));
 ?>
 --EXPECT--
 bool(false)
@@ -55,3 +61,34 @@ variables test
 int(51)
 string(3) "yes"
 float(42.5)
+++++++++++++++++++++++++++++++++++++
+array(0) {
+}
+array(3) {
+  [0]=>
+  int(1)
+  [1]=>
+  int(2)
+  [2]=>
+  int(3)
+}
+array(2) {
+  [3]=>
+  float(3.23)
+  [4]=>
+  int(135)
+}
+array(3) {
+  [0]=>
+  int(1)
+  [1]=>
+  string(6) "string"
+  [2]=>
+  array(2) {
+    [5]=>
+    array(0) {
+    }
+    ["menu"]=>
+    string(4) "dish"
+  }
+}

@@ -194,6 +194,10 @@ def var_dump_one_parameter(context, param):
             context.print_output("bool(false)\n")
     elif param.type == PHPTypes.w_null:
         context.print_output("NULL\n")
+    elif param.type == PHPTypes.w_array:
+        representation = 'array(%d) {\n' % param.len()
+        representation += '}\n'
+        context.print_output(representation)
 
 
 #TODO: var_export

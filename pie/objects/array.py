@@ -32,7 +32,7 @@ class W_ArrayObject(W_Type):
 
     def copy(self):
         raw_data = []
-        for key, value in self.storage:
+        for key, value in self.storage.iteritems():
             raw_data.append(space.str(key))
             raw_data.append(value)
         return space.array(raw_data)
@@ -128,6 +128,9 @@ class W_ArrayObject(W_Type):
 
     def dec(self):
         return self
+
+    def len(self):
+        return len(self.storage)
 
     def get(self, w_index):
         assert isinstance(w_index, W_Type)
