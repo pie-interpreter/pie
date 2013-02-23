@@ -36,23 +36,23 @@ def floatval(context, params):
 
 @builtin_function()
 def gettype(context, params):
-    type = params[0].deref().get_type()
+    php_type = params[0].deref().get_type()
     type_name = 'unknown type'
-    if type == PHPTypes.w_int:
+    if php_type == PHPTypes.w_int:
         type_name = 'integer'
-    elif type == PHPTypes.w_float:
+    elif php_type == PHPTypes.w_float:
         type_name = 'double'
-    elif type == PHPTypes.w_string:
+    elif php_type == PHPTypes.w_string:
         type_name = 'string'
-    elif type == PHPTypes.w_bool:
+    elif php_type == PHPTypes.w_bool:
         type_name = 'boolean'
-    elif type == PHPTypes.w_null:
+    elif php_type == PHPTypes.w_null:
         type_name = 'NULL'
-    elif type == PHPTypes.w_array:
+    elif php_type == PHPTypes.w_array:
         type_name = 'array'
-    elif type == PHPTypes.w_object:
+    elif php_type == PHPTypes.w_object:
         type_name = 'object'
-    elif type == PHPTypes.w_resource:
+    elif php_type == PHPTypes.w_resource:
         type_name = 'resource'
     return space.str(type_name)
 
@@ -101,10 +101,10 @@ def is_null(context, params):
 
 @builtin_function()
 def is_numeric(context, params):
-    type = params[0].deref().get_type()
-    if type == PHPTypes.w_int or type == PHPTypes.w_float:
+    php_type = params[0].deref().get_type()
+    if php_type == PHPTypes.w_int or php_type == PHPTypes.w_float:
         return space.bool(True)
-    if type == PHPTypes.w_string:
+    if php_type == PHPTypes.w_string:
         return params[0].deref().is_convertible_to_number_strict()
     return space.bool(False)
 
@@ -125,9 +125,9 @@ def is_resource(context, params):
 
 @builtin_function()
 def is_scalar(context, params):
-    type = params[0].deref().get_type()
-    if type == PHPTypes.w_string or type == PHPTypes.w_int or type == PHPTypes.w_float \
-        or type == PHPTypes.w_bool:
+    php_type = params[0].deref().get_type()
+    if (php_type == PHPTypes.w_string or php_type == PHPTypes.w_int or
+        php_type == PHPTypes.w_float or php_type == PHPTypes.w_bool):
         return space.bool(True)
     return space.bool(False)
 
@@ -135,6 +135,7 @@ def is_scalar(context, params):
 def is_string(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_string)
     return space.bool(result)
+
 
 @builtin_function(args=[MIXED], optional_args=[SCALAR])
 def print_r(context, params):
@@ -146,14 +147,15 @@ def print_r(context, params):
         to_variable = params[1].deref().is_true()
     else:
         to_variable = False
-    if w_expression.type == PHPTypes.w_string:
+    if w_expression.get_type() == PHPTypes.w_string:
         return _handle_output(context, w_expression, to_variable)
-    elif w_expression.type == PHPTypes.w_int \
-            or w_expression.type == PHPTypes.w_float \
-            or w_expression.type == PHPTypes.w_bool \
-            or w_expression.type == PHPTypes.w_null:
+    elif (w_expression.get_type() == PHPTypes.w_int
+          or w_expression.get_type() == PHPTypes.w_float
+          or w_expression.get_type() == PHPTypes.w_bool
+          or w_expression.get_type() == PHPTypes.w_null):
         return _handle_output(context, w_expression.as_string(), to_variable)
     return space.bool(True)
+
 
 def _handle_output(context, w_value, to_variable):
     if not to_variable:
@@ -180,21 +182,21 @@ def var_dump_one_parameter(context, param):
     #TODO: object
     #TODO: unknown type (?)
     #TODO: add JIT support
-    if param.type == PHPTypes.w_string:
+    if param.php_type == PHPTypes.w_string:
         context.print_output("string(%d) \"%s\"\n" %
             (param.strlen(), param.str_w()))
-    elif param.type == PHPTypes.w_int:
+    elif param.php_type == PHPTypes.w_int:
         context.print_output("int(%d)\n" % param.int_w())
-    elif param.type == PHPTypes.w_float:
+    elif param.php_type == PHPTypes.w_float:
         context.print_output("float(%s)\n" % param.float_w())
-    elif param.type == PHPTypes.w_bool:
+    elif param.php_type == PHPTypes.w_bool:
         if param.is_true():
             context.print_output("bool(true)\n")
         else:
             context.print_output("bool(false)\n")
-    elif param.type == PHPTypes.w_null:
+    elif param.php_type == PHPTypes.w_null:
         context.print_output("NULL\n")
-    elif param.type == PHPTypes.w_array:
+    elif param.php_type == PHPTypes.w_array:
         representation = 'array(%d) {\n' % param.len()
         representation += '}\n'
         context.print_output(representation)

@@ -1,5 +1,6 @@
 from pie.types import PHPTypes
 
+
 class W_Root(object):
     """ The base class for everything that can be represented as a first-class
     object at applevel
@@ -17,7 +18,7 @@ class W_Root(object):
 class W_Type(W_Root):
     """ Base type class representing each type in PHP and common operations
     """
-    type = 'unknown type'
+    php_type = 'unknown type'
 
     def as_bool(self):
         raise NotImplementedError
@@ -41,27 +42,27 @@ class W_Type(W_Root):
         return self
 
     def get_type(self):
-        return self.type
+        return self.php_type
 
     def is_null(self):
         return False
 
-    def less_than(self, object):
+    def less_than(self, w_object):
         raise NotImplementedError
 
-    def more_than(self, object):
+    def more_than(self, w_object):
         raise NotImplementedError
 
-    def equal(self, object):
+    def equal(self, w_object):
         raise NotImplementedError
 
-    def not_equal(self, object):
+    def not_equal(self, w_object):
         raise NotImplementedError
 
-    def less_than_or_equal(self, object):
+    def less_than_or_equal(self, w_object):
         raise NotImplementedError
 
-    def more_than_or_equal(self, object):
+    def more_than_or_equal(self, w_object):
         raise NotImplementedError
 
     def inc(self):
@@ -95,7 +96,7 @@ class DivisionByZeroError(Exception):
 
 class W_Undefined(W_Type):
 
-    type = PHPTypes.w_undefined
+    php_type = PHPTypes.w_undefined
 
     def __repr__(self):
         return "W_Undefined()"

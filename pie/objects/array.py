@@ -2,15 +2,17 @@ from pie.objspace import space
 from pie.objects.base import W_Type
 from pie.types import PHPTypes
 
+
 class IllegalOffsetType(Exception):
     pass
+
 
 class W_ArrayObject(W_Type):
 
     _immutable_fields = ['type']
-    type = PHPTypes.w_array
+    php_type = PHPTypes.w_array
 
-    def __init__(self, raw_data = []):
+    def __init__(self, raw_data=[]):
         self.storage = {}
         self.last_index = 0
         self.last_index_changed = False
@@ -50,12 +52,12 @@ class W_ArrayObject(W_Type):
 
     def as_float(self):
         #TODO: make caution
-        # http://www.php.net/manual/en/language.types.integer.php
+        # http://www.php.net/manual/en/language.php_types.integer.php
         return space.float(float(self.is_true()))
 
     def as_int(self):
         #TODO: make caution
-        # http://www.php.net/manual/en/language.types.integer.php
+        # http://www.php.net/manual/en/language.php_types.integer.php
         return space.int(int(self.is_true()))
 
     def as_number(self):
@@ -158,14 +160,14 @@ class W_ArrayObject(W_Type):
         # Right now all indexes are strings because
         #  we cannot translate otherwise.
         #TODO: change such behaviour as soon as internal represent. is implement
-        if w_index.type == PHPTypes.w_float or \
-            w_index.type == PHPTypes.w_int or \
-            w_index.type == PHPTypes.w_bool:
+        if w_index.php_type == PHPTypes.w_float or \
+            w_index.php_type == PHPTypes.w_int or \
+            w_index.php_type == PHPTypes.w_bool:
             key = w_index.as_int().int_w()
             if key >= self.last_index:
                 self.last_index_changed = True
             return str(key)
-        elif w_index.type == PHPTypes.w_string:
+        elif w_index.php_type == PHPTypes.w_string:
             key = w_index.str_w()
             if (len(key) > 1 and key[0] == '0') \
                 or (key[0] == '-' and key[1] == '0'):
@@ -178,9 +180,9 @@ class W_ArrayObject(W_Type):
             except ValueError:
                 pass
             return key
-        elif w_index.type == PHPTypes.w_null:
+        elif w_index.php_type == PHPTypes.w_null:
             return ""
-        elif w_index.type == PHPTypes.w_undefined:
+        elif w_index.php_type == PHPTypes.w_undefined:
             key = self.last_index
             self.last_index_changed = True
             return str(key)

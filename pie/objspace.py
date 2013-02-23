@@ -1,4 +1,3 @@
-from pie.objects.int import W_IntObject
 from pie.objects.variable import W_Variable
 from pie.types import PHPTypes
 
@@ -8,6 +7,7 @@ __author__ = 'sery0ga'
 class ObjSpace(object):
 
     def int(self, value):
+        from pie.objects.int import W_IntObject
         return W_IntObject(value)
 
     def str(self, value):
@@ -26,7 +26,7 @@ class ObjSpace(object):
         from pie.objects.null import W_NullObject
         return W_NullObject()
 
-    def array(self, value = []):
+    def array(self, value=[]):
         from pie.objects.array import W_ArrayObject
         return W_ArrayObject(value)
 
@@ -46,8 +46,8 @@ class ObjSpace(object):
         #TODO: add array support
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        php_type = self.get_common_arithmetic_type(left_number, right_number)
+        if php_type == PHPTypes.w_int:
             return left_number.as_int().plus(right_number.as_int())
         else:
             return left_number.as_float().plus(right_number.as_float())
@@ -58,8 +58,8 @@ class ObjSpace(object):
         """
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        php_type = self.get_common_arithmetic_type(left_number, right_number)
+        if php_type == PHPTypes.w_int:
             return left_number.as_int().minus(right_number.as_int())
         else:
             return left_number.as_float().minus(right_number.as_float())
@@ -70,8 +70,8 @@ class ObjSpace(object):
         """
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        php_type = self.get_common_arithmetic_type(left_number, right_number)
+        if php_type == PHPTypes.w_int:
             return left_number.as_int().multiply(right_number.as_int())
         else:
             return left_number.as_float().multiply(right_number.as_float())
@@ -82,8 +82,8 @@ class ObjSpace(object):
         """
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        php_type = self.get_common_arithmetic_type(left_number, right_number)
+        if php_type == PHPTypes.w_int:
             return left_number.as_int().divide(right_number.as_int())
         else:
             return left_number.as_float().divide(right_number.as_float())
@@ -100,12 +100,12 @@ class ObjSpace(object):
         return w_left.as_string().concatenate(w_right.as_string())
 
     def identical(self, w_left, w_right):
-        if w_left.deref().type != w_right.deref().type:
+        if w_left.deref().php_type != w_right.deref().php_type:
             return self.bool(False)
         return w_left.deref().equal(w_right.deref())
 
     def not_identical(self, w_left, w_right):
-        if w_left.deref().type != w_right.deref().type:
+        if w_left.deref().php_type != w_right.deref().php_type:
             return self.bool(True)
         return w_left.deref().not_equal(w_right.deref())
 
@@ -115,9 +115,9 @@ class ObjSpace(object):
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
         """
-        left_type = w_left.type
-        if self._is_any_number(left_type, w_right.type) \
-            and self._is_any_string(left_type, w_right.type):
+        left_type = w_left.php_type
+        if self._is_any_number(left_type, w_right.php_type) \
+            and self._is_any_string(left_type, w_right.php_type):
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -125,15 +125,15 @@ class ObjSpace(object):
             then each string is converted to a number and the comparison performed numerically
             """
             return PHPTypes.w_float
-        elif left_type == PHPTypes.w_int and w_right.type == PHPTypes.w_float:
+        elif left_type == PHPTypes.w_int and w_right.php_type == PHPTypes.w_float:
             """
-            http://www.php.net/manual/en/language.types.type-juggling.php
+            http://www.php.net/manual/en/language.types.php_type-juggling.php
 
              If either operand is a float, then both operands are evaluated as floats,
              and the result will be a float
             """
             return PHPTypes.w_float
-        elif left_type == PHPTypes.w_null and w_right.type == PHPTypes.w_string:
+        elif left_type == PHPTypes.w_null and w_right.php_type == PHPTypes.w_string:
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -141,7 +141,7 @@ class ObjSpace(object):
             Convert NULL to "", numerical or lexical comparison
             """
             return PHPTypes.w_string
-        elif left_type == PHPTypes.w_null and w_right.type != PHPTypes.w_null:
+        elif left_type == PHPTypes.w_null and w_right.php_type != PHPTypes.w_null:
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -151,12 +151,12 @@ class ObjSpace(object):
             return PHPTypes.w_bool
         elif left_type == PHPTypes.w_bool:
             return PHPTypes.w_bool
-        return w_left.type
+        return w_left.php_type
 
     def get_common_arithmetic_type(self, w_left, w_right):
         """ Use this function only in arithmetic operations (like '-' or '+')
         """
-        if self._is_any_float(w_left.type, w_right.type):
+        if self._is_any_float(w_left.php_type, w_right.php_type):
             return PHPTypes.w_float
         return PHPTypes.w_int
 
@@ -180,34 +180,35 @@ class ObjSpace(object):
 def _new_comparison_op(name):
     def func(self, w_left, w_right):
         from pie.objects.string import NotConvertibleToNumber
+        from pie.objects.int import W_IntObject
         w_left = w_left.deref()
         w_right = w_right.deref()
-        type = self.get_common_comparison_type(w_left, w_right)
-        if type == PHPTypes.w_string:
+        php_type = self.get_common_comparison_type(w_left, w_right)
+        if php_type == PHPTypes.w_string:
             try:
-                if w_left.type == PHPTypes.w_null:
+                if w_left.php_type == PHPTypes.w_null:
                     return getattr(w_left.as_string(), name)(w_right)
                 #TODO: use is_convertible_to_number_strict
                 left_number = w_left.as_number_strict()
                 right_number = w_right.as_number_strict()
-                if self._is_any_float(left_number.type, right_number.type):
+                if self._is_any_float(left_number.php_type, right_number.php_type):
                     return getattr(left_number.as_float(), name)(right_number.as_float())
                 assert isinstance(left_number, W_IntObject)
                 return getattr(left_number, name)(right_number)
             except NotConvertibleToNumber:
                 return getattr(w_left, name)(w_right)
-        elif type == PHPTypes.w_int:
+        elif php_type == PHPTypes.w_int:
             return getattr(w_left.as_int(), name)(w_right.as_int())
-        elif type == PHPTypes.w_float:
+        elif php_type == PHPTypes.w_float:
             return getattr(w_left.as_float(), name)(w_right.as_float())
-        elif type == PHPTypes.w_bool:
+        elif php_type == PHPTypes.w_bool:
             return getattr(w_left.as_bool(), name)(w_right.as_bool())
-        elif type == PHPTypes.w_null:
+        elif php_type == PHPTypes.w_null:
             # this is possible only if both arguments are null
             return getattr(w_left, name)(w_right)
-        elif type == PHPTypes.w_array:
-            # we're sure now, that at least w_left.type == PHPTypes.w_array
-            if w_right.type == PHPTypes.w_array:
+        elif php_type == PHPTypes.w_array:
+            # we're sure now, that at least w_left.php_type == PHPTypes.w_array
+            if w_right.php_type == PHPTypes.w_array:
                 return getattr(w_left, name)(w_right)
             # in php array on the left is always > than anything (except array)
             # on the right:

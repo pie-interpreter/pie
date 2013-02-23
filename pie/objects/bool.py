@@ -6,7 +6,7 @@ from pie.types import PHPTypes
 class W_BoolObject(W_Type):
 
     _immutable_fields_ = ['value', 'type']
-    type = PHPTypes.w_bool
+    php_type = PHPTypes.w_bool
 
     def __init__(self, value):
         self.value = bool(value)
@@ -41,44 +41,44 @@ class W_BoolObject(W_Type):
             return space.str('1')
         return space.str('')
 
-    def less_than(self, object):
-        assert isinstance(object, W_BoolObject)
-        if self.value < object.value:
+    def less_than(self, w_object):
+        assert isinstance(w_object, W_BoolObject)
+        if self.value < w_object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
-    def more_than(self, object):
-        assert isinstance(object, W_BoolObject)
-        if self.value > object.value:
+    def more_than(self, w_object):
+        assert isinstance(w_object, W_BoolObject)
+        if self.value > w_object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
-    def equal(self, object):
-        assert isinstance(object, W_BoolObject)
-        if self.value == object.value:
+    def equal(self, w_object):
+        assert isinstance(w_object, W_BoolObject)
+        if self.value == w_object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
-    def not_equal(self, object):
-        assert isinstance(object, W_BoolObject)
-        if self.value != object.value:
+    def not_equal(self, w_object):
+        assert isinstance(w_object, W_BoolObject)
+        if self.value != w_object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
-    def less_than_or_equal(self, object):
-        assert isinstance(object, W_BoolObject)
-        if self.value <= object.value:
+    def less_than_or_equal(self, w_object):
+        assert isinstance(w_object, W_BoolObject)
+        if self.value <= w_object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)
 
-    def more_than_or_equal(self, object):
-        assert isinstance(object, W_BoolObject)
-        if self.value >= object.value:
+    def more_than_or_equal(self, w_object):
+        assert isinstance(w_object, W_BoolObject)
+        if self.value >= w_object.value:
             return W_BoolObject(True)
         else:
             return W_BoolObject(False)

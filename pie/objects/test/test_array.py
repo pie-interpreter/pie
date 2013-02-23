@@ -11,9 +11,9 @@ class TestArray(unittest.TestCase):
 
     def test_array_creation_int_branch(self):
         raw = [space.int(3), space.int(1),
-                space.float(-1.2), space.int(2),
-                space.bool(False), space.int(2),
-                space.bool(True), space.int(3)]
+               space.float(-1.2), space.int(2),
+               space.bool(False), space.int(2),
+               space.bool(True), space.int(3)]
         actual = space.array(raw)
         expected = {'3': space.int(1), '-1': space.int(2),
                     '0': space.int(2), '1': space.int(3)}
@@ -21,11 +21,11 @@ class TestArray(unittest.TestCase):
 
     def test_array_creation_null_string_branch(self):
         raw = [space.str("test"), space.int(1),
-                space.str("08"), space.int(2),
-                space.str("99"), space.int(3),
-                space.null(), space.int(4),
-                space.str("-5"), space.int(5),
-                space.str("-09"), space.int(7)]
+               space.str("08"), space.int(2),
+               space.str("99"), space.int(3),
+               space.null(), space.int(4),
+               space.str("-5"), space.int(5),
+               space.str("-09"), space.int(7)]
         actual = space.array(raw)
         expected = {"test": space.int(1), "08": space.int(2),
                     '99': space.int(3), "": space.int(4),

@@ -25,7 +25,7 @@ class W_StringObject(W_Type):
     """
     _immutable_fields_ = ['type']
     convertible_to_number = True
-    type = PHPTypes.w_string
+    php_type = PHPTypes.w_string
 
     def __init__(self, strval):
         from pie.objects.strategy.general import ConstantStringStrategy
