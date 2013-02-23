@@ -175,31 +175,42 @@ def var_dump(context, params):
         var_dump_one_parameter(context, param.deref())
 
 
-def var_dump_one_parameter(context, param):
+def var_dump_one_parameter(context, param, to_context=True, indent_level=""):
     #FIXME: correct float var_dump for 1.0e+4 < value < 1.0e+14. Uncomment in test
-    #TODO: array
     #TODO: resource
     #TODO: object
     #TODO: unknown type (?)
     #TODO: add JIT support
-    if param.php_type == PHPTypes.w_string:
-        context.print_output("string(%d) \"%s\"\n" %
-            (param.strlen(), param.str_w()))
-    elif param.php_type == PHPTypes.w_int:
-        context.print_output("int(%d)\n" % param.int_w())
-    elif param.php_type == PHPTypes.w_float:
-        context.print_output("float(%s)\n" % param.float_w())
-    elif param.php_type == PHPTypes.w_bool:
+    output = ""
+    if param.get_type() == PHPTypes.w_string:
+        output = "string(%d) \"%s\"\n" % (param.strlen(), param.str_w())
+    elif param.get_type() == PHPTypes.w_int:
+        output = "int(%d)\n" % param.int_w()
+    elif param.get_type() == PHPTypes.w_float:
+        output = "float(%s)\n" % param.float_w()
+    elif param.get_type() == PHPTypes.w_bool:
         if param.is_true():
-            context.print_output("bool(true)\n")
+            output = "bool(true)\n"
         else:
-            context.print_output("bool(false)\n")
-    elif param.php_type == PHPTypes.w_null:
-        context.print_output("NULL\n")
-    elif param.php_type == PHPTypes.w_array:
-        representation = 'array(%d) {\n' % param.len()
-        representation += '}\n'
-        context.print_output(representation)
-
+            output = "bool(false)\n"
+    elif param.get_type() == PHPTypes.w_null:
+        output = "NULL\n"
+    elif param.get_type() == PHPTypes.w_array:
+        array_indent_level = indent_level + "  "
+        output = 'array(%d) {\n' % param.len()
+        for key, value in sorted(param.storage.iteritems()):
+            try:
+                int(key)
+                printable_key = key
+            except ValueError:
+                printable_key = '"%s"' % key
+            output += "%s[%s]=>\n%s%s" % (array_indent_level,
+                                          printable_key,
+                                          array_indent_level,
+                                          var_dump_one_parameter(context, value, False, array_indent_level))
+        output += "%s}\n" % indent_level
+    if to_context:
+        context.print_output(output)
+    return output
 
 #TODO: var_export
