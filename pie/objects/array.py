@@ -1,5 +1,5 @@
 from pie.objspace import space
-from pie.objects.base import W_Type
+from pie.objects.base import W_Type, W_Root
 from pie.types import PHPTypes
 
 
@@ -98,7 +98,7 @@ class W_ArrayObject(W_Type):
         if len(self.storage) != len(w_object.storage):
             return space.bool(True)
         else:
-            for key,value in self.storage.iteritems():
+            for key, value in self.storage.iteritems():
                 if key not in w_object.storage:
                     return space.bool(True)
                 if space.not_equal(value, w_object.storage[key]).is_true():
@@ -137,7 +137,7 @@ class W_ArrayObject(W_Type):
     def get(self, w_index):
         assert isinstance(w_index, W_Type)
         index = self._convert_index(w_index)
-        return self.storage[index]
+        return W_Cell(index, self.storage[index])
 
     def set(self, w_index, w_value):
         assert isinstance(w_index, W_Type)
@@ -160,14 +160,15 @@ class W_ArrayObject(W_Type):
         # Right now all indexes are strings because
         #  we cannot translate otherwise.
         #TODO: change such behaviour as soon as internal represent. is implement
-        if w_index.php_type == PHPTypes.w_float or \
-            w_index.php_type == PHPTypes.w_int or \
-            w_index.php_type == PHPTypes.w_bool:
+        index_type = w_index.get_type()
+        if index_type == PHPTypes.w_float or \
+            index_type == PHPTypes.w_int or \
+            index_type == PHPTypes.w_bool:
             key = w_index.as_int().int_w()
             if key >= self.last_index:
                 self.last_index_changed = True
             return str(key)
-        elif w_index.php_type == PHPTypes.w_string:
+        elif index_type == PHPTypes.w_string:
             key = w_index.str_w()
             if (len(key) > 1 and key[0] == '0') \
                 or (key[0] == '-' and key[1] == '0'):
@@ -180,9 +181,9 @@ class W_ArrayObject(W_Type):
             except ValueError:
                 pass
             return key
-        elif w_index.php_type == PHPTypes.w_null:
+        elif index_type == PHPTypes.w_null:
             return ""
-        elif w_index.php_type == PHPTypes.w_undefined:
+        elif index_type == PHPTypes.w_undefined:
             key = self.last_index
             self.last_index_changed = True
             return str(key)
@@ -190,7 +191,15 @@ class W_ArrayObject(W_Type):
             raise IllegalOffsetType
 
     def _update_last_index(self, index):
-        if isinstance(index, str):
-            index = int(index)
-        self.last_index = index + 1
+        self.last_index = int(index) + 1
         self.last_index_changed = False
+
+
+class W_Cell(W_Root):
+
+    def __init__(self, index, w_value):
+        self.index = index
+        self.value = w_value
+
+    def deref(self):
+        return self.value.deref()

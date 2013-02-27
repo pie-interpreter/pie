@@ -217,9 +217,9 @@ class TestArray(unittest.TestCase):
     def test_get(self):
         array = space.array([space.int(0), space.int(1),
                              space.int(1), space.int(2)])
-        value = array.get(space.int(0))
+        value = array.get(space.int(0)).deref()
         self.assertTrue(value.equal(space.int(1)).is_true())
-        value = array.get(space.int(1))
+        value = array.get(space.int(1)).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())
         # check no valid key exception
         with self.assertRaises(KeyError):
@@ -229,15 +229,15 @@ class TestArray(unittest.TestCase):
         array = space.array([space.int(0), space.int(1),
                              space.int(1), space.int(2),
                              space.int(-1), space.int(3)])
-        value = array.get(space.str("1"))
+        value = array.get(space.str("1")).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())
-        value = array.get(space.str("-1"))
+        value = array.get(space.str("-1")).deref()
         self.assertTrue(value.equal(space.int(3)).is_true())
         with self.assertRaises(KeyError):
             value = array.get(space.str("01"))
         with self.assertRaises(KeyError):
             value = array.get(space.str("-0"))
-        value = array.get(space.str("0"))
+        value = array.get(space.str("0")).deref()
         self.assertTrue(value.equal(space.int(1)).is_true())
         with self.assertRaises(KeyError):
             value = array.get(space.str("12Tst"))
@@ -246,11 +246,11 @@ class TestArray(unittest.TestCase):
         array = space.array([space.int(0), space.int(1),
                              space.int(1), space.int(2),
                              space.int(-1), space.int(3)])
-        value = array.get(space.float(1.5))
+        value = array.get(space.float(1.5)).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())
-        value = array.get(space.bool(True))
+        value = array.get(space.bool(True)).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())
-        value = array.get(space.bool(False))
+        value = array.get(space.bool(False)).deref()
         self.assertTrue(value.equal(space.int(1)).is_true())
         with self.assertRaises(KeyError):
             value = array.get(space.null())
@@ -261,23 +261,23 @@ class TestArray(unittest.TestCase):
         array = space.array([space.int(5), space.int(1),
                              space.int(12), space.int(2)])
         array.set(space.int(2), space.int(3))
-        value = array.get(space.int(2))
+        value = array.get(space.int(2)).deref()
         self.assertTrue(value.equal(space.int(3)).is_true())
         array.set(space.str("4"), space.int(4))
-        value = array.get(space.int(4))
+        value = array.get(space.int(4)).deref()
         self.assertTrue(value.equal(space.int(4)).is_true())
         # no index test
         array.set(space.undefined(), space.int(13))
-        value = array.get(space.int(13))
+        value = array.get(space.int(13)).deref()
         self.assertTrue(value.equal(space.int(13)).is_true())
         array.set(space.int(15), space.int(15))
         array.set(space.undefined(), space.int(16))
-        value = array.get(space.int(16))
+        value = array.get(space.int(16)).deref()
         self.assertTrue(value.equal(space.int(16)).is_true())
         # now string
         array.set(space.str("20"), space.int(20))
         array.set(space.undefined(), space.int(21))
-        value = array.get(space.int(21))
+        value = array.get(space.int(21)).deref()
         self.assertTrue(value.equal(space.int(21)).is_true())
 
     def test_get_set_combination(self):
@@ -285,10 +285,10 @@ class TestArray(unittest.TestCase):
         with self.assertRaises(KeyError):
             array.get(space.int(5))
         array.set(space.undefined(), space.int(1))
-        value = array.get(space.int(0))
+        value = array.get(space.int(0)).deref()
         self.assertTrue(value.equal(space.int(1)).is_true())
         with self.assertRaises(KeyError):
             array.get(space.str("7"))
         array.set(space.undefined(), space.int(2))
-        value = array.get(space.int(1))
+        value = array.get(space.int(1)).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())

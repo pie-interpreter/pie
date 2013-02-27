@@ -16,10 +16,12 @@ http://www.php.net/manual/en/function.is-resource.php
 http://www.php.net/manual/en/function.is-scalar.php
 http://www.php.net/manual/en/function.is-string.php
 
-TODO: add array, callable, resouce and object support
+TODO: add callable, resouce and object support
 --FILE--
 <?php
-//echo is_array()
+echo is_array(array(3,2,4)) . "=\n";
+echo is_array(null) . "=\n";
+echo "+++++\n";
 echo is_bool(1) . "=\n";
 echo is_bool(true) . "=\n";
 echo "+++++\n";
@@ -62,6 +64,9 @@ echo is_string(null) . "=\n";
 echo is_string("1.3") . "=\n";
 
 --EXPECT--
+1=
+=
++++++
 =
 1=
 +++++

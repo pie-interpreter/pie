@@ -1,13 +1,14 @@
-import os
 from phplib.standard import *
 
 from rpython.rlib.objectmodel import we_are_translated
 from rpython.rlib.unroll import unrolling_iterable
 
 from pie.objspace import space
+from pie.types import PHPTypes
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
-from pie.objects.base import DivisionByZeroError
+from pie.objects.base import DivisionByZeroError, W_Type
 from pie.objects.variable import W_Variable
+from pie.objects.array import IllegalOffsetType
 from pie.interpreter.errors.base import InternalError
 from pie.interpreter.errors.notices import NonVariableReturnedByReference
 from pie.interpreter.errors.warnings import DivisionByZero
@@ -84,7 +85,6 @@ class Interpreter(object):
         self.frame.stack.append(self.frame.stack[-1])
 
     def EMPTY_VAR(self, value):
-        #TODO: array support
         #TODO: object support
         name = self.frame.pop_name()
         if name not in self.frame.variables:
@@ -111,7 +111,17 @@ class Interpreter(object):
             self.frame.stack.append(w_variable.deref())
 
     def GET_INDEX(self, value):
-        raise InternalError("Not implemented")
+        name = self.frame.pop_name()
+        w_array = self.frame.get_variable(name, self.context)
+        w_index = self.frame.stack.pop()
+        try:
+            w_value = w_array.get(w_index)
+        except KeyError:
+            w_value = space.undefined()
+        except IllegalOffsetType:
+            #TODO: add illegal offset type message print
+            w_value = space.null()
+        self.frame.stack.append(w_value)
 
     def NOT(self, value):
         w_object = self.frame.stack.pop()
@@ -250,17 +260,33 @@ class Interpreter(object):
         if w_value.is_true():
             self.position = new_position
 
-    def ISSET(self, names_count):
-        #TODO: add array support
+    def ISSET(self, arguments_number):
+        """
+        For most variables we keep their names on stack
+        Unfortunately, we cannot do for array elements, which are
+          called like this: isset($a[4])
+        To handle this situation, GET_INDEX/GET_INDEXES put on stack
+          not a name, but a wrapped element: W_Cell(index, element)
+          and we check it
+        """
         #TODO: add __isset() support
         #TODO: add PHP 5.4 support
         stack = self.frame.stack
-        for i in range(names_count):
-            var_name = stack.pop().str_w()
-            if not var_name in self.frame.variables \
-                or self.frame.variables[var_name].deref().is_null():
-                stack.append(space.bool(False))
-                return
+        for i in range(arguments_number):
+            w_argument = stack.pop()
+            # W_Cell is not inherited from W_Type
+            if isinstance(w_argument, W_Type):
+                var_name = w_argument.str_w()
+                if (not var_name in self.frame.variables or
+                    self.frame.variables[var_name].deref().is_null()):
+                    stack.append(space.bool(False))
+                    return
+            else:
+                arg_type = w_argument.deref().get_type()
+                if (arg_type == PHPTypes.w_undefined or
+                    arg_type == PHPTypes.w_null):
+                    stack.append(space.bool(False))
+                    return
 
         stack.append(space.bool(True))
 

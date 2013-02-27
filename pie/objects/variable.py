@@ -2,6 +2,7 @@ from pie.objects.base import W_Root
 
 __author__ = 'sery0ga'
 
+
 class W_Variable(W_Root):
 
     def __init__(self, value):

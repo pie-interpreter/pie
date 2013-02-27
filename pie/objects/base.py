@@ -18,7 +18,7 @@ class W_Root(object):
 class W_Type(W_Root):
     """ Base type class representing each type in PHP and common operations
     """
-    php_type = 'unknown type'
+    php_type = -1
 
     def as_bool(self):
         raise NotImplementedError

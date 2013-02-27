@@ -139,29 +139,42 @@ def is_string(context, params):
 
 @builtin_function(args=[MIXED], optional_args=[SCALAR])
 def print_r(context, params):
-    #TODO: array
     #TODO: object
     #TODO: resource
-    w_expression = params[0].deref()
+    w_variable = params[0].deref()
     if len(params) > 1:
         to_variable = params[1].deref().is_true()
     else:
         to_variable = False
-    if w_expression.get_type() == PHPTypes.w_string:
-        return _handle_output(context, w_expression, to_variable)
-    elif (w_expression.get_type() == PHPTypes.w_int
-          or w_expression.get_type() == PHPTypes.w_float
-          or w_expression.get_type() == PHPTypes.w_bool
-          or w_expression.get_type() == PHPTypes.w_null):
-        return _handle_output(context, w_expression.as_string(), to_variable)
-    return space.bool(True)
 
-
-def _handle_output(context, w_value, to_variable):
+    w_result = _print_variable(w_variable)
     if not to_variable:
-        context.print_output(w_value.str_w())
+        context.print_output(w_result.str_w())
         return space.bool(True)
-    return w_value
+
+    return w_result
+
+def _print_variable(w_variable, indent_level=""):
+    if w_variable.get_type() == PHPTypes.w_string:
+        return w_variable
+    elif (w_variable.get_type() == PHPTypes.w_int
+          or w_variable.get_type() == PHPTypes.w_float
+          or w_variable.get_type() == PHPTypes.w_bool
+          or w_variable.get_type() == PHPTypes.w_null):
+        return w_variable.as_string()
+    elif w_variable.get_type() == PHPTypes.w_array:
+        indentation = "    "
+        array_variables_indent_level = indent_level + indentation
+        next_indent_level = array_variables_indent_level + indentation
+        output = "Array\n%s(\n" % indent_level
+        for key, value in sorted(w_variable.storage.iteritems()):
+            output += "%s[%s] => %s\n" % (array_variables_indent_level,
+                    key,
+                    _print_variable(value, next_indent_level).str_w())
+        output += "%s)\n" % indent_level
+        return space.str(output)
+
+    return space.str("NOT IMPLEMENTED")
 
 #TODO: serialize
 #TODO: settype
@@ -204,13 +217,16 @@ def var_dump_one_parameter(context, param, to_context=True, indent_level=""):
                 printable_key = key
             except ValueError:
                 printable_key = '"%s"' % key
+            value = var_dump_one_parameter(context, value,
+                                           False, array_indent_level)
             output += "%s[%s]=>\n%s%s" % (array_indent_level,
                                           printable_key,
-                                          array_indent_level,
-                                          var_dump_one_parameter(context, value, False, array_indent_level))
+                                          array_indent_level, value)
         output += "%s}\n" % indent_level
+
     if to_context:
         context.print_output(output)
+
     return output
 
 #TODO: var_export

@@ -30,7 +30,12 @@ echo empty($b) . "=\n";
 $b = &$a;
 echo empty($b) . "=\n";
 $a = 1;
-echo empty($b) . "=";
+echo empty($b) . "=\n";
+// check for arrays
+$a = array();
+echo empty($a) . "=\n";
+$a = array(1,3,4,5);
+echo empty($a) . "=";
 ?>
 --EXPECT--
 =
@@ -46,5 +51,7 @@ echo empty($b) . "=";
 =
 1=
 1=
+1=
+=
 1=
 =
