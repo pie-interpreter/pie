@@ -6,7 +6,7 @@ from pie.types import PHPTypes
 class W_NullObject(W_Type):
 
     _immutable_fields_ = ['type']
-    php_type = PHPTypes.w_null
+    type = PHPTypes.w_null
 
     def __repr__(self):
         return "W_NullObject()"

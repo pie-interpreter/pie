@@ -6,7 +6,7 @@ from pie.types import PHPTypes
 class W_BoolObject(W_Type):
 
     _immutable_fields_ = ['value', 'type']
-    php_type = PHPTypes.w_bool
+    type = PHPTypes.w_bool
 
     def __init__(self, value):
         self.value = bool(value)

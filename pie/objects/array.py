@@ -33,11 +33,12 @@ class W_ArrayObject(W_Type):
         return "W_ArrayObject(%s)" % self.storage
 
     def copy(self):
-        raw_data = []
-        for key, value in self.storage.iteritems():
-            raw_data.append(space.str(key))
-            raw_data.append(value)
-        return space.array(raw_data)
+        # raw_data = []
+        # for key, value in self.storage.iteritems():
+        #     raw_data.append(space.str(key))
+        #     raw_data.append(value)
+        # return space.array(raw_data)
+        assert NotImplementedError
 
     def is_true(self):
         if not self.storage:
@@ -52,12 +53,12 @@ class W_ArrayObject(W_Type):
 
     def as_float(self):
         #TODO: make caution
-        # http://www.php.net/manual/en/language.php_types.integer.php
+        # http://www.php.net/manual/en/language.types.integer.php
         return space.float(float(self.is_true()))
 
     def as_int(self):
         #TODO: make caution
-        # http://www.php.net/manual/en/language.php_types.integer.php
+        # http://www.php.net/manual/en/language.types.integer.php
         return space.int(int(self.is_true()))
 
     def as_number(self):
@@ -73,8 +74,15 @@ class W_ArrayObject(W_Type):
         object_length = len(w_object.storage)
         if self_length < object_length:
             return space.bool(True)
-        elif self_length == object_length:
-            return self._compare_elements('less_than', w_object)
+        elif self_length == object_length and self_length > 0:
+            for key, w_value in self.storage.iteritems():
+                if key not in w_object.storage:
+                    return space.bool(False)
+                w_result = space.less_than(w_value,
+                                           w_object.storage[key])
+                if not w_result.is_true():
+                    return space.bool(False)
+                return space.bool(True)
         return space.bool(False)
 
     def more_than(self, w_object):
@@ -83,15 +91,29 @@ class W_ArrayObject(W_Type):
         object_length = len(w_object.storage)
         if self_length > object_length:
             return space.bool(True)
-        elif self_length == object_length:
-            return self._compare_elements('more_than', w_object)
+        elif self_length == object_length and self_length > 0:
+            for key, w_value in self.storage.iteritems():
+                if key not in w_object.storage:
+                    return space.bool(False)
+                w_result = space.more_than(w_value,
+                                           w_object.storage[key])
+                if not w_result.is_true():
+                    return space.bool(False)
+                return space.bool(True)
         return space.bool(False)
 
     def equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
         if len(self.storage) != len(w_object.storage):
             return space.bool(False)
-        return self._compare_elements('equal', w_object)
+        for key, w_value in self.storage.iteritems():
+            if key not in w_object.storage:
+                return space.bool(False)
+            w_result = space.equal(w_value,
+                                   w_object.storage[key])
+            if not w_result.is_true():
+                return space.bool(False)
+            return space.bool(True)
 
     def not_equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
@@ -112,7 +134,14 @@ class W_ArrayObject(W_Type):
         if self_length < object_length:
             return space.bool(True)
         elif self_length == object_length:
-            return self._compare_elements('less_than_or_equal', w_object)
+            for key, w_value in self.storage.iteritems():
+                if key not in w_object.storage:
+                    return space.bool(False)
+                w_result = space.less_than_or_equal(w_value,
+                                                    w_object.storage[key])
+                if not w_result.is_true():
+                    return space.bool(False)
+                return space.bool(True)
         return space.bool(False)
 
     def more_than_or_equal(self, w_object):
@@ -122,7 +151,14 @@ class W_ArrayObject(W_Type):
         if self_length > object_length:
             return space.bool(True)
         elif self_length == object_length:
-            return self._compare_elements('more_than_or_equal', w_object)
+            for key, w_value in self.storage.iteritems():
+                if key not in w_object.storage:
+                    return space.bool(False)
+                w_result = space.more_than_or_equal(w_value,
+                                                    w_object.storage[key])
+                if not w_result.is_true():
+                    return space.bool(False)
+                return space.bool(True)
         return space.bool(False)
 
     def inc(self):
@@ -143,6 +179,7 @@ class W_ArrayObject(W_Type):
         assert isinstance(w_index, W_Type)
         assert isinstance(w_value, W_Type)
         index = self._convert_index(w_index)
+
         self.storage[index] = w_value
         if self.last_index_changed:
             self._update_last_index(index)
@@ -151,47 +188,47 @@ class W_ArrayObject(W_Type):
         for key, w_value in self.storage.iteritems():
             if key not in w_object.storage:
                 return space.bool(False)
-            if not getattr(space, operation)(w_value,
-                                             w_object.storage[key]).is_true():
+            w_result = getattr(space, operation)(w_value, w_object.storage[key])
+            if not w_result.is_true():
                 return space.bool(False)
         return space.bool(True)
 
     def _convert_index(self, w_index):
-        # Right now all indexes are strings because
-        #  we cannot translate otherwise.
-        #TODO: change such behaviour as soon as internal represent. is implement
-        index_type = w_index.get_type()
-        if index_type == PHPTypes.w_float or \
-            index_type == PHPTypes.w_int or \
-            index_type == PHPTypes.w_bool:
+        if (w_index.type == PHPTypes.w_float or
+                w_index.type == PHPTypes.w_int or
+                w_index.type == PHPTypes.w_bool):
             key = w_index.as_int().int_w()
             if key >= self.last_index:
                 self.last_index_changed = True
+            #temporary
             return str(key)
-        elif index_type == PHPTypes.w_string:
+        elif w_index.type == PHPTypes.w_string:
             key = w_index.str_w()
-            if (len(key) > 1 and key[0] == '0') \
-                or (key[0] == '-' and key[1] == '0'):
+            if ((len(key) > 1 and key[0] == '0')
+                    or (key[0] == '-' and key[1] == '0')):
                 return key
             try:
                 key = int(key)
                 if key >= self.last_index:
                     self.last_index_changed = True
-                return str(key)
+                # temporary
+                key = str(key)
             except ValueError:
                 pass
             return key
-        elif index_type == PHPTypes.w_null:
+        elif w_index.type == PHPTypes.w_null:
             return ""
-        elif index_type == PHPTypes.w_undefined:
+        elif w_index.type == PHPTypes.w_undefined:
             key = self.last_index
             self.last_index_changed = True
+            # temporary
             return str(key)
         else:
             raise IllegalOffsetType
 
     def _update_last_index(self, index):
-        self.last_index = int(index) + 1
+        assert isinstance(index, int)
+        self.last_index = index + 1
         self.last_index_changed = False
 
 

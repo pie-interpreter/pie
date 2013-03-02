@@ -1,5 +1,4 @@
 import os.path
-
 from pie.config import config
 from pie.utils.path import split_path
 from pie.interpreter.errors.fatalerrors import RedeclaredFunction, RedeclaredUserFunction
@@ -39,7 +38,6 @@ class Context(object):
     def print_output(self, string):
         assert isinstance(string, str)
         os.write(1, string)
-
 
 class Trace(object):
 

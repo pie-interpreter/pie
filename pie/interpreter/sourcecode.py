@@ -2,6 +2,7 @@ from rpython.rlib.streamio import open_file_as_stream
 
 from pie.compiling import compiling
 from pie.objspace import space
+from pie.interpreter.interpreter import Interpreter
 from pie.interpreter.errors.base import PieError
 
 __author__ = 'sery0ga'
@@ -20,7 +21,6 @@ class SourceCode(object):
         self.content = input_file.readall()
 
     def interpret(self, context, frame):
-        from pie.interpreter.interpreter import Interpreter
         if not self.bytecode:
             try:
                 self.bytecode = compiling.compile_source(self)

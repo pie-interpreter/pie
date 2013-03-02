@@ -1,5 +1,3 @@
-from phplib.standard import *
-
 from rpython.rlib.objectmodel import we_are_translated
 from rpython.rlib.unroll import unrolling_iterable
 
@@ -14,6 +12,8 @@ from pie.interpreter.errors.notices import NonVariableReturnedByReference
 from pie.interpreter.errors.warnings import DivisionByZero
 from pie.interpreter.errors.fatalerrors import UndefinedFunction
 import pie.interpreter.include as include
+
+from phplib.standard import *
 
 
 class Interpreter(object):
@@ -85,6 +85,7 @@ class Interpreter(object):
         self.frame.stack.append(self.frame.stack[-1])
 
     def EMPTY_VAR(self, value):
+        #TODO: array support
         #TODO: object support
         name = self.frame.pop_name()
         if name not in self.frame.variables:
@@ -278,13 +279,13 @@ class Interpreter(object):
             if isinstance(w_argument, W_Type):
                 var_name = w_argument.str_w()
                 if (not var_name in self.frame.variables or
-                    self.frame.variables[var_name].deref().is_null()):
+                        self.frame.variables[var_name].deref().is_null()):
                     stack.append(space.bool(False))
                     return
             else:
                 arg_type = w_argument.deref().get_type()
                 if (arg_type == PHPTypes.w_undefined or
-                    arg_type == PHPTypes.w_null):
+                        arg_type == PHPTypes.w_null):
                     stack.append(space.bool(False))
                     return
 
@@ -294,7 +295,6 @@ class Interpreter(object):
         #TODO: add reference support
         #TODO: add global variable support
         #TODO: add static variable support
-        #TODO: add array support
         for i in range(names_count):
             var_name = self.frame.pop_name()
             if var_name in self.frame.variables:
@@ -327,8 +327,8 @@ def _new_binary_op(name, space_name):
     return func
 
 for name in ['ADD', 'SUBSTRACT', 'MULTIPLY', 'MOD', 'DIVIDE', 'LESS_THAN',
-              'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
-              'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
+             'MORE_THAN', 'LESS_THAN_OR_EQUAL', 'MORE_THAN_OR_EQUAL', 'EQUAL',
+             'NOT_EQUAL', 'IDENTICAL', 'NOT_IDENTICAL']:
     setattr(Interpreter, name, _new_binary_op(name, name.lower()))
 
 
@@ -368,8 +368,7 @@ for name, include_class in [
         ('INCLUDE', include.IncludeStatement),
         ('INCLUDE_ONCE', include.IncludeOnceStatement),
         ('REQUIRE', include.RequireStatement),
-        ('REQUIRE_ONCE', include.RequireOnceStatement)
-    ]:
+        ('REQUIRE_ONCE', include.RequireOnceStatement)]:
     setattr(Interpreter, name, _new_include_op(name, include_class))
 
 

@@ -2,10 +2,11 @@ from pie.objects.base import W_Number, DivisionByZeroError
 from pie.types import PHPTypes
 from pie.objspace import space
 
+
 class W_IntObject(W_Number):
 
     _immutable_fields_ = ['value', 'type']
-    php_type = PHPTypes.w_int
+    type = PHPTypes.w_int
 
     def __init__(self, value):
         self.value = value
@@ -103,8 +104,7 @@ class W_IntObject(W_Number):
         # if the numbers are evenly divisible, we should return int
         if not self.value % number.value:
             return W_IntObject(self.value / number.value)
-        from pie.objects.float import W_FloatObject
-        return W_FloatObject(float(self.value) / number.value)
+        return space.float(float(self.value) / number.value)
 
     def mod(self, number):
         if not number.value:

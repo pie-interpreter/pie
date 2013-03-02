@@ -16,16 +16,20 @@ function.
 """
 from pie.interpreter.functions.builtin import builtin_function
 from pie.types import PHPTypes
+from pie.objects.array import W_ArrayObject
 from pie.interpreter.functions.builtin import SCALAR, MIXED
 from pie.objspace import space
+
 
 @builtin_function()
 def boolval(context, params):
     return params[0].deref().as_bool()
 
+
 @builtin_function()
 def doubleval(context, params):
     return params[0].deref().as_float()
+
 
 @builtin_function()
 def floatval(context, params):
@@ -33,6 +37,7 @@ def floatval(context, params):
 
 #TODO: get_defined_vars
 #TODO: get_resource_type
+
 
 @builtin_function()
 def gettype(context, params):
@@ -59,45 +64,54 @@ def gettype(context, params):
 #TODO: is_callable
 #TODO: intval
 
+
 @builtin_function()
 def is_array(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_array)
     return space.bool(result)
+
 
 @builtin_function()
 def is_bool(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_bool)
     return space.bool(result)
 
+
 @builtin_function()
 def is_double(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_float)
     return space.bool(result)
+
 
 @builtin_function()
 def is_float(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_float)
     return space.bool(result)
 
+
 @builtin_function()
 def is_int(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_int)
     return space.bool(result)
+
 
 @builtin_function()
 def is_integer(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_int)
     return space.bool(result)
 
+
 @builtin_function()
 def is_long(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_int)
     return space.bool(result)
 
+
 @builtin_function()
 def is_null(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_null)
     return space.bool(result)
+
 
 @builtin_function()
 def is_numeric(context, params):
@@ -108,28 +122,33 @@ def is_numeric(context, params):
         return params[0].deref().is_convertible_to_number_strict()
     return space.bool(False)
 
+
 @builtin_function()
 def is_object(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_object)
     return space.bool(result)
+
 
 @builtin_function()
 def is_real(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_float)
     return space.bool(result)
 
+
 @builtin_function()
 def is_resource(context, params):
     result = (params[0].deref().get_type() == PHPTypes.w_resource)
     return space.bool(result)
 
+
 @builtin_function()
 def is_scalar(context, params):
     php_type = params[0].deref().get_type()
     if (php_type == PHPTypes.w_string or php_type == PHPTypes.w_int or
-        php_type == PHPTypes.w_float or php_type == PHPTypes.w_bool):
+            php_type == PHPTypes.w_float or php_type == PHPTypes.w_bool):
         return space.bool(True)
     return space.bool(False)
+
 
 @builtin_function()
 def is_string(context, params):
@@ -154,6 +173,7 @@ def print_r(context, params):
 
     return w_result
 
+
 def _print_variable(w_variable, indent_level=""):
     if w_variable.get_type() == PHPTypes.w_string:
         return w_variable
@@ -163,14 +183,15 @@ def _print_variable(w_variable, indent_level=""):
           or w_variable.get_type() == PHPTypes.w_null):
         return w_variable.as_string()
     elif w_variable.get_type() == PHPTypes.w_array:
+        assert isinstance(w_variable, W_ArrayObject)
         indentation = "    "
         array_variables_indent_level = indent_level + indentation
         next_indent_level = array_variables_indent_level + indentation
         output = "Array\n%s(\n" % indent_level
-        for key, value in sorted(w_variable.storage.iteritems()):
+        for key, value in w_variable.storage.iteritems():
+            child_output = _print_variable(value, next_indent_level).str_w()
             output += "%s[%s] => %s\n" % (array_variables_indent_level,
-                    key,
-                    _print_variable(value, next_indent_level).str_w())
+                                          key, child_output)
         output += "%s)\n" % indent_level
         return space.str(output)
 
@@ -209,9 +230,10 @@ def var_dump_one_parameter(context, param, to_context=True, indent_level=""):
     elif param.get_type() == PHPTypes.w_null:
         output = "NULL\n"
     elif param.get_type() == PHPTypes.w_array:
+        assert isinstance(param, W_ArrayObject)
         array_indent_level = indent_level + "  "
         output = 'array(%d) {\n' % param.len()
-        for key, value in sorted(param.storage.iteritems()):
+        for key, value in param.storage.iteritems():
             try:
                 int(key)
                 printable_key = key
@@ -228,5 +250,6 @@ def var_dump_one_parameter(context, param, to_context=True, indent_level=""):
         context.print_output(output)
 
     return output
+
 
 #TODO: var_export

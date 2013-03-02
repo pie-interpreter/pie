@@ -125,28 +125,28 @@ class TypeAssertionError(Exception):
 
 
 def assert_int(w_value):
-    if w_value.get_type() == PHPTypes.w_int:
+    if w_value.type == PHPTypes.w_int:
         return
 
     raise TypeAssertionError('int', w_value.type)
 
 
 def assert_float(w_value):
-    if w_value.get_type() == PHPTypes.w_float:
+    if w_value.type == PHPTypes.w_float:
         return
 
     raise TypeAssertionError('float', w_value.type)
 
 
 def assert_bool(w_value):
-    if w_value.get_type() == PHPTypes.w_bool:
+    if w_value.type == PHPTypes.w_bool:
         return
 
     raise TypeAssertionError('bool', w_value.type)
 
 
 def assert_string(w_value):
-    if w_value.get_type() == PHPTypes.w_string:
+    if w_value.type == PHPTypes.w_string:
         return
 
     raise TypeAssertionError('string', w_value.type)
@@ -154,7 +154,7 @@ def assert_string(w_value):
 
 def assert_scalar(w_value):
     types = [PHPTypes.w_int, PHPTypes.w_float, PHPTypes.w_bool, PHPTypes.w_string]
-    if w_value.get_type() in types:
+    if w_value.type in types:
         return
 
     raise TypeAssertionError('int or float or bool or string', w_value.type)

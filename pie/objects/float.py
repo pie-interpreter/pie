@@ -6,7 +6,7 @@ from pie.types import PHPTypes
 class W_FloatObject(W_Number):
 
     _immutable_fields_ = ['value', 'type']
-    php_type = PHPTypes.w_float
+    type = PHPTypes.w_float
 
     def __init__(self, value):
         self.value = value
