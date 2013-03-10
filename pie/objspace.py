@@ -116,8 +116,8 @@ class ObjSpace(object):
         """ Use this function only in comparison operations (like '>' or '<=')
         """
         left_type = w_left.type
-        if self._is_any_number(left_type, w_right.type) \
-            and self._is_any_string(left_type, w_right.type):
+        if (self._is_any_number(left_type, w_right.type) and
+                self._is_any_string(left_type, w_right.type)):
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -161,8 +161,8 @@ class ObjSpace(object):
         return PHPTypes.w_int
 
     def _is_any_number(self, left_type, right_type):
-        if left_type == PHPTypes.w_int or right_type == PHPTypes.w_int \
-            or self._is_any_float(left_type, right_type):
+        if (left_type == PHPTypes.w_int or right_type == PHPTypes.w_int
+                or self._is_any_float(left_type, right_type)):
             return True
         return False
 
@@ -183,31 +183,31 @@ def _new_comparison_op(name):
         from pie.objects.string import NotConvertibleToNumber
         w_left = w_left.deref()
         w_right = w_right.deref()
-        type = self.get_common_comparison_type(w_left, w_right)
-        if type == PHPTypes.w_string:
+        php_type = self.get_common_comparison_type(w_left, w_right)
+        if php_type == PHPTypes.w_string:
             try:
-                if w_left.type == PHPTypes.w_null:
+                if w_left.get_type() == PHPTypes.w_null:
                     return getattr(w_left.as_string(), name)(w_right)
                 left_number = w_left.as_number_strict()
                 right_number = w_right.as_number_strict()
-                if self._is_any_float(left_number.type, right_number.type):
+                if self._is_any_float(left_number.get_type(), right_number.get_type()):
                     return getattr(left_number.as_float(), name)(right_number.as_float())
                 assert isinstance(left_number, W_IntObject)
                 return getattr(left_number, name)(right_number)
             except NotConvertibleToNumber:
                 return getattr(w_left, name)(w_right)
-        elif type == PHPTypes.w_int:
+        elif php_type == PHPTypes.w_int:
             return getattr(w_left.as_int(), name)(w_right.as_int())
-        elif type == PHPTypes.w_float:
+        elif php_type == PHPTypes.w_float:
             return getattr(w_left.as_float(), name)(w_right.as_float())
-        elif type == PHPTypes.w_bool:
+        elif php_type == PHPTypes.w_bool:
             return getattr(w_left.as_bool(), name)(w_right.as_bool())
-        elif type == PHPTypes.w_null:
+        elif php_type == PHPTypes.w_null:
             # this is possible only if both arguments are null
             return getattr(w_left, name)(w_right)
-        elif type == PHPTypes.w_array:
-            # we're sure now, that at least w_left.type == PHPTypes.w_array
-            if w_right.type == PHPTypes.w_array:
+        elif php_type == PHPTypes.w_array:
+            # we're sure now, that at least w_left.php_type == PHPTypes.w_array
+            if w_right.php_type == PHPTypes.w_array:
                 return getattr(w_left, name)(w_right)
             # in php array on the left is always > than anything (except array)
             # on the right:

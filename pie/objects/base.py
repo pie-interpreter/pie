@@ -90,10 +90,6 @@ class W_Number(W_Type):
         raise NotImplementedError
 
 
-class DivisionByZeroError(Exception):
-    pass
-
-
 class W_Undefined(W_Type):
 
     type = PHPTypes.w_undefined
@@ -103,3 +99,7 @@ class W_Undefined(W_Type):
 
     def copy(self):
         return self
+
+
+class DivisionByZeroError(Exception):
+    pass

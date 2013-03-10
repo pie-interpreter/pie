@@ -39,6 +39,7 @@ class Context(object):
         assert isinstance(string, str)
         os.write(1, string)
 
+
 class Trace(object):
 
     def __init__(self, filename):
@@ -59,11 +60,10 @@ class Trace(object):
             for depth, entry in enumerate(self.stack):
                 function_name, filename, line = entry
                 lines.append(
-                    'PHP   %s. %s() %s:%s\n' \
-                        % ((depth + 1),
-                            function_name,
-                            os.path.abspath(filename),
-                            line)
-                        )
+                    'PHP   %s. %s() %s:%s\n' % ((depth + 1),
+                    function_name,
+                    os.path.abspath(filename),
+                    line)
+                )
 
         return ''.join(lines)
