@@ -335,6 +335,16 @@ class __extend__(nodes.ArrayDereferencing):
             builder.emit('STORE_VAR')
 
 
+class __extend__(nodes.DynamicVariable):
+
+    def compile_node(self, builder):
+        self.expression.compile(builder)
+        if self.compile_mode == nodes.VariableExpression.STORE:
+            builder.emit('STORE_VAR')
+        elif self.compile_mode == nodes.VariableExpression.LOAD:
+            builder.emit('LOAD_VAR')
+
+
 class __extend__(nodes.Variable):
 
     def compile_node(self, builder):

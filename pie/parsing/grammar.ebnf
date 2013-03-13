@@ -11,9 +11,12 @@ T_DOC_COMMENT: "/\*\*([^\*]|\*[^/])*\*?\*/";
 T_INLINE_COMMENT: "/\*([^\*]|\*[^/])*\*?\*/";
 T_WHITESPACE: "\s";
 
+VARIABLE_IDENTIFIER: "\$[a-z_][a-z0-9_]*";
+
 # original PHP tokens
 T_ARRAY: "array";
 T_ARRAY_CAST: "\([ \t]*(array)[ \t]*\)";
+T_AS: "as";
 T_BOOL_CAST: "\([ \t]*((bool)|(boolean))[ \t]*\)";
 T_BOOLEAN_AND: "&&";
 T_BOOLEAN_OR: "\|\|";
@@ -30,10 +33,12 @@ T_ELSEIF: "elseif";
 T_ELSE: "else";
 T_EMPTY: "empty";
 T_ENDFOR: "endfor";
+T_ENDFOREACH: "endforeach";
 T_ENDIF: "endif";
 T_ENDSWITCH: "endswitch";
 T_ENDWHILE: "endwhile";
 T_FOR: "for";
+T_FOREACH: "foreach";
 T_FUNCTION: "function";
 T_IF: "if";
 T_INC: "\+\+";
@@ -326,11 +331,12 @@ primary_expression: ["("] <expression> [")"]
 
 variable_expression: array_dereferencing
                    | variable_specification;
+variable_specification: <variable_dynamic_expression>
+                      | <VARIABLE_IDENTIFIER>;
+variable_dynamic_expression: "$" ["{"] expression ["}"]
+                           |  "$" variable_value_expression;
+
 variable_value_expression: >variable_expression<;
-
-variable_specification: <variable_identifier>;
-
-variable_identifier: ["$"] IDENTIFIER;
 
 array_dereferencing: variable_specification >array_index_list<;
 array_index_list: array_index >array_index_list<
@@ -378,6 +384,7 @@ finished_statement: function_declaration
                   | while
                   | dowhile
                   | for
+                  | foreach
                   | switch;
 
 
@@ -389,10 +396,10 @@ function_argument: function_argument_reference_with_default_value
                  | function_argument_variable_with_default_value
                  | function_argument_reference
                  | function_argument_variable;
-function_argument_reference_with_default_value: ["&"] variable_identifier [ASSIGN_OPERATOR] constant_expression;
-function_argument_variable_with_default_value: variable_identifier [ASSIGN_OPERATOR] constant_expression;
-function_argument_reference: ["&"] variable_identifier;
-function_argument_variable: variable_identifier;
+function_argument_reference_with_default_value: ["&"] VARIABLE_IDENTIFIER [ASSIGN_OPERATOR] constant_expression;
+function_argument_variable_with_default_value: VARIABLE_IDENTIFIER [ASSIGN_OPERATOR] constant_expression;
+function_argument_reference: ["&"] VARIABLE_IDENTIFIER;
+function_argument_variable: VARIABLE_IDENTIFIER;
 
 if: T_IF >if_condition< >control_structure_body< >else_inner<?
   | T_IF >if_condition< [":"] statements_block? >else_inner_alt<
@@ -417,6 +424,13 @@ for: T_FOR ["("] for_init? [";"] for_condition? [";"] for_expression? [")"] >con
 for_init: >comma_seperated_expressions<;
 for_condition:  >comma_seperated_expressions<;
 for_expression:  >comma_seperated_expressions<;
+
+foreach: T_FOREACH ["("] foreach_inner [")"] >control_structure_body<
+       | T_FOREACH ["("] foreach_inner [")"] [":"] statements_block? [T_ENDFOREACH] [";"];
+foreach_inner: variable_expression [T_AS] variable_expression ["=>"] "&"? variable_expression
+             | variable_expression [T_AS] "&"? variable_expression
+             | expression [T_AS] variable_expression ["=>"] variable_expression
+             | expression [T_AS] variable_expression;
 
 switch: T_SWITCH ["("] expression [")"] ["{"] >switch_case_list< ["}"]
       | T_SWITCH ["("] expression [")"] [":"] >switch_case_list< [T_ENDSWITCH]

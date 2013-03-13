@@ -334,6 +334,15 @@ class ArrayDereferencing(AstNodeWithResult):
             self.variable.repr(), ''.join(representations))
 
 
+class DynamicVariable(AstNodeWithResult):
+
+    def __init__(self, expression):
+        self.expression = expression
+
+    def repr(self):
+        return "DynamicVariable(%s)" % self.expression.repr()
+
+
 class Variable(AstNodeWithResult):
 
     def __init__(self, name):

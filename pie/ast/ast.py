@@ -252,8 +252,8 @@ class AstBuilder(RPythonVisitor):
 
         return self.get_second_child(node)
 
-    def visit_variable_identifier(self, node):
-        return Variable(self.get_single_child(node))
+    def visit_variable_dynamic_expression(self, node):
+        return DynamicVariable(self.get_second_child(node))
 
     def visit_function_call(self, node):
         children_count = len(node.children)
@@ -393,6 +393,35 @@ class AstBuilder(RPythonVisitor):
                    expression_statements,
                    body)
 
+    def visit_foreach(self, node):
+        children_count = len(node.children)
+        assert children_count in [2, 3]
+
+        inner_statement = self.transform(node.children[1])
+        if children_count == 3:
+            body = self.transform(node.children[2])
+        else:
+            body = EmptyStatement()
+
+        return Foreach(inner_statement, body)
+
+    def visit_foreach_inner(self, node):
+        children_count = len(node.children)
+        assert children_count in [2, 3, 4]
+
+        array_expression = self.transform(node.children[0])
+
+        is_reference = False
+        if children_count == 2:
+            key_expression = ConstantUndefined()
+            value_expression = self.transform(node.children[1])
+            is_constant == isinstance(value_expression)
+
+        return ForeachInner(
+            array_expression,
+            key_expression, value_expression,
+            is_constant, is_reference)
+
     def visit_switch(self, node):
         children_count = len(node.children)
         assert children_count >= 2
@@ -493,6 +522,9 @@ class AstBuilder(RPythonVisitor):
 
     def visit_NULL(self, node):
         return ConstantNull()
+
+    def visit_VARIABLE_IDENTIFIER(self, node):
+        return Variable(Identifier(node.token.source[1:]))
 
     def visit_IDENTIFIER(self, node):
         return Identifier(node.token.source)
