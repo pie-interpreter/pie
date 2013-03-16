@@ -200,6 +200,24 @@ class Interpreter(object):
         w_value = self.frame.stack[-1]  # we need to leave value on the stack
         self.frame.set_variable(var_name, w_value)
 
+    def ITERATOR_CREATE(self, value):
+        raise InternalError("Not implemented")
+
+    def ITERATOR_CREATE_REF(self, value):
+        raise InternalError("Not implemented")
+
+    def ITERATOR_RESET(self, value):
+        raise InternalError("Not implemented")
+
+    def ITERATOR_NEXT(self, value):
+        raise InternalError("Not implemented")
+
+    def ITERATOR_GET_NEXT_KEY(self, value):
+        raise InternalError("Not implemented")
+
+    def ITERATOR_GET_NEXT_VALUE(self, value):
+        raise InternalError("Not implemented")
+
     def LOAD_CONST(self, value):
         self.frame.stack.append(self.bytecode.consts[value].copy())
 
@@ -282,6 +300,9 @@ class Interpreter(object):
         # self.frame.stack.append(space.array(values))
 
     def GET_INDEXES(self, indexes_len):
+        raise InternalError("Not implemented")
+
+    def ITERATOR_JUMP_IF_NOT_VALID(self, value):
         raise InternalError("Not implemented")
 
 

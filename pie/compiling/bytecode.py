@@ -79,7 +79,7 @@ def disassemble(bytecode):
 
         position += 1
         opcode_name = get_opcode_name(next_instr)
-        result += ' %-20s' % opcode_name
+        result += ' %-30s' % opcode_name
 
         if next_instr > OPCODE_INDEX_DIVIDER:
             arg = ord(code[position]) + (ord(code[position + 1]) << 8)

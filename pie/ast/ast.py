@@ -8,6 +8,7 @@ from pie.parsing import parsing
 def build(source):
     parse_tree = parsing.parse(source)
     astree = build_ast(parse_tree)
+
     return astree
 
 
@@ -410,12 +411,25 @@ class AstBuilder(RPythonVisitor):
         assert children_count in [2, 3, 4]
 
         array_expression = self.transform(node.children[0])
-
         is_reference = False
+
         if children_count == 2:
             key_expression = ConstantUndefined()
             value_expression = self.transform(node.children[1])
-            is_constant == isinstance(value_expression)
+        elif children_count == 3 \
+            and node.children[1].symbol == 'variable_expression':
+            key_expression = self.transform(node.children[1])
+            value_expression = self.transform(node.children[2])
+        elif children_count == 3:
+            is_reference = True
+            key_expression = ConstantUndefined()
+            value_expression = self.transform(node.children[2])
+        else:
+            is_reference = True
+            key_expression = self.transform(node.children[1])
+            value_expression = self.transform(node.children[3])
+
+        is_constant = isinstance(value_expression.variable_value, Variable)
 
         return ForeachInner(
             array_expression,

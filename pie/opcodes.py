@@ -70,6 +70,16 @@ OPCODE = {
     70: 'LOAD_VAR',
     71: 'STORE_VAR',
 
+    # iteration-related operations
+    80: 'ITERATOR_CREATE', # create fast iterator for array on stack with
+                           # key and value variable names are also on stack
+    81: 'ITERATOR_CREATE_REF', # same as ITERATOR_CREATE,but with value beeing
+                               # a reference to current element
+    82: 'ITERATOR_RESET', # reset common iterator
+    83: 'ITERATOR_NEXT', # fill key and value with new values for fast iterator
+    84: 'ITERATOR_GET_NEXT_KEY', # load on stack new key value
+    85: 'ITERATOR_GET_NEXT_VALUE', # load on stack new value's value
+
     # from here operations require argument
     # meaning of the argument is provided in comment
 
@@ -93,6 +103,10 @@ OPCODE = {
     161: 'UNSET',  # number of var names on the stack to unset
     162: 'MAKE_ARRAY',  # number of values to read from the stack
     163: 'GET_INDEXES', # number of indexes to read from the stack
+
+    # iteration-related operations
+    170: 'ITERATOR_JUMP_IF_NOT_VALID', # just to given position, if lastly created
+                                      # iterator is no longer valid
 }
 
 OPCODE_INDEXES = {}

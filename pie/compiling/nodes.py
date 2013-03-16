@@ -312,8 +312,8 @@ class __extend__(nodes.Cast):
 class __extend__(nodes.VariableExpression):
 
     def compile_node(self, builder):
-        self.value.compile_mode = self.compile_mode
-        self.value.compile(builder)
+        self.variable_value.compile_mode = self.compile_mode
+        self.variable_value.compile(builder)
 
 
 class __extend__(nodes.ArrayDereferencing):
@@ -552,6 +552,55 @@ class __extend__(nodes.For):
 
         builder.patch_continue_positions(start_position)
         builder.patch_break_positions(builder.get_current_position())
+
+
+class __extend__(nodes.Foreach):
+
+    def compile_node(self, builder):
+        builder.register_loop()
+
+        self.inner.compile_init(builder)
+        start_position = builder.get_current_position()
+
+        self.inner.compile_next(builder)
+        self.body.compile(builder)
+        self.inner.compile_validate(builder, start_position)
+
+        builder.patch_continue_positions(start_position)
+        builder.patch_break_positions(builder.get_current_position())
+
+
+class __extend__(nodes.ForeachInner):
+
+    def compile_init(self, builder):
+        if self.is_constant:
+            self.key.compile(builder)
+            self.value.compile(builder)
+            self.array.compile(builder)
+            if self.is_reference:
+                builder.emit('ITERATOR_CREATE')
+            else:
+                builder.emit('ITERATOR_CREATE_REF')
+        else:
+            builder.emit('ITERATOR_RESET')
+
+    def compile_next(self, builder):
+        if self.is_constant:
+            builder.emit('ITERATOR_NEXT')
+        else:
+            builder.emit('ITERATOR_GET_NEXT_KEY')
+            self.key.compile(builder)
+            builder.emit('STORE_VAR')
+
+            builder.emit('ITERATOR_GET_NEXT_VALUE')
+            self.value.compile(builder)
+            if self.is_reference:
+                builder.emit('MAKE_REFERENCE')
+            else:
+                builder.emit('STORE_VAR')
+
+    def compile_validate(self, builder, start_position):
+        builder.emit('ITERATOR_JUMP_IF_NOT_VALID', start_position)
 
 
 class __extend__(nodes.Switch):

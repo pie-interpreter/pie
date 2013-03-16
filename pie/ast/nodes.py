@@ -313,10 +313,10 @@ class VariableExpression(AstNodeWithResult):
     compile_mode = NAME
 
     def __init__(self, value):
-        self.value = value
+        self.variable_value = value
 
     def repr(self):
-        return "VariableExpression(%s)" % self.value.repr()
+        return "VariableExpression(%s)" % self.variable_value.repr()
 
 
 class ArrayDereferencing(AstNodeWithResult):
@@ -487,6 +487,35 @@ class For(AstNode):
                self.get_list_repr(self.condition_statements),
                self.get_list_repr(self.expression_statements),
                self.body.repr())
+
+
+class Foreach(AstNode):
+
+    def __init__(self, inner, body):
+        self.inner = inner
+        self.body = body
+
+    def repr(self):
+        return "Foreach(%s) {%s}" % (self.inner, self.body)
+
+
+class ForeachInner(AstNode):
+
+    def __init__(self, array, key, value, is_constant, is_reference):
+        self.array = array
+        self.key = key
+        self.value = value
+        self.is_constant = is_constant
+        self.is_reference = is_reference
+
+    def repr(self):
+        if self.is_reference:
+            reference_symbol = '&'
+        else:
+            reference_symbol = ''
+
+        return "%s as %s => %s%s" % (
+            self.array, self.key, reference_symbol, self.value)
 
 
 class Switch(AstNode):
