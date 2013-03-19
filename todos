@@ -1,2 +1,7 @@
 TODO: array arithmetic operations
 TODO: cast to array
+TODO: refactor 'type' -> 'php_type'
+TODO: rename *Object -> *
+TODO: make unit tests pass
+TODO: refactor integration tests for better output
+TODO: refactor unit tests not to load parser

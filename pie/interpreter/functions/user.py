@@ -6,6 +6,7 @@ from pie.interpreter.frame import Frame
 from pie.interpreter.errors.fatalerrors import NonVariablePassedByReference
 from pie.interpreter.errors.warnings import MissingArgument
 from pie.interpreter.functions.base import AbstractFunction
+from pie.interpreter.interpreter import Interpreter
 
 
 class UserFunction(AbstractFunction):

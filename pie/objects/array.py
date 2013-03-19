@@ -1,4 +1,4 @@
-from collections import OrderedDict
+from pie.rpy.rdict import RDict
 
 from pie.objspace import space
 from pie.objects.base import W_Type, W_Root
@@ -21,7 +21,7 @@ class W_ArrayObject(W_Type):
         return w_new_array
 
     def __init__(self, raw_data=[]):
-        self.storage = OrderedDict()
+        self.storage = RDict(W_Root)
         self.last_index = 0
         self.last_index_changed = False
 
@@ -59,114 +59,67 @@ class W_ArrayObject(W_Type):
         return space.bool(self.is_true())
 
     def as_float(self):
-        #TODO: make caution
-        # http://www.php.net/manual/en/language.types.integer.php
         return space.float(float(self.is_true()))
 
     def as_int(self):
-        #TODO: make caution
-        # http://www.php.net/manual/en/language.types.integer.php
         return space.int(int(self.is_true()))
 
     def as_number(self):
         return self.as_int()
 
     def as_string(self):
-        from pie.objects.string import W_StringObject
-        return W_StringObject('Array')
+        return space.str('Array')
 
     def less_than(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
-        self_length = len(self.storage)
-        object_length = len(w_object.storage)
-        if self_length < object_length:
+        if self.len() < w_object.len():
             return space.bool(True)
-        elif self_length == object_length and self_length > 0:
-            for key, w_value in self.storage.iteritems():
-                if key not in w_object.storage:
-                    return space.bool(False)
-                w_result = space.less_than(w_value,
-                                           w_object.storage[key])
-                if not w_result.is_true():
-                    return space.bool(False)
-                return space.bool(True)
+        elif self.len() == w_object.len() and self.len() > 0:
+            return self._less_than(w_object)
         return space.bool(False)
 
     def more_than(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
-        self_length = len(self.storage)
-        object_length = len(w_object.storage)
-        if self_length > object_length:
+        if self.len() > w_object.len():
             return space.bool(True)
-        elif self_length == object_length and self_length > 0:
-            for key, w_value in self.storage.iteritems():
-                if key not in w_object.storage:
-                    return space.bool(False)
-                w_result = space.more_than(w_value,
-                                           w_object.storage[key])
-                if not w_result.is_true():
-                    return space.bool(False)
-                return space.bool(True)
+        elif self.len() == w_object.len() and self.len() > 0:
+            return self._more_than(w_object)
         return space.bool(False)
 
     def equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
-        if len(self.storage) != len(w_object.storage):
+        if self.len() != w_object.len():
             return space.bool(False)
-        for key, w_value in self.storage.iteritems():
-            if key not in w_object.storage:
-                return space.bool(False)
-            w_result = space.equal(w_value,
-                                   w_object.storage[key])
-            if not w_result.is_true():
-                return space.bool(False)
-            return space.bool(True)
-        return space.bool(True)
+        return self._equal(w_object)
 
     def not_equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
-        if len(self.storage) != len(w_object.storage):
+        if self.len() != w_object.len():
             return space.bool(True)
         else:
-            for key, value in self.storage.iteritems():
+            iterator = self.storage.iter()
+            for i in range(self.len()):
+                key, w_value = iterator.nextitem()
                 if key not in w_object.storage:
                     return space.bool(True)
-                if space.not_equal(value, w_object.storage[key]).is_true():
+                if space.not_equal(w_value, w_object.storage[key]).is_true():
                     return space.bool(True)
             return space.bool(False)
 
     def less_than_or_equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
-        self_length = len(self.storage)
-        object_length = len(w_object.storage)
-        if self_length < object_length:
+        if self.len() < w_object.len():
             return space.bool(True)
-        elif self_length == object_length:
-            for key, w_value in self.storage.iteritems():
-                if key not in w_object.storage:
-                    return space.bool(False)
-                w_result = space.less_than_or_equal(w_value,
-                                                    w_object.storage[key])
-                if not w_result.is_true():
-                    return space.bool(False)
-                return space.bool(True)
+        elif self.len() == w_object.len():
+            return self._less_than_or_equal(w_object)
         return space.bool(False)
 
     def more_than_or_equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
-        self_length = len(self.storage)
-        object_length = len(w_object.storage)
-        if self_length > object_length:
+        if self.len() > w_object.len():
             return space.bool(True)
-        elif self_length == object_length:
-            for key, w_value in self.storage.iteritems():
-                if key not in w_object.storage:
-                    return space.bool(False)
-                w_result = space.more_than_or_equal(w_value,
-                                                    w_object.storage[key])
-                if not w_result.is_true():
-                    return space.bool(False)
-                return space.bool(True)
+        elif self.len() == w_object.len():
+            return self._more_than_or_equal(w_object)
         return space.bool(False)
 
     def inc(self):
@@ -204,7 +157,8 @@ class W_ArrayObject(W_Type):
         for key, w_value in self.storage.iteritems():
             if key not in w_object.storage:
                 return space.bool(False)
-            w_result = getattr(space, operation)(w_value, w_object.storage[key])
+            w_result = getattr(space, operation)(w_value,
+                                                 w_object.storage[key])
             if not w_result.is_true():
                 return space.bool(False)
         return space.bool(True)
@@ -219,8 +173,8 @@ class W_ArrayObject(W_Type):
             return key, None
         elif w_index.type == PHPTypes.w_string:
             key = w_index.str_w()
-            if ((len(key) > 1 and key[0] == '0')
-                    or (key[0] == '-' and key[1] == '0')):
+            if (len(key) > 1 and
+                    ((key[0] == '0') or (key[0] == '-' and key[1] == '0'))):
                 return 0, key
             try:
                 key = int(key)
@@ -243,6 +197,29 @@ class W_ArrayObject(W_Type):
         assert isinstance(index, int)
         self.last_index = index + 1
         self.last_index_changed = False
+
+
+def _new_comparison_op(name, private_name):
+    def func(self, w_object):
+        iterator = self.storage.iter()
+        for i in range(self.len()):
+            key, w_value = iterator.nextitem()
+            if key not in w_object.storage:
+                return space.bool(False)
+            w_result = getattr(space, name)(w_value,
+                                            w_object.storage[key])
+            if not w_result.is_true():
+                return space.bool(False)
+        return space.bool(True)
+
+    func.func_name = private_name
+    return func
+
+for _name in ['less_than', 'more_than', 'equal', 'not_equal',
+              'less_than_or_equal', 'more_than_or_equal']:
+    private_name = '_' + _name
+    setattr(W_ArrayObject, private_name,
+            _new_comparison_op(_name, private_name))
 
 
 class W_Cell(W_Root):

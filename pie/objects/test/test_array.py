@@ -15,9 +15,11 @@ class TestArray(unittest.TestCase):
                space.bool(False), space.int(2),
                space.bool(True), space.int(3)]
         actual = space.array(raw)
-        expected = {'3': space.int(1), '-1': space.int(2),
-                    '0': space.int(2), '1': space.int(3)}
-        self.assertEqual(expected, actual.storage)
+        expected = {space.str('3'): space.int(1),
+                    space.str('-1'): space.int(2),
+                    space.str('0'): space.int(2), space.str('1'): space.int(3)}
+        for key, value in expected.iteritems():
+            self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
     def test_array_creation_null_string_branch(self):
         raw = [space.str("test"), space.int(1),
@@ -27,39 +29,46 @@ class TestArray(unittest.TestCase):
                space.str("-5"), space.int(5),
                space.str("-09"), space.int(7)]
         actual = space.array(raw)
-        expected = {"test": space.int(1), "08": space.int(2),
-                    '99': space.int(3), "": space.int(4),
-                    '-5': space.int(5), "-09": space.int(7)}
-        self.assertEqual(expected, actual.storage)
+        expected = {space.str("test"): space.int(1),
+                    space.str("08"): space.int(2),
+                    space.str('99'): space.int(3), space.str(""): space.int(4),
+                    space.str('-5'): space.int(5),
+                    space.str("-09"): space.int(7)}
+        for key, value in expected.iteritems():
+            self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
     def test_array_creation_one_key(self):
         raw = [space.int(1), space.int(1),
-                space.str("1"), space.int(2),
-                space.float(1.5), space.int(3),
-                space.bool(True), space.int(4)]
+               space.str("1"), space.int(2),
+               space.float(1.5), space.int(3),
+               space.bool(True), space.int(4)]
         actual = space.array(raw)
-        expected = {'1': space.int(4)}
-        self.assertEqual(expected, actual.storage)
+        expected = {space.str('1'): space.int(4)}
+        for key, value in expected.iteritems():
+            self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
     def test_array_creation_with_no_keys(self):
         raw = [space.undefined(), space.int(1),
-                space.undefined(), space.int(2),
-                space.float(6.0), space.int(3),
-                space.undefined(), space.int(4),
-                space.int(3), space.int(5),
-                space.undefined(), space.int(6)]
+               space.undefined(), space.int(2),
+               space.float(6.0), space.int(3),
+               space.undefined(), space.int(4),
+               space.int(3), space.int(5),
+               space.undefined(), space.int(6)]
         actual = space.array(raw)
-        expected = {'0': space.int(1), '1': space.int(2),
-                    '6': space.int(3), '7': space.int(4),
-                    '3': space.int(5), '8': space.int(6)}
-        self.assertEqual(expected, actual.storage)
+        expected = {space.str('0'): space.int(1), space.str('1'): space.int(2),
+                    space.str('6'): space.int(3), space.str('7'): space.int(4),
+                    space.str('3'): space.int(5), space.str('8'): space.int(6)}
+        for key, value in expected.iteritems():
+            self.assertTrue(actual.get(key).deref().equal(value).is_true())
         raw = [space.str("6"), space.int(3),
-                space.str("3"), space.int(5),
-                space.undefined(), space.int(6)]
+               space.str("3"), space.int(5),
+               space.undefined(), space.int(6)]
         actual = space.array(raw)
-        expected = {'6': space.int(3), '3': space.int(5),
-                    '7': space.int(6)}
-        self.assertEqual(expected, actual.storage)
+        expected = {space.str('6'): space.int(3),
+                    space.str('3'): space.int(5),
+                    space.str('7'): space.int(6)}
+        for key, value in expected.iteritems():
+            self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
     def test_is_true(self):
         self.assertFalse(self.array.is_true())
@@ -114,14 +123,14 @@ class TestArray(unittest.TestCase):
         right = space.array([space.int(1), space.int(2)])
         self.assertFalse(right.equal(left).is_true())
         right = space.array([space.int(1),
-            space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertFalse(right.equal(left).is_true())
 
     def test_equal_multidimension(self):
         left = space.array([space.int(0),
-                    space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         right = space.array([space.int(0),
-                    space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertTrue(right.equal(left).is_true())
 
     def test_less_than(self):
@@ -133,7 +142,7 @@ class TestArray(unittest.TestCase):
         right = space.array([space.int(1), space.int(0)])
         self.assertFalse(right.less_than(left).is_true())
         right = space.array([space.int(0),
-                space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertFalse(right.less_than(left).is_true())
         self.assertFalse(left.less_than(right).is_true())
         left = space.array()
@@ -150,7 +159,7 @@ class TestArray(unittest.TestCase):
         self.assertFalse(right.more_than(left).is_true())
         left = space.array([space.int(0), space.int(0)])
         right = space.array([space.int(0),
-                space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertTrue(right.more_than(left).is_true())
         left = space.array([space.int(0), space.int(1),
                             space.int(1), space.int(2)])
@@ -169,7 +178,7 @@ class TestArray(unittest.TestCase):
         right = space.array([space.int(1), space.int(2)])
         self.assertTrue(right.not_equal(left).is_true())
         right = space.array([space.int(1),
-            space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertTrue(right.not_equal(left).is_true())
 
     def test_less_than_or_equal(self):
@@ -181,7 +190,7 @@ class TestArray(unittest.TestCase):
         right = space.array([space.int(1), space.int(0)])
         self.assertFalse(right.less_than_or_equal(left).is_true())
         right = space.array([space.int(0),
-                space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertFalse(right.less_than_or_equal(left).is_true())
         left = space.array()
         self.assertFalse(right.less_than_or_equal(left).is_true())
@@ -196,7 +205,7 @@ class TestArray(unittest.TestCase):
         self.assertFalse(right.more_than_or_equal(left).is_true())
         left = space.array([space.int(0), space.int(0)])
         right = space.array([space.int(0),
-                space.array([space.int(0), space.int(1)])])
+                            space.array([space.int(0), space.int(1)])])
         self.assertTrue(right.more_than_or_equal(left).is_true())
         left = space.array([space.int(0), space.int(1),
                             space.int(1), space.int(2)])
