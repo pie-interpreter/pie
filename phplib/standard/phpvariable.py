@@ -188,8 +188,11 @@ def _print_variable(w_variable, indent_level=""):
         array_variables_indent_level = indent_level + indentation
         next_indent_level = array_variables_indent_level + indentation
         output = "Array\n%s(\n" % indent_level
-        for key, value in w_variable.storage.iteritems():
-            child_output = _print_variable(value, next_indent_level).str_w()
+        # temporary
+        iterator = w_variable.storage.iter()
+        for i in range(w_variable.len()):
+            key, w_value = iterator.nextitem()
+            child_output = _print_variable(w_value, next_indent_level).str_w()
             output += "%s[%s] => %s\n" % (array_variables_indent_level,
                                           key, child_output)
         output += "%s)\n" % indent_level
@@ -233,13 +236,16 @@ def var_dump_one_parameter(context, param, to_context=True, indent_level=""):
         assert isinstance(param, W_ArrayObject)
         array_indent_level = indent_level + "  "
         output = 'array(%d) {\n' % param.len()
-        for key, value in param.storage.iteritems():
+        # temporary
+        iterator = param.storage.iter()
+        for i in range(param.len()):
+            key, w_value = iterator.nextitem()
             try:
                 int(key)
                 printable_key = key
             except ValueError:
                 printable_key = '"%s"' % key
-            value = var_dump_one_parameter(context, value,
+            value = var_dump_one_parameter(context, w_value,
                                            False, array_indent_level)
             output += "%s[%s]=>\n%s%s" % (array_indent_level,
                                           printable_key,

@@ -1,3 +1,5 @@
+from pie.rpy.rdict import RDict
+
 from pie.objspace import space
 from pie.objects.base import W_Type, W_Root
 from pie.types import PHPTypes
@@ -12,8 +14,14 @@ class W_ArrayObject(W_Type):
     _immutable_fields = ['type']
     type = PHPTypes.w_array
 
+    @staticmethod
+    def array_from_array(w_array):
+        w_new_array = W_ArrayObject()
+        w_new_array.storage = w_array.storage.copy()
+        return w_new_array
+
     def __init__(self, raw_data=[]):
-        self.storage = {}
+        self.storage = RDict(W_Root)
         self.last_index = 0
         self.last_index_changed = False
 
@@ -37,12 +45,7 @@ class W_ArrayObject(W_Type):
         return "W_ArrayObject(%s)" % self.storage
 
     def copy(self):
-        # raw_data = []
-        # for key, value in self.storage.iteritems():
-        #     raw_data.append(space.str(key))
-        #     raw_data.append(value)
-        # return space.array(raw_data)
-        assert NotImplementedError
+        return W_ArrayObject.array_from_array(self)
 
     def is_true(self):
         if not self.storage:
@@ -79,7 +82,9 @@ class W_ArrayObject(W_Type):
         if self_length < object_length:
             return space.bool(True)
         elif self_length == object_length and self_length > 0:
-            for key, w_value in self.storage.iteritems():
+            iterator = self.storage.iter()
+            for i in range(len(self.storage)):
+                key, w_value = iterator.nextitem()
                 if key not in w_object.storage:
                     return space.bool(False)
                 w_result = space.less_than(w_value,
@@ -96,7 +101,9 @@ class W_ArrayObject(W_Type):
         if self_length > object_length:
             return space.bool(True)
         elif self_length == object_length and self_length > 0:
-            for key, w_value in self.storage.iteritems():
+            iterator = self.storage.iter()
+            for i in range(len(self.storage)):
+                key, w_value = iterator.nextitem()
                 if key not in w_object.storage:
                     return space.bool(False)
                 w_result = space.more_than(w_value,
@@ -110,7 +117,9 @@ class W_ArrayObject(W_Type):
         assert isinstance(w_object, W_ArrayObject)
         if len(self.storage) != len(w_object.storage):
             return space.bool(False)
-        for key, w_value in self.storage.iteritems():
+        iterator = self.storage.iter()
+        for i in range(len(self.storage)):
+            key, w_value = iterator.nextitem()
             if key not in w_object.storage:
                 return space.bool(False)
             w_result = space.equal(w_value,
@@ -125,10 +134,12 @@ class W_ArrayObject(W_Type):
         if len(self.storage) != len(w_object.storage):
             return space.bool(True)
         else:
-            for key, value in self.storage.iteritems():
+            iterator = self.storage.iter()
+            for i in range(len(self.storage)):
+                key, w_value = iterator.nextitem()
                 if key not in w_object.storage:
                     return space.bool(True)
-                if space.not_equal(value, w_object.storage[key]).is_true():
+                if space.not_equal(w_value, w_object.storage[key]).is_true():
                     return space.bool(True)
             return space.bool(False)
 
@@ -139,7 +150,9 @@ class W_ArrayObject(W_Type):
         if self_length < object_length:
             return space.bool(True)
         elif self_length == object_length:
-            for key, w_value in self.storage.iteritems():
+            iterator = self.storage.iter()
+            for i in range(len(self.storage)):
+                key, w_value = iterator.nextitem()
                 if key not in w_object.storage:
                     return space.bool(False)
                 w_result = space.less_than_or_equal(w_value,
@@ -156,7 +169,9 @@ class W_ArrayObject(W_Type):
         if self_length > object_length:
             return space.bool(True)
         elif self_length == object_length:
-            for key, w_value in self.storage.iteritems():
+            iterator = self.storage.iter()
+            for i in range(len(self.storage)):
+                key, w_value = iterator.nextitem()
                 if key not in w_object.storage:
                     return space.bool(False)
                 w_result = space.more_than_or_equal(w_value,

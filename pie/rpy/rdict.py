@@ -97,7 +97,7 @@ class SomeRDict(annmodel.SomeObject):
         self.clsdef = clsdef
 
     def rtyper_makerepr(self, rtyper):
-        instance_repr = rtyper.makerepr(annmodel.SomeInstance(self.clsdef))
+        instance_repr = rtyper.getrepr(annmodel.SomeInstance(self.clsdef))
         return RDictRepr(rtyper, instance_repr)
 
     def rtyper_makekey(self):
@@ -125,7 +125,7 @@ class SomeRDictIter(annmodel.SomeObject):
                                    annmodel.SomeInstance(self.rdict.clsdef)])
 
     def rtyper_makerepr(self, rtyper):
-        return RDictIterRepr(rtyper, rtyper.makerepr(self.rdict))
+        return RDictIterRepr(rtyper, rtyper.getrepr(self.rdict))
 
     def rtyper_makekey(self):
         return (self.__class__, self.rdict.rtyper_makekey())
@@ -182,7 +182,7 @@ class RDictRepr(Repr):
     def __init__(self, rtyper, instance_repr):
         self.rtyper = rtyper
         self.instance_repr = instance_repr
-        self.str_repr = rtyper.makerepr(annmodel.SomeString())
+        self.str_repr = rtyper.getrepr(annmodel.SomeString())
         self.lowleveltype = new_dict_lltype(instance_repr.lowleveltype)
 
     def rtyper_new(self, hop):
