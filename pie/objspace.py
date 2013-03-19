@@ -207,7 +207,7 @@ def _new_comparison_op(name):
             return getattr(w_left, name)(w_right)
         elif php_type == PHPTypes.w_array:
             # we're sure now, that at least w_left.php_type == PHPTypes.w_array
-            if w_right.php_type == PHPTypes.w_array:
+            if w_right.get_type() == PHPTypes.w_array:
                 return getattr(w_left, name)(w_right)
             # in php array on the left is always > than anything (except array)
             # on the right:

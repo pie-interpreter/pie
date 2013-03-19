@@ -10,7 +10,7 @@ class IllegalOffsetType(Exception):
 class W_ArrayObject(W_Type):
 
     _immutable_fields = ['type']
-    php_type = PHPTypes.w_array
+    type = PHPTypes.w_array
 
     def __init__(self, raw_data=[]):
         self.storage = {}
@@ -25,9 +25,13 @@ class W_ArrayObject(W_Type):
                 self.storage[index] = w_data_unit
             else:
                 record = True
-                index = self._convert_index(w_data_unit)
+                int_index, str_index = self._convert_index(w_data_unit)
                 if self.last_index_changed:
-                    self._update_last_index(index)
+                    self._update_last_index(int_index)
+                if str_index is None:
+                    index = str(int_index)
+                else:
+                    index = str_index
 
     def __repr__(self):
         return "W_ArrayObject(%s)" % self.storage
@@ -114,6 +118,7 @@ class W_ArrayObject(W_Type):
             if not w_result.is_true():
                 return space.bool(False)
             return space.bool(True)
+        return space.bool(True)
 
     def not_equal(self, w_object):
         assert isinstance(w_object, W_ArrayObject)
@@ -172,23 +177,32 @@ class W_ArrayObject(W_Type):
 
     def get(self, w_index):
         assert isinstance(w_index, W_Type)
-        index = self._convert_index(w_index)
+        int_index, str_index = self._convert_index(w_index)
+        if str_index is None:
+            index = str(int_index)
+        else:
+            index = str_index
         return W_Cell(index, self.storage[index])
 
     def set(self, w_index, w_value):
         assert isinstance(w_index, W_Type)
         assert isinstance(w_value, W_Type)
-        index = self._convert_index(w_index)
+        int_index, str_index = self._convert_index(w_index)
+        if str_index is None:
+            index = str(int_index)
+        else:
+            index = str_index
 
         self.storage[index] = w_value
         if self.last_index_changed:
-            self._update_last_index(index)
+            self._update_last_index(int_index)
 
     def _compare_elements(self, operation, w_object):
         for key, w_value in self.storage.iteritems():
             if key not in w_object.storage:
                 return space.bool(False)
-            w_result = getattr(space, operation)(w_value, w_object.storage[key])
+            w_result = getattr(space, operation)(w_value,
+                                                 w_object.storage[key])
             if not w_result.is_true():
                 return space.bool(False)
         return space.bool(True)
@@ -200,29 +214,26 @@ class W_ArrayObject(W_Type):
             key = w_index.as_int().int_w()
             if key >= self.last_index:
                 self.last_index_changed = True
-            #temporary
-            return str(key)
+            return key, None
         elif w_index.type == PHPTypes.w_string:
             key = w_index.str_w()
-            if ((len(key) > 1 and key[0] == '0')
-                    or (key[0] == '-' and key[1] == '0')):
-                return key
+            if (len(key) > 1 and
+                    ((key[0] == '0') or (key[0] == '-' and key[1] == '0'))):
+                return 0, key
             try:
                 key = int(key)
                 if key >= self.last_index:
                     self.last_index_changed = True
-                # temporary
-                key = str(key)
+                return key, None
             except ValueError:
                 pass
-            return key
+            return 0, key
         elif w_index.type == PHPTypes.w_null:
-            return ""
+            return 0, ""
         elif w_index.type == PHPTypes.w_undefined:
             key = self.last_index
             self.last_index_changed = True
-            # temporary
-            return str(key)
+            return key, None
         else:
             raise IllegalOffsetType
 

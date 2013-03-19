@@ -2,7 +2,6 @@ from rpython.rlib.streamio import open_file_as_stream
 
 from pie.compiling import compiling
 from pie.objspace import space
-from pie.interpreter.interpreter import Interpreter
 from pie.interpreter.errors.base import PieError
 
 __author__ = 'sery0ga'
@@ -29,6 +28,7 @@ class SourceCode(object):
                 e.handle()
                 return space.bool(False)
 
+        from pie.interpreter.interpreter import Interpreter
         Interpreter(self.bytecode, context, frame).interpret()
 
         # TODO: as debug_trace function appear, a test for

@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from rpython.rtyper.extregistry import ExtRegistryEntry
 from rpython.annotator import model as annmodel
 from rpython.tool.pairtype import pairtype
@@ -5,8 +7,8 @@ from rpython.rtyper.lltypesystem import lltype
 from rpython.rtyper.lltypesystem.rstr import STR, StringRepr
 from rpython.rtyper.rmodel import Repr
 from rpython.rtyper.rint import IntegerRepr
-from hippy.rpy import lldict
-from collections import OrderedDict
+
+from pie.rpy import lldict
 
 
 class Iterator(object):

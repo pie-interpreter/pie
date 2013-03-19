@@ -3,7 +3,6 @@
 from pie.objspace import space
 from pie.objects.variable import W_Variable
 from pie.interpreter.frame import Frame
-from pie.interpreter.interpreter import Interpreter
 from pie.interpreter.errors.fatalerrors import NonVariablePassedByReference
 from pie.interpreter.errors.warnings import MissingArgument
 from pie.interpreter.functions.base import AbstractFunction
@@ -25,6 +24,7 @@ class UserFunction(AbstractFunction):
     def call(self, context, stack_values):
         context.trace.append(self.name, self.bytecode.filename)
         frame = self._get_frame(context, stack_values)
+        from pie.interpreter.interpreter import Interpreter
         Interpreter(self.bytecode, context, frame).interpret()
         context.trace.pop()
 
