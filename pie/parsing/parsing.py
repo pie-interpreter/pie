@@ -19,8 +19,8 @@ def parse(source):
     return parse_tree
 
 
-def get_parse_tools():
-    grammar = get_grammar_file()
+def _get_parse_tools():
+    grammar = _get_grammar_file()
     try:
         regexs, rules, transformer_class = parse_ebnf(grammar)
     except ParseError as e:
@@ -41,11 +41,11 @@ def get_parse_tools():
     return parse, transformer_class()
 
 
-def get_grammar_file():
+def _get_grammar_file():
     currentDir = os.path.dirname(os.path.abspath(__file__))
     grammar = py.path.local(currentDir).join('grammar.ebnf').read("rt")
 
     return grammar
 
 
-parse_php, transformer = get_parse_tools()
+parse_php, transformer = _get_parse_tools()

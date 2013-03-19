@@ -331,6 +331,7 @@ primary_expression: ["("] <expression> [")"]
 
 variable_expression: array_dereferencing
                    | variable_specification;
+
 variable_specification: <variable_dynamic_expression>
                       | <VARIABLE_IDENTIFIER>;
 variable_dynamic_expression: "$" ["{"] expression ["}"]

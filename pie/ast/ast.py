@@ -592,5 +592,6 @@ class AstBuilder(RPythonVisitor):
 
         return children_list
 
-
+# Cached AstBuilder instance
 builder = AstBuilder()
+

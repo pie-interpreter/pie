@@ -1,12 +1,12 @@
 from pie.objects.base import W_Number, DivisionByZeroError
-from pie.objects.int import W_IntObject
+from pie.objspace import space
 from pie.types import PHPTypes
 
 
 class W_FloatObject(W_Number):
 
-    _immutable_fields_ = ['value', 'type']
-    type = PHPTypes.w_float
+    _immutable_fields_ = ['value', 'php_type']
+    php_type = PHPTypes.w_float
 
     def __init__(self, value):
         self.value = value
@@ -24,15 +24,18 @@ class W_FloatObject(W_Number):
     def float_w(self):
         return self.value
 
+    def as_array(self):
+        array = space.array()
+        return array.set(0, self.value)
+
     def as_bool(self):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(bool(self.value))
+        return space.bool(bool(self.value))
 
     def as_float(self):
         return self
 
     def as_int(self):
-        return W_IntObject(int(self.value))
+        return space.int(int(self.value))
 
     def as_number(self):
         return self
@@ -48,53 +51,47 @@ class W_FloatObject(W_Number):
 
         return W_StringObject(str(value))
 
-    def less_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_FloatObject)
-        if self.value < object.value:
-            return W_BoolObject(True)
+    def less_than(self, w_object):
+        assert isinstance(w_object, W_FloatObject)
+        if self.value < w_object.value:
+            return space.bool(True)
         else:
-            return W_BoolObject(False)
+            return space.bool(False)
 
-    def more_than(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_FloatObject)
-        if self.value > object.value:
-            return W_BoolObject(True)
+    def more_than(self, w_object):
+        assert isinstance(w_object, W_FloatObject)
+        if self.value > w_object.value:
+            return space.bool(True)
         else:
-            return W_BoolObject(False)
+            return space.bool(False)
 
-    def equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_FloatObject)
-        if self.value == object.value:
-            return W_BoolObject(True)
+    def equal(self, w_object):
+        assert isinstance(w_object, W_FloatObject)
+        if self.value == w_object.value:
+            return space.bool(True)
         else:
-            return W_BoolObject(False)
+            return space.bool(False)
 
-    def not_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_FloatObject)
-        if self.value != object.value:
-            return W_BoolObject(True)
+    def not_equal(self, w_object):
+        assert isinstance(w_object, W_FloatObject)
+        if self.value != w_object.value:
+            return space.bool(True)
         else:
-            return W_BoolObject(False)
+            return space.bool(False)
 
-    def less_than_or_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_FloatObject)
-        if self.value <= object.value:
-            return W_BoolObject(True)
+    def less_than_or_equal(self, w_object):
+        assert isinstance(w_object, W_FloatObject)
+        if self.value <= w_object.value:
+            return space.bool(True)
         else:
-            return W_BoolObject(False)
+            return space.bool(False)
 
-    def more_than_or_equal(self, object):
-        from pie.objects.bool import W_BoolObject
-        assert isinstance(object, W_FloatObject)
-        if self.value >= object.value:
-            return W_BoolObject(True)
+    def more_than_or_equal(self, w_object):
+        assert isinstance(w_object, W_FloatObject)
+        if self.value >= w_object.value:
+            return space.bool(True)
         else:
-            return W_BoolObject(False)
+            return space.bool(False)
 
     def inc(self):
         return W_FloatObject(self.value + 1)

@@ -27,8 +27,6 @@ class TestPHPLanguageCoverage(unittest.TestCase):
         os.dup2(self.output_file.fileno(), sys.stderr.fileno())
 
     def restore_output(self):
-        sys.stdout.flush()
-        sys.stderr.flush()
         os.dup2(self.stdout_no, sys.stdout.fileno())
         os.dup2(self.stderr_no, sys.stderr.fileno())
 

@@ -1,13 +1,12 @@
 from pie.objects.base import W_Type
-from pie.objects.int import W_IntObject
-import pie.objects.bool as boolean
+from pie.objspace import space
 from pie.types import PHPTypes
 
 
 class W_NullObject(W_Type):
 
-    _immutable_fields_ = ['type']
-    type = PHPTypes.w_null
+    _immutable_fields_ = ['php_type']
+    php_type = PHPTypes.w_null
 
     def __repr__(self):
         return "W_NullObject()"
@@ -18,15 +17,17 @@ class W_NullObject(W_Type):
     def is_true(self):
         return False
 
+    def as_array(self):
+        return space.array()
+
     def as_bool(self):
-        return boolean.W_BoolObject(False)
+        return space.bool(False)
 
     def as_int(self):
-        return W_IntObject(0)
+        return space.int(0)
 
     def as_float(self):
-        from pie.objects.float import W_FloatObject
-        return W_FloatObject(0.0)
+        return space.float(0.0)
 
     def as_number(self):
         return self.as_int()
@@ -35,29 +36,28 @@ class W_NullObject(W_Type):
         return self.as_int()
 
     def as_string(self):
-        from pie.objects.string import W_StringObject
-        return W_StringObject("")
+        return space.str("")
 
     def is_null(self):
         return True
 
     def less_than(self, object):
-        return boolean.W_BoolObject(False)
+        return space.bool(False)
 
     def more_than(self, object):
-        return boolean.W_BoolObject(False)
+        return space.bool(False)
 
     def equal(self, object):
-        return boolean.W_BoolObject(True)
+        return space.bool(True)
 
     def not_equal(self, object):
-        return boolean.W_BoolObject(False)
+        return space.bool(False)
 
     def less_than_or_equal(self, object):
-        return boolean.W_BoolObject(True)
+        return space.bool(True)
 
     def more_than_or_equal(self, object):
-        return boolean.W_BoolObject(True)
+        return space.bool(True)
 
     def inc(self):
         """
@@ -65,7 +65,7 @@ class W_NullObject(W_Type):
 
          Decrementing NULL values has no effect too, but incrementing them results in 1.
         """
-        return W_IntObject(1)
+        return space.int(1)
 
     def dec(self):
         """

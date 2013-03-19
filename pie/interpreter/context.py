@@ -1,5 +1,4 @@
 import os.path
-
 from pie.config import config
 from pie.utils.path import split_path
 from pie.interpreter.errors.fatalerrors import RedeclaredFunction, RedeclaredUserFunction
@@ -37,7 +36,9 @@ class Context(object):
             self.functions[function.name] = function
 
     def print_output(self, string):
+        assert isinstance(string, str)
         os.write(1, string)
+
 
 class Trace(object):
 
@@ -59,11 +60,10 @@ class Trace(object):
             for depth, entry in enumerate(self.stack):
                 function_name, filename, line = entry
                 lines.append(
-                    'PHP   %s. %s() %s:%s\n' \
-                        % ((depth + 1),
-                            function_name,
-                            os.path.abspath(filename),
-                            line)
-                        )
+                    'PHP   %s. %s() %s:%s\n' % ((depth + 1),
+                    function_name,
+                    os.path.abspath(filename),
+                    line)
+                )
 
         return ''.join(lines)

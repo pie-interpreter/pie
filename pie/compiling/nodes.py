@@ -218,7 +218,7 @@ class __extend__(nodes.Assignment):
 
     def get_modification_operation(self):
         operations = {
-            '=': '',
+            '=': 'STORE_VAR',
             '+=': 'INPLACE_ADD',
             '-=': 'INPLACE_SUBSTRACT',
             '.=': 'INPLACE_CONCAT',

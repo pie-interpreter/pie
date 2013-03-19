@@ -1,8 +1,6 @@
 from pie.objects.strategy.base import get_string_strategy, StringFactory
 from pie.objects.base import W_Type
-from pie.objects.bool import W_BoolObject
-from pie.objects.int import W_IntObject
-from pie.objects.float import W_FloatObject
+from pie.objspace import space
 from pie.types import PHPTypes
 
 __author__ = 'sery0ga'
@@ -25,9 +23,9 @@ class W_StringObject(W_Type):
                     on strategy.
       - strategy -- defines object behaviour. For more info see stringstrategies.py
     """
-    _immutable_fields_ = ['type']
+    _immutable_fields_ = ['php_type']
     convertible_to_number = True
-    type = PHPTypes.w_string
+    php_type = PHPTypes.w_string
 
     def __init__(self, strval):
         from pie.objects.strategy.general import ConstantStringStrategy
@@ -51,17 +49,22 @@ class W_StringObject(W_Type):
         self.make_integral()
         return self.strategy.str_w(self)
 
+    def as_array(self):
+        array = space.array()
+        return array.set(0, self.str_w())
+
     def as_bool(self):
         self.make_integral()
         if not self.is_true():
-            return W_BoolObject(False)
-        return W_BoolObject(True)
+            return space.bool(False)
+        return space.bool(True)
 
     def as_float(self):
         return self._handle_number(False).as_float()
 
     def as_int(self):
         value = self._handle_number(strict=False, int_only=True)
+        from pie.objects.int import W_IntObject
         assert isinstance(value, W_IntObject)
         return value
 
@@ -86,61 +89,61 @@ class W_StringObject(W_Type):
     def is_convertible_to_number_strict(self):
         try:
             self.as_number_strict()
-            return W_BoolObject(True)
+            return space.bool(True)
         except NotConvertibleToNumber:
-            return W_BoolObject(False)
+            return space.bool(False)
 
     def equal(self, w_object):
         if self is w_object:
-            return W_BoolObject(True)
+            return space.bool(True)
         if self.strlen() != w_object.strlen():
-            return W_BoolObject(False)
+            return space.bool(False)
         assert isinstance(w_object, W_StringObject)
         if self.strategy is w_object.strategy:
-            return W_BoolObject(self.strategy.equal(self, w_object))
+            return space.bool(self.strategy.equal(self, w_object))
         self.make_integral()
         w_object.make_integral()
-        return W_BoolObject(self.str_w() == w_object.str_w())
+        return space.bool(self.str_w() == w_object.str_w())
 
     def not_equal(self, w_object):
         w_result = self.equal(w_object)
-        return W_BoolObject(not w_result.is_true())
+        return space.bool(not w_result.is_true())
 
     def less_than(self, w_object):
         if self is w_object:
-            return W_BoolObject(False)
+            return space.bool(False)
         assert isinstance(w_object, W_StringObject)
         self.make_integral()
         w_object.make_integral()
-        return W_BoolObject(self.str_w() < w_object.str_w())
+        return space.bool(self.str_w() < w_object.str_w())
 
     def more_than(self, w_object):
         if self is w_object:
-            return W_BoolObject(False)
+            return space.bool(False)
         assert isinstance(w_object, W_StringObject)
         self.make_integral()
         w_object.make_integral()
-        return W_BoolObject(self.str_w() > w_object.str_w())
+        return space.bool(self.str_w() > w_object.str_w())
 
     def less_than_or_equal(self, w_object):
         if self is w_object:
-            return W_BoolObject(True)
+            return space.bool(True)
         assert isinstance(w_object, W_StringObject)
         self.make_integral()
         w_object.make_integral()
-        return W_BoolObject(self.str_w() <= w_object.str_w())
+        return space.bool(self.str_w() <= w_object.str_w())
 
     def more_than_or_equal(self, w_object):
         if self is w_object:
-            return W_BoolObject(True)
+            return space.bool(True)
         assert isinstance(w_object, W_StringObject)
         self.make_integral()
         w_object.make_integral()
-        return W_BoolObject(self.str_w() >= w_object.str_w())
+        return space.bool(self.str_w() >= w_object.str_w())
 
     def inc(self):
         if not self.is_true():
-            return W_StringObject('1')
+            return space.str('1')
         try:
             return self.as_number_strict().inc()
         except NotConvertibleToNumber:
@@ -175,7 +178,7 @@ class W_StringObject(W_Type):
 
     def dec(self):
         if not self.is_true():
-            return W_IntObject(-1)
+            return space.int(-1)
         try:
             return self.as_number_strict().dec()
         except NotConvertibleToNumber:
@@ -220,7 +223,7 @@ class W_StringObject(W_Type):
         #TODO: add setlocale() support
         self.make_integral()
         if not self.is_true():
-            return W_IntObject(0)
+            return space.int(0)
         (begin, end) = (0, 0)
         value_len = self.strlen()
         string = self.str_w()
@@ -272,17 +275,17 @@ class W_StringObject(W_Type):
             end -= 1
 
         if minus and end == 0:
-            return W_IntObject(0)
+            return space.int(0)
         elif minus == -1 and end == 1:
-            return W_IntObject(0)
+            return space.int(0)
 
         assert begin >= 0
         assert end >= 0
         value = self.str_w()[begin:end]
         if e_symbol or dot_symbol:
-            return W_FloatObject(float(value) * minus)
+            return space.float(float(value) * minus)
         #TODO add PHP_INT_MAX check
-        return W_IntObject(int(value) * minus)
+        return space.int(int(value) * minus)
 
     def _handle_decimal(self, value, begin, end, value_len, strict = False):
         #detect minus
@@ -302,15 +305,15 @@ class W_StringObject(W_Type):
             end += 1
 
         if minus and end == 0:
-            return W_IntObject(0)
+            return space.int(0)
         elif minus == -1 and end == 1:
-            return W_IntObject(0)
+            return space.int(0)
 
         assert begin >= 0
         assert end >= 0
         value = self.str_w()[begin:end]
         #TODO add PHP_INT_MAX check
-        return W_IntObject(int(value) * minus)
+        return space.int(int(value) * minus)
 
     def _handle_hexadecimal(self, value, begin, end, value_len, strict = False):
         while end < value_len:
@@ -323,5 +326,5 @@ class W_StringObject(W_Type):
             end += 1
 
         if not end:
-            return W_IntObject(0)
-        return W_IntObject(int(self.str_w()[begin:end], 0))
+            return space.int(0)
+        return space.int(int(self.str_w()[begin:end], 0))
