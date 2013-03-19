@@ -1,8 +1,6 @@
 from rpython.rlib.objectmodel import we_are_translated
 from rpython.rlib.unroll import unrolling_iterable
 
-from phplib.standard import *
-
 from pie.objspace import space
 from pie.types import PHPTypes
 from pie.opcodes import OPCODE_INDEX_DIVIDER, get_opcode_name, OPCODE
@@ -15,6 +13,7 @@ from pie.interpreter.errors.warnings import DivisionByZero
 from pie.interpreter.errors.fatalerrors import UndefinedFunction
 import pie.interpreter.include as include
 
+from phplib.standard import *
 
 
 class Interpreter(object):

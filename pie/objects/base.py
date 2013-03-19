@@ -18,7 +18,7 @@ class W_Root(object):
 class W_Type(W_Root):
     """ Base type class representing each type in PHP and common operations
     """
-    type = -1
+    php_type = -1
 
     def as_bool(self):
         raise NotImplementedError
@@ -45,7 +45,7 @@ class W_Type(W_Root):
         return False
 
     def get_type(self):
-        return self.type
+        return self.php_type
 
     def less_than(self, w_object):
         raise NotImplementedError
@@ -92,7 +92,7 @@ class W_Number(W_Type):
 
 class W_Undefined(W_Type):
 
-    type = PHPTypes.w_undefined
+    php_type = PHPTypes.w_undefined
 
     def __repr__(self):
         return "W_Undefined()"

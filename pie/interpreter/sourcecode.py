@@ -28,8 +28,6 @@ class SourceCode(object):
                 e.context = context
                 e.handle()
                 return space.bool(False)
-
-        from pie.interpreter.interpreter import Interpreter
         Interpreter(self.bytecode, context, frame).interpret()
 
         # TODO: as debug_trace function appear, a test for

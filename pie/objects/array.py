@@ -11,8 +11,8 @@ class IllegalOffsetType(Exception):
 
 class W_ArrayObject(W_Type):
 
-    _immutable_fields = ['type']
-    type = PHPTypes.w_array
+    _immutable_fields = ['php_type']
+    php_type = PHPTypes.w_array
 
     @staticmethod
     def array_from_array(w_array):
@@ -164,14 +164,14 @@ class W_ArrayObject(W_Type):
         return space.bool(True)
 
     def _convert_index(self, w_index):
-        if (w_index.type == PHPTypes.w_float or
-                w_index.type == PHPTypes.w_int or
-                w_index.type == PHPTypes.w_bool):
+        if (w_index.get_type() == PHPTypes.w_float or
+                w_index.get_type() == PHPTypes.w_int or
+                w_index.get_type() == PHPTypes.w_bool):
             key = w_index.as_int().int_w()
             if key >= self.last_index:
                 self.last_index_changed = True
             return key, None
-        elif w_index.type == PHPTypes.w_string:
+        elif w_index.get_type() == PHPTypes.w_string:
             key = w_index.str_w()
             if (len(key) > 1 and
                     ((key[0] == '0') or (key[0] == '-' and key[1] == '0'))):
@@ -184,9 +184,9 @@ class W_ArrayObject(W_Type):
             except ValueError:
                 pass
             return 0, key
-        elif w_index.type == PHPTypes.w_null:
+        elif w_index.get_type() == PHPTypes.w_null:
             return 0, ""
-        elif w_index.type == PHPTypes.w_undefined:
+        elif w_index.get_type() == PHPTypes.w_undefined:
             key = self.last_index
             self.last_index_changed = True
             return key, None

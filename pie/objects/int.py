@@ -5,8 +5,8 @@ from pie.objspace import space
 
 class W_IntObject(W_Number):
 
-    _immutable_fields_ = ['value', 'type']
-    type = PHPTypes.w_int
+    _immutable_fields_ = ['value', 'php_type']
+    php_type = PHPTypes.w_int
 
     def __init__(self, value):
         self.value = value

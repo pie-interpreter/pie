@@ -23,9 +23,9 @@ class W_StringObject(W_Type):
                     on strategy.
       - strategy -- defines object behaviour. For more info see stringstrategies.py
     """
-    _immutable_fields_ = ['type']
+    _immutable_fields_ = ['php_type']
     convertible_to_number = True
-    type = PHPTypes.w_string
+    php_type = PHPTypes.w_string
 
     def __init__(self, strval):
         from pie.objects.strategy.general import ConstantStringStrategy

@@ -100,12 +100,12 @@ class ObjSpace(object):
         return w_left.as_string().concatenate(w_right.as_string())
 
     def identical(self, w_left, w_right):
-        if w_left.deref().type != w_right.deref().type:
+        if w_left.deref().get_type() != w_right.deref().get_type():
             return self.bool(False)
         return w_left.deref().equal(w_right.deref())
 
     def not_identical(self, w_left, w_right):
-        if w_left.deref().type != w_right.deref().type:
+        if w_left.deref().get_type() != w_right.deref().get_type():
             return self.bool(True)
         return w_left.deref().not_equal(w_right.deref())
 
@@ -115,9 +115,10 @@ class ObjSpace(object):
     def get_common_comparison_type(self, w_left, w_right):
         """ Use this function only in comparison operations (like '>' or '<=')
         """
-        left_type = w_left.type
-        if (self._is_any_number(left_type, w_right.type) and
-                self._is_any_string(left_type, w_right.type)):
+        left_type = w_left.get_type()
+        right_type = w_right.get_type()
+        if (self._is_any_number(left_type, right_type) and
+                self._is_any_string(left_type, right_type)):
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -125,7 +126,7 @@ class ObjSpace(object):
             then each string is converted to a number and the comparison performed numerically
             """
             return PHPTypes.w_float
-        elif left_type == PHPTypes.w_int and w_right.type == PHPTypes.w_float:
+        elif left_type == PHPTypes.w_int and right_type == PHPTypes.w_float:
             """
             http://www.php.net/manual/en/language.types.type-juggling.php
 
@@ -133,7 +134,7 @@ class ObjSpace(object):
              and the result will be a float
             """
             return PHPTypes.w_float
-        elif left_type == PHPTypes.w_null and w_right.type == PHPTypes.w_string:
+        elif left_type == PHPTypes.w_null and right_type == PHPTypes.w_string:
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -141,7 +142,7 @@ class ObjSpace(object):
             Convert NULL to "", numerical or lexical comparison
             """
             return PHPTypes.w_string
-        elif left_type == PHPTypes.w_null and w_right.type != PHPTypes.w_null:
+        elif left_type == PHPTypes.w_null and right_type != PHPTypes.w_null:
             """
             http://www.php.net/manual/en/language.operators.comparison.php
 
@@ -151,12 +152,12 @@ class ObjSpace(object):
             return PHPTypes.w_bool
         elif left_type == PHPTypes.w_bool:
             return PHPTypes.w_bool
-        return w_left.type
+        return left_type
 
     def get_common_arithmetic_type(self, w_left, w_right):
         """ Use this function only in arithmetic operations (like '-' or '+')
         """
-        if self._is_any_float(w_left.type, w_right.type):
+        if self._is_any_float(w_left.get_type(), w_right.get_type()):
             return PHPTypes.w_float
         return PHPTypes.w_int
 

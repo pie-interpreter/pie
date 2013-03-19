@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-import sourcecode
 import os.path
 
 from rpython.rlib.objectmodel import specialize
@@ -8,6 +7,7 @@ from pie.objects.bool import W_BoolObject
 from pie.utils.path import split_path
 from pie.interpreter.errors.warnings import NoFile, NoFileInIncludePath
 from pie.interpreter.errors.fatalerrors import NoRequiredFile, NoRequiredFileInIncludePath
+import sourcecode
 
 __author__ = 'sery0ga'
 
