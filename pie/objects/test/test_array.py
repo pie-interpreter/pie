@@ -15,35 +15,35 @@ class TestArray(unittest.TestCase):
                space.bool(False), space.int(2),
                space.bool(True), space.int(3)]
         actual = space.array(raw)
-        expected = {space.str('3'): space.int(1),
-                    space.str('-1'): space.int(2),
-                    space.str('0'): space.int(2), space.str('1'): space.int(3)}
+        expected = {space.string('3'): space.int(1),
+                    space.string('-1'): space.int(2),
+                    space.string('0'): space.int(2), space.string('1'): space.int(3)}
         for key, value in expected.iteritems():
             self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
     def test_array_creation_null_string_branch(self):
-        raw = [space.str("test"), space.int(1),
-               space.str("08"), space.int(2),
-               space.str("99"), space.int(3),
+        raw = [space.string("test"), space.int(1),
+               space.string("08"), space.int(2),
+               space.string("99"), space.int(3),
                space.null(), space.int(4),
-               space.str("-5"), space.int(5),
-               space.str("-09"), space.int(7)]
+               space.string("-5"), space.int(5),
+               space.string("-09"), space.int(7)]
         actual = space.array(raw)
-        expected = {space.str("test"): space.int(1),
-                    space.str("08"): space.int(2),
-                    space.str('99'): space.int(3), space.str(""): space.int(4),
-                    space.str('-5'): space.int(5),
-                    space.str("-09"): space.int(7)}
+        expected = {space.string("test"): space.int(1),
+                    space.string("08"): space.int(2),
+                    space.string('99'): space.int(3), space.string(""): space.int(4),
+                    space.string('-5'): space.int(5),
+                    space.string("-09"): space.int(7)}
         for key, value in expected.iteritems():
             self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
     def test_array_creation_one_key(self):
         raw = [space.int(1), space.int(1),
-               space.str("1"), space.int(2),
+               space.string("1"), space.int(2),
                space.float(1.5), space.int(3),
                space.bool(True), space.int(4)]
         actual = space.array(raw)
-        expected = {space.str('1'): space.int(4)}
+        expected = {space.string('1'): space.int(4)}
         for key, value in expected.iteritems():
             self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
@@ -55,18 +55,18 @@ class TestArray(unittest.TestCase):
                space.int(3), space.int(5),
                space.undefined(), space.int(6)]
         actual = space.array(raw)
-        expected = {space.str('0'): space.int(1), space.str('1'): space.int(2),
-                    space.str('6'): space.int(3), space.str('7'): space.int(4),
-                    space.str('3'): space.int(5), space.str('8'): space.int(6)}
+        expected = {space.string('0'): space.int(1), space.string('1'): space.int(2),
+                    space.string('6'): space.int(3), space.string('7'): space.int(4),
+                    space.string('3'): space.int(5), space.string('8'): space.int(6)}
         for key, value in expected.iteritems():
             self.assertTrue(actual.get(key).deref().equal(value).is_true())
-        raw = [space.str("6"), space.int(3),
-               space.str("3"), space.int(5),
+        raw = [space.string("6"), space.int(3),
+               space.string("3"), space.int(5),
                space.undefined(), space.int(6)]
         actual = space.array(raw)
-        expected = {space.str('6'): space.int(3),
-                    space.str('3'): space.int(5),
-                    space.str('7'): space.int(6)}
+        expected = {space.string('6'): space.int(3),
+                    space.string('3'): space.int(5),
+                    space.string('7'): space.int(6)}
         for key, value in expected.iteritems():
             self.assertTrue(actual.get(key).deref().equal(value).is_true())
 
@@ -103,11 +103,11 @@ class TestArray(unittest.TestCase):
         self.assertFalse(five.equal(self.array.as_int()).is_true())
 
     def test_as_string(self):
-        expected = space.str('Array')
+        expected = space.string('Array')
         self.assertTrue(expected.equal(self.array.as_string()).is_true())
-        not_expected = space.str('')
+        not_expected = space.string('')
         self.assertFalse(not_expected.equal(self.array.as_string()).is_true())
-        self.array.set(space.int(0), space.str('Array'))
+        self.array.set(space.int(0), space.string('Array'))
         self.assertTrue(expected.equal(self.array.as_string()).is_true())
 
     def test_equal(self):
@@ -238,18 +238,18 @@ class TestArray(unittest.TestCase):
         array = space.array([space.int(0), space.int(1),
                              space.int(1), space.int(2),
                              space.int(-1), space.int(3)])
-        value = array.get(space.str("1")).deref()
+        value = array.get(space.string("1")).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())
-        value = array.get(space.str("-1")).deref()
+        value = array.get(space.string("-1")).deref()
         self.assertTrue(value.equal(space.int(3)).is_true())
         with self.assertRaises(KeyError):
-            value = array.get(space.str("01"))
+            value = array.get(space.string("01"))
         with self.assertRaises(KeyError):
-            value = array.get(space.str("-0"))
-        value = array.get(space.str("0")).deref()
+            value = array.get(space.string("-0"))
+        value = array.get(space.string("0")).deref()
         self.assertTrue(value.equal(space.int(1)).is_true())
         with self.assertRaises(KeyError):
-            value = array.get(space.str("12Tst"))
+            value = array.get(space.string("12Tst"))
 
     def test_get_type_conversion_other(self):
         array = space.array([space.int(0), space.int(1),
@@ -272,7 +272,7 @@ class TestArray(unittest.TestCase):
         array.set(space.int(2), space.int(3))
         value = array.get(space.int(2)).deref()
         self.assertTrue(value.equal(space.int(3)).is_true())
-        array.set(space.str("4"), space.int(4))
+        array.set(space.string("4"), space.int(4))
         value = array.get(space.int(4)).deref()
         self.assertTrue(value.equal(space.int(4)).is_true())
         # no index test
@@ -284,7 +284,7 @@ class TestArray(unittest.TestCase):
         value = array.get(space.int(16)).deref()
         self.assertTrue(value.equal(space.int(16)).is_true())
         # now string
-        array.set(space.str("20"), space.int(20))
+        array.set(space.string("20"), space.int(20))
         array.set(space.undefined(), space.int(21))
         value = array.get(space.int(21)).deref()
         self.assertTrue(value.equal(space.int(21)).is_true())
@@ -297,7 +297,7 @@ class TestArray(unittest.TestCase):
         value = array.get(space.int(0)).deref()
         self.assertTrue(value.equal(space.int(1)).is_true())
         with self.assertRaises(KeyError):
-            array.get(space.str("7"))
+            array.get(space.string("7"))
         array.set(space.undefined(), space.int(2))
         value = array.get(space.int(1)).deref()
         self.assertTrue(value.equal(space.int(2)).is_true())

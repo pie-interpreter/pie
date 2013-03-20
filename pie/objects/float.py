@@ -3,7 +3,7 @@ from pie.objspace import space
 from pie.types import PHPTypes
 
 
-class W_FloatObject(W_Number):
+class W_Float(W_Number):
 
     _immutable_fields_ = ['value', 'php_type']
     php_type = PHPTypes.w_float
@@ -13,10 +13,10 @@ class W_FloatObject(W_Number):
         self.nan = False
 
     def __repr__(self):
-        return "W_FloatObject(%s)" % self.value
+        return "W_Float(%s)" % self.value
 
     def copy(self):
-        return W_FloatObject(self.value)
+        return W_Float(self.value)
 
     def is_true(self):
         return bool(self.value)
@@ -47,72 +47,72 @@ class W_FloatObject(W_Number):
             value = intvalue
         else:
             value = self.value
-        from pie.objects.string import W_StringObject
+        from pie.objects.string import W_String
 
-        return W_StringObject(str(value))
+        return W_String(str(value))
 
     def less_than(self, w_object):
-        assert isinstance(w_object, W_FloatObject)
+        assert isinstance(w_object, W_Float)
         if self.value < w_object.value:
             return space.bool(True)
         else:
             return space.bool(False)
 
     def more_than(self, w_object):
-        assert isinstance(w_object, W_FloatObject)
+        assert isinstance(w_object, W_Float)
         if self.value > w_object.value:
             return space.bool(True)
         else:
             return space.bool(False)
 
     def equal(self, w_object):
-        assert isinstance(w_object, W_FloatObject)
+        assert isinstance(w_object, W_Float)
         if self.value == w_object.value:
             return space.bool(True)
         else:
             return space.bool(False)
 
     def not_equal(self, w_object):
-        assert isinstance(w_object, W_FloatObject)
+        assert isinstance(w_object, W_Float)
         if self.value != w_object.value:
             return space.bool(True)
         else:
             return space.bool(False)
 
     def less_than_or_equal(self, w_object):
-        assert isinstance(w_object, W_FloatObject)
+        assert isinstance(w_object, W_Float)
         if self.value <= w_object.value:
             return space.bool(True)
         else:
             return space.bool(False)
 
     def more_than_or_equal(self, w_object):
-        assert isinstance(w_object, W_FloatObject)
+        assert isinstance(w_object, W_Float)
         if self.value >= w_object.value:
             return space.bool(True)
         else:
             return space.bool(False)
 
     def inc(self):
-        return W_FloatObject(self.value + 1)
+        return W_Float(self.value + 1)
 
     def dec(self):
-        return W_FloatObject(self.value - 1)
+        return W_Float(self.value - 1)
 
     def plus(self, number):
-        return W_FloatObject(self.value + number.value)
+        return W_Float(self.value + number.value)
 
     def minus(self, number):
-        return W_FloatObject(self.value - number.value)
+        return W_Float(self.value - number.value)
 
     def multiply(self, number):
-        return W_FloatObject(self.value * number.value)
+        return W_Float(self.value * number.value)
 
     def divide(self, number):
         if not number.value:
             raise DivisionByZeroError()
 
-        return W_FloatObject(self.value / number.value)
+        return W_Float(self.value / number.value)
 
     def mod(self, number):
         if not number.value:
@@ -124,4 +124,4 @@ class W_FloatObject(W_Number):
         elif self.value and divider < 0:
             divider *= -1
 
-        return W_FloatObject(self.value % divider)
+        return W_Float(self.value % divider)

@@ -3,7 +3,7 @@ import os.path
 
 from rpython.rlib.objectmodel import specialize
 
-from pie.objects.bool import W_BoolObject
+from pie.objects.bool import W_Bool
 from pie.utils.path import split_path
 from pie.interpreter.errors.warnings import NoFile, NoFileInIncludePath
 from pie.interpreter.errors.fatalerrors import NoRequiredFile, NoRequiredFileInIncludePath
@@ -97,7 +97,7 @@ class BaseIncludeStatement(object):
             absolute_filename = os.path.abspath(self._search(filename))
         except FileNotFound:
             self._handle_error(filename)
-            return W_BoolObject(False)
+            return W_Bool(False)
 
         (in_cache, update_cache) = (False, False)
         try:
@@ -111,13 +111,13 @@ class BaseIncludeStatement(object):
             #TODO: file change time support should be added.
             pass
         if self._return_if_file_in_cache(in_cache):
-            return W_BoolObject(True)
+            return W_Bool(True)
 
         if update_cache:
             try:
                 source = self._get_source(absolute_filename)
             except FileReadFailure:
-                return W_BoolObject(False)
+                return W_Bool(False)
 
             self.context.include_cache[absolute_filename] = source
 
@@ -174,7 +174,7 @@ class BaseIncludeStatement(object):
         self.context.trace.pop()
 
         if w_return_value.deref().is_null():
-            return W_BoolObject(True)
+            return W_Bool(True)
 
         return w_return_value
 

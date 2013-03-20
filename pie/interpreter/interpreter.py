@@ -234,7 +234,7 @@ class Interpreter(object):
 
     def LOAD_NAME(self, index):
         name = self.bytecode.names[index]
-        self.frame.stack.append(space.str(name))
+        self.frame.stack.append(space.string(name))
 
     def LOAD_VAR_FAST(self, var_index):
         var_name = self.bytecode.names[var_index]

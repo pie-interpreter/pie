@@ -25,11 +25,11 @@ class StringFactory(object):
 
     @staticmethod
     def constant_str(strval):
-        return pie.objects.string.W_StringObject(strval)
+        return pie.objects.string.W_String(strval)
 
     @staticmethod
     def mutable_str(strval):
-        w_s = instantiate(pie.objects.string.W_StringObject)
+        w_s = instantiate(pie.objects.string.W_String)
         from pie.objects.strategy.general import MutableStringStrategy
         strategy = get_string_strategy(MutableStringStrategy)
         w_s.storage = strategy.erase(strval)
@@ -39,7 +39,7 @@ class StringFactory(object):
 
     @staticmethod
     def copied_str(w_original_string):
-        w_s = instantiate(pie.objects.string.W_StringObject)
+        w_s = instantiate(pie.objects.string.W_String)
         from pie.objects.strategy.reference import StringCopyStrategy
         strategy = get_string_strategy(StringCopyStrategy)
         w_s.storage = strategy.erase(w_original_string)
@@ -49,7 +49,7 @@ class StringFactory(object):
 
     @staticmethod
     def concat_str(w_left, w_right):
-        w_string = instantiate(pie.objects.string.W_StringObject)
+        w_string = instantiate(pie.objects.string.W_String)
         from pie.objects.strategy.reference import StringConcatStrategy
         strategy = get_string_strategy(StringConcatStrategy)
         w_string.storage = strategy.erase((w_left, w_right, w_left.strlen() +

@@ -7,28 +7,28 @@ __author__ = 'sery0ga'
 class ObjSpace(object):
 
     def int(self, value):
-        from pie.objects.int import W_IntObject
-        return W_IntObject(value)
+        from pie.objects.int import W_Int
+        return W_Int(value)
 
-    def str(self, value):
-        from pie.objects.string import W_StringObject
-        return W_StringObject(value)
+    def string(self, value):
+        from pie.objects.string import W_String
+        return W_String(value)
 
     def bool(self, value):
-        from pie.objects.bool import W_BoolObject
-        return W_BoolObject(value)
+        from pie.objects.bool import W_Bool
+        return W_Bool(value)
 
     def float(self, value):
-        from pie.objects.float import W_FloatObject
-        return W_FloatObject(value)
+        from pie.objects.float import W_Float
+        return W_Float(value)
 
     def null(self):
-        from pie.objects.null import W_NullObject
-        return W_NullObject()
+        from pie.objects.null import W_Null
+        return W_Null()
 
     def array(self, value=[]):
-        from pie.objects.array import W_ArrayObject
-        return W_ArrayObject(value)
+        from pie.objects.array import W_Array
+        return W_Array(value)
 
     def undefined(self):
         from pie.objects.base import W_Undefined
@@ -46,8 +46,8 @@ class ObjSpace(object):
         #TODO: add array support
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        common_type = self.get_common_arithmetic_type(left_number, right_number)
+        if common_type == PHPTypes.w_int:
             return left_number.as_int().plus(right_number.as_int())
         else:
             return left_number.as_float().plus(right_number.as_float())
@@ -58,8 +58,8 @@ class ObjSpace(object):
         """
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        common_type = self.get_common_arithmetic_type(left_number, right_number)
+        if common_type == PHPTypes.w_int:
             return left_number.as_int().minus(right_number.as_int())
         else:
             return left_number.as_float().minus(right_number.as_float())
@@ -70,8 +70,8 @@ class ObjSpace(object):
         """
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        common_type = self.get_common_arithmetic_type(left_number, right_number)
+        if common_type == PHPTypes.w_int:
             return left_number.as_int().multiply(right_number.as_int())
         else:
             return left_number.as_float().multiply(right_number.as_float())
@@ -82,8 +82,8 @@ class ObjSpace(object):
         """
         left_number = w_left.deref().as_number()
         right_number = w_right.deref().as_number()
-        type = self.get_common_arithmetic_type(left_number, right_number)
-        if type == PHPTypes.w_int:
+        common_type = self.get_common_arithmetic_type(left_number, right_number)
+        if common_type == PHPTypes.w_int:
             return left_number.as_int().divide(right_number.as_int())
         else:
             return left_number.as_float().divide(right_number.as_float())
@@ -180,7 +180,7 @@ class ObjSpace(object):
 
 def _new_comparison_op(name):
     def func(self, w_left, w_right):
-        from pie.objects.int import W_IntObject
+        from pie.objects.int import W_Int
         from pie.objects.string import NotConvertibleToNumber
         w_left = w_left.deref()
         w_right = w_right.deref()
@@ -193,7 +193,7 @@ def _new_comparison_op(name):
                 right_number = w_right.as_number_strict()
                 if self._is_any_float(left_number.get_type(), right_number.get_type()):
                     return getattr(left_number.as_float(), name)(right_number.as_float())
-                assert isinstance(left_number, W_IntObject)
+                assert isinstance(left_number, W_Int)
                 return getattr(left_number, name)(right_number)
             except NotConvertibleToNumber:
                 return getattr(w_left, name)(w_right)

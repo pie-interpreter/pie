@@ -793,7 +793,7 @@ class __extend__(nodes.ConstantString):
         return self.const_value
 
     def get_compiled_value(self):
-        return space.str(self.const_value)
+        return space.string(self.const_value)
 
 
 class __extend__(nodes.ConstantSingleQuotedString):

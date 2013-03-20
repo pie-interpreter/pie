@@ -16,7 +16,7 @@ function.
 """
 from pie.interpreter.functions.builtin import builtin_function
 from pie.types import PHPTypes
-from pie.objects.array import W_ArrayObject
+from pie.objects.array import W_Array
 from pie.interpreter.functions.builtin import SCALAR, MIXED
 from pie.objspace import space
 from pie.types import PHPTypes
@@ -63,7 +63,7 @@ def gettype(context, params):
     elif php_type == PHPTypes.w_resource:
         type_name = 'resource'
 
-    return space.str(type_name)
+    return space.string(type_name)
 
 #TODO: is_callable
 #TODO: intval
@@ -187,7 +187,7 @@ def _print_variable(w_variable, indent_level=""):
           or w_variable.get_type() == PHPTypes.w_null):
         return w_variable.as_string()
     elif w_variable.get_type() == PHPTypes.w_array:
-        assert isinstance(w_variable, W_ArrayObject)
+        assert isinstance(w_variable, W_Array)
         indentation = "    "
         array_variables_indent_level = indent_level + indentation
         next_indent_level = array_variables_indent_level + indentation
@@ -200,9 +200,9 @@ def _print_variable(w_variable, indent_level=""):
             output += "%s[%s] => %s\n" % (array_variables_indent_level,
                                           key, child_output)
         output += "%s)\n" % indent_level
-        return space.str(output)
+        return space.string(output)
 
-    return space.str("NOT IMPLEMENTED")
+    return space.string("NOT IMPLEMENTED")
 
 
 #TODO: serialize
@@ -238,7 +238,7 @@ def var_dump_one_parameter(context, param, to_context=True, indent_level=""):
     elif param.get_type() == PHPTypes.w_null:
         output = "NULL\n"
     elif param.get_type() == PHPTypes.w_array:
-        assert isinstance(param, W_ArrayObject)
+        assert isinstance(param, W_Array)
         array_indent_level = indent_level + "  "
         output = 'array(%d) {\n' % param.len()
         # temporary

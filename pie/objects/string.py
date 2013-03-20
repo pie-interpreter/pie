@@ -15,7 +15,7 @@ DECIMAL_SYMBOLS = list("0123456789")
 class NotConvertibleToNumber(Exception):
     pass
 
-class W_StringObject(W_Type):
+class W_String(W_Type):
     """
     This class represents PHP strings.
     It has 2 main attributes:
@@ -64,8 +64,8 @@ class W_StringObject(W_Type):
 
     def as_int(self):
         value = self._handle_number(strict=False, int_only=True)
-        from pie.objects.int import W_IntObject
-        assert isinstance(value, W_IntObject)
+        from pie.objects.int import W_Int
+        assert isinstance(value, W_Int)
         return value
 
     def as_number(self):
@@ -98,7 +98,7 @@ class W_StringObject(W_Type):
             return space.bool(True)
         if self.strlen() != w_object.strlen():
             return space.bool(False)
-        assert isinstance(w_object, W_StringObject)
+        assert isinstance(w_object, W_String)
         if self.strategy is w_object.strategy:
             return space.bool(self.strategy.equal(self, w_object))
         self.make_integral()
@@ -112,7 +112,7 @@ class W_StringObject(W_Type):
     def less_than(self, w_object):
         if self is w_object:
             return space.bool(False)
-        assert isinstance(w_object, W_StringObject)
+        assert isinstance(w_object, W_String)
         self.make_integral()
         w_object.make_integral()
         return space.bool(self.str_w() < w_object.str_w())
@@ -120,7 +120,7 @@ class W_StringObject(W_Type):
     def more_than(self, w_object):
         if self is w_object:
             return space.bool(False)
-        assert isinstance(w_object, W_StringObject)
+        assert isinstance(w_object, W_String)
         self.make_integral()
         w_object.make_integral()
         return space.bool(self.str_w() > w_object.str_w())
@@ -128,7 +128,7 @@ class W_StringObject(W_Type):
     def less_than_or_equal(self, w_object):
         if self is w_object:
             return space.bool(True)
-        assert isinstance(w_object, W_StringObject)
+        assert isinstance(w_object, W_String)
         self.make_integral()
         w_object.make_integral()
         return space.bool(self.str_w() <= w_object.str_w())
@@ -136,14 +136,14 @@ class W_StringObject(W_Type):
     def more_than_or_equal(self, w_object):
         if self is w_object:
             return space.bool(True)
-        assert isinstance(w_object, W_StringObject)
+        assert isinstance(w_object, W_String)
         self.make_integral()
         w_object.make_integral()
         return space.bool(self.str_w() >= w_object.str_w())
 
     def inc(self):
         if not self.is_true():
-            return space.str('1')
+            return space.string('1')
         try:
             return self.as_number_strict().inc()
         except NotConvertibleToNumber:
@@ -256,8 +256,8 @@ class W_StringObject(W_Type):
                     dot_symbol = True
                     end += 1
                     continue
-                if not e_symbol and \
-                   (value[end] == 'e' or value[end] == 'E'):
+                if (not e_symbol and
+                        (value[end] == 'e' or value[end] == 'E')):
                     e_symbol = True
                     end += 1
                     continue

@@ -3,13 +3,13 @@ from pie.objspace import space
 from pie.types import PHPTypes
 
 
-class W_NullObject(W_Type):
+class W_Null(W_Type):
 
     _immutable_fields_ = ['php_type']
     php_type = PHPTypes.w_null
 
     def __repr__(self):
-        return "W_NullObject()"
+        return "W_Null()"
 
     def copy(self):
         return self
@@ -36,7 +36,7 @@ class W_NullObject(W_Type):
         return self.as_int()
 
     def as_string(self):
-        return space.str("")
+        return space.string("")
 
     def is_null(self):
         return True

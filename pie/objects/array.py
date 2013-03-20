@@ -9,14 +9,14 @@ class IllegalOffsetType(Exception):
     pass
 
 
-class W_ArrayObject(W_Type):
+class W_Array(W_Type):
 
     _immutable_fields = ['php_type']
     php_type = PHPTypes.w_array
 
     @staticmethod
     def array_from_array(w_array):
-        w_new_array = W_ArrayObject()
+        w_new_array = W_Array()
         w_new_array.storage = w_array.storage.copy()
         return w_new_array
 
@@ -42,10 +42,10 @@ class W_ArrayObject(W_Type):
                     index = str_index
 
     def __repr__(self):
-        return "W_ArrayObject(%s)" % self.storage
+        return "W_Array(%s)" % self.storage
 
     def copy(self):
-        return W_ArrayObject.array_from_array(self)
+        return W_Array.array_from_array(self)
 
     def is_true(self):
         if not self.storage:
@@ -68,10 +68,10 @@ class W_ArrayObject(W_Type):
         return self.as_int()
 
     def as_string(self):
-        return space.str('Array')
+        return space.string('Array')
 
     def less_than(self, w_object):
-        assert isinstance(w_object, W_ArrayObject)
+        assert isinstance(w_object, W_Array)
         if self.len() < w_object.len():
             return space.bool(True)
         elif self.len() == w_object.len() and self.len() > 0:
@@ -79,7 +79,7 @@ class W_ArrayObject(W_Type):
         return space.bool(False)
 
     def more_than(self, w_object):
-        assert isinstance(w_object, W_ArrayObject)
+        assert isinstance(w_object, W_Array)
         if self.len() > w_object.len():
             return space.bool(True)
         elif self.len() == w_object.len() and self.len() > 0:
@@ -87,13 +87,13 @@ class W_ArrayObject(W_Type):
         return space.bool(False)
 
     def equal(self, w_object):
-        assert isinstance(w_object, W_ArrayObject)
+        assert isinstance(w_object, W_Array)
         if self.len() != w_object.len():
             return space.bool(False)
         return self._equal(w_object)
 
     def not_equal(self, w_object):
-        assert isinstance(w_object, W_ArrayObject)
+        assert isinstance(w_object, W_Array)
         if self.len() != w_object.len():
             return space.bool(True)
         else:
@@ -107,7 +107,7 @@ class W_ArrayObject(W_Type):
             return space.bool(False)
 
     def less_than_or_equal(self, w_object):
-        assert isinstance(w_object, W_ArrayObject)
+        assert isinstance(w_object, W_Array)
         if self.len() < w_object.len():
             return space.bool(True)
         elif self.len() == w_object.len():
@@ -115,7 +115,7 @@ class W_ArrayObject(W_Type):
         return space.bool(False)
 
     def more_than_or_equal(self, w_object):
-        assert isinstance(w_object, W_ArrayObject)
+        assert isinstance(w_object, W_Array)
         if self.len() > w_object.len():
             return space.bool(True)
         elif self.len() == w_object.len():
@@ -218,7 +218,7 @@ def _new_comparison_op(name, private_name):
 for _name in ['less_than', 'more_than', 'equal', 'not_equal',
               'less_than_or_equal', 'more_than_or_equal']:
     private_name = '_' + _name
-    setattr(W_ArrayObject, private_name,
+    setattr(W_Array, private_name,
             _new_comparison_op(_name, private_name))
 
 
